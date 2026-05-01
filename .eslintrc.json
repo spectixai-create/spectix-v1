@@ -1,15 +1,14 @@
 {
-  "extends": ["next/core-web-vitals", "next/typescript"],
-  "rules": {
-    "@typescript-eslint/no-unused-vars": [
-      "error",
-      {
-        "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_",
-        "caughtErrorsIgnorePattern": "^_"
-      }
-    ],
-    "no-unused-vars": "off"
+  "extends": ["next/core-web-vitals", "plugin:tailwindcss/recommended"],
+  "settings": {
+    "tailwindcss": {
+      "callees": ["cn"],
+      "whitelist": ["toaster", "toast"]
+    }
   },
-  "ignorePatterns": ["node_modules", ".next", "out", "build"]
+  "rules": {
+    "tailwindcss/enforces-shorthand": "off",
+    "tailwindcss/no-unnecessary-arbitrary-value": "off",
+    "tailwindcss/no-custom-classname": "warn"
+  }
 }

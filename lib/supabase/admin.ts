@@ -13,7 +13,10 @@
  * this module is ever pulled into a client component.
  */
 import 'server-only';
-import { createClient as createSupabaseClient, type SupabaseClient } from '@supabase/supabase-js';
+import {
+  createClient as createSupabaseClient,
+  type SupabaseClient,
+} from '@supabase/supabase-js';
 
 let cached: SupabaseClient | null = null;
 

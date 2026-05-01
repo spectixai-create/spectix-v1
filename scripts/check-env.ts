@@ -57,7 +57,9 @@ if (warnings.length > 0) {
 }
 
 if (missing.length > 0) {
-  console.error('\n[check-env] FAILED — missing required environment variables:');
+  console.error(
+    '\n[check-env] FAILED — missing required environment variables:',
+  );
   for (const name of missing) {
     console.error(`  - ${name}`);
   }

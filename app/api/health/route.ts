@@ -31,7 +31,12 @@ export async function GET() {
         const { error, count } = await supabase
           .from(table)
           .select('*', { count: 'exact', head: true });
-        return { table, ok: !error, error: error?.message ?? null, count: count ?? 0 };
+        return {
+          table,
+          ok: !error,
+          error: error?.message ?? null,
+          count: count ?? 0,
+        };
       }),
     );
 
