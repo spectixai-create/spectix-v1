@@ -15,5 +15,6 @@ Specs in this directory are the implementation source for future spikes. Older s
 | #02b   | Clarification Questions Queue skeleton | DONE   | frontend-questions-queue | -               |
 | #01    | Supabase Auth wiring                   | DONE   | backend-auth             | merged directly |
 | #00z-A | Documentation Infrastructure           | DONE   | docs-infrastructure      | this PR         |
+| #03    | Document processing                    | NEXT   | TBD                      | pending         |
 
 Use [spike-template.md](spike-template.md) for new specs.

@@ -4,11 +4,11 @@ Updated by Codex atomically with each spike PR. CEO updates this file only for d
 
 ## Version
 
-Spectix Spike #10 • 2025-05-02
+Spectix Spike #11 • 2025-05-02
 
 ## Current Phase
 
-Documentation infrastructure is being established. Auth wiring is already merged on `main`.
+Documentation infrastructure is complete. Auth wiring is already merged on `main`.
 
 ## Completed Spikes
 
@@ -26,7 +26,7 @@ Documentation infrastructure is being established. Auth wiring is already merged
 
 ## Active Spike
 
-None after #00z-A merge.
+None.
 
 ## Next Spike
 
