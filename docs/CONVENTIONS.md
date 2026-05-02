@@ -28,6 +28,22 @@
 - Update [CURRENT_STATE.md](CURRENT_STATE.md) with each spike.
 - On schema changes, update [DB_SCHEMA.md](DB_SCHEMA.md) and [lib/types.ts](../lib/types.ts).
 
+## Schema Invariants
+
+- DB schema is canonical for relational structure.
+- TypeScript types are canonical for JSONB content shape.
+- When a field is only in [lib/types.ts](../lib/types.ts) and not a DB column, it lives inside a JSONB column such as `claims.metadata`, `documents.extracted_data`, `findings.evidence`, or `audit_log.details`.
+- When a migration promotes JSONB content to a column, update the migration first, then [DB_SCHEMA.md](DB_SCHEMA.md), then [lib/types.ts](../lib/types.ts) in the same PR.
+- `incidentLocation` is canonical for free-text location. `country` and `city` metadata values are computed-and-stored helpers and must not be updated independently.
+- Denormalized pipeline fields on `claims` must be maintained from normalized pipeline tables by DB trigger, not manually by UI code.
+
+## Hebrew to English Form Translation
+
+- Form Selects use `{ value, label }` options: Hebrew `label` for display, English `value` for API contracts.
+- API routes and Server Actions receive English values only.
+- [lib/sample-data/intake-options.ts](../lib/sample-data/intake-options.ts) is the current UI mapping source.
+- See [SCHEMA_AUDIT.md](SCHEMA_AUDIT.md) for the full mapping table and the known corrections needed before real intake submission.
+
 ## Verification
 
 Run:

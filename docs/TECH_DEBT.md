@@ -8,3 +8,28 @@
 - [ ] Migration #0002: add reliable document processing status for `DocumentDerivedStatus`.
 - [ ] Historical archive for older spikes #00, #00b, #00c, #00d, #00e, #02, #02a, #02b. Deferred to Spike #00z-B.
 - [ ] Replace sample dashboard/claim/questions data with real Supabase data once API contracts land.
+
+## Migration #0002 Scope
+
+Rationale and detailed SQL snippets are tracked in [SCHEMA_AUDIT.md](SCHEMA_AUDIT.md).
+
+Estimated effort: 1 full day.
+
+Column and table scope:
+
+- `claims`: `claimant_email`, `claimant_phone`, `policy_number`, `current_pass`, `total_llm_cost_usd`, `brief_text`, `brief_pass_number`, `brief_recommendation`, `brief_generated_at`, plus `claims_policy_number_idx` and `claims_status_valid`.
+- `passes`: new normalized pass-state table with RLS enabled and unique `(claim_id, pass_number)`.
+- `documents`: `processing_status` plus status CHECK.
+- `clarification_questions`: `urgency`, `resolved_by`, `resolution_note`, `closed_at`, plus status and urgency CHECKs.
+- `findings`: `severity_adjusted_by_context`, `severity_original`, `status`, `resolved_in_pass`, `recommended_action`, plus severity and status CHECKs.
+- `gaps`: `fill_method`, `fill_target`, `filled_in_pass`, `filled_value`, `updated_at`, status CHECK, and `gaps_set_updated_at` trigger.
+- Trigger: `update_claim_pipeline_state()` keeps `claims.current_pass`, `claims.total_llm_cost_usd`, and `claims.risk_band` synchronized from `passes`.
+
+Blocked or partially blocked spikes:
+
+- #02c-2: `POST /api/claims` with full field support.
+- #03: document processing with reliable status tracking.
+- #04+: rules that need `policy_number`, pass state, and context-adjusted severity.
+- #08: clarification flow with full closed-state support.
+
+Migration #0002 is blocking further backend work. If delayed beyond 3 days from #02c-1 merge, re-prioritize against active spikes. Audit findings are not actionable until #migration-0002 lands.
