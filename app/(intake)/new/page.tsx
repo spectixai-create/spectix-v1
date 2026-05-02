@@ -1,34 +1,43 @@
+import { IntakeForm } from '@/components/intake/intake-form';
+import type { IntakeDemoState } from '@/components/intake/types';
 import { PageShell } from '@/components/layout/page-shell';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 
-export default function NewClaimPage() {
+function getDemoState(value: string | string[] | undefined) {
+  if (value === 'success' || value === 'error') {
+    return value;
+  }
+
+  return undefined;
+}
+
+export default function NewClaimPage({
+  searchParams,
+}: Readonly<{
+  searchParams?: { state?: string | string[] };
+}>) {
+  const initialDemoState = getDemoState(searchParams?.state);
+
   return (
-    <PageShell className="flex min-h-screen max-w-2xl flex-col justify-center">
-      <div className="space-y-6 text-right">
-        <div className="space-y-3">
-          <Badge variant="risk-orange">כתום</Badge>
+    <div className="min-h-screen bg-background">
+      <header className="border-b bg-card">
+        <div className="container mx-auto max-w-3xl px-4 py-4">
+          <p className="font-semibold">Spectix</p>
+        </div>
+      </header>
+      <PageShell size="md" className="max-w-3xl space-y-6">
+        <div className="space-y-2 text-start">
+          <p className="text-sm font-medium text-muted-foreground">
+            פתיחת תיק ציבורי
+          </p>
           <h1 className="font-heb text-3xl font-semibold tracking-normal">
             פתיחת תיק חדש
           </h1>
-          <p className="text-muted-foreground">
-            הטופס יבנה בספייק 02 לאחר עיצוב
+          <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+            מלא את הפרטים והעלה מסמכים ראשוניים כדי שנוכל להתחיל בבדיקת התיק.
           </p>
         </div>
-        <div className="space-y-2 rounded-md border bg-card p-4 text-card-foreground">
-          <p>
-            תיק <span className="num font-latin">2024-001</span> - סכום{' '}
-            <span className="num font-latin">₪1,234.56</span>
-          </p>
-          <p>
-            מזהה בדיקה{' '}
-            <span className="ltr-isolate font-latin text-sm">
-              https://example.com/claims/INTAKE-2024-001
-            </span>
-          </p>
-        </div>
-        <Button>שלח</Button>
-      </div>
-    </PageShell>
+        <IntakeForm initialDemoState={initialDemoState} />
+      </PageShell>
+    </div>
   );
 }
