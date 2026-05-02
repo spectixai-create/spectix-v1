@@ -1,9 +1,12 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { signIn } from '@/lib/auth/actions';
+import { safeNextOrDefault } from '@/lib/auth/safe-redirect';
 import { ErrorBanner } from '@/components/states/error-state';
 import { Spinner } from '@/components/states/loading';
 import { Button } from '@/components/ui/button';
@@ -45,10 +48,17 @@ function RequiredLabel({ children }: Readonly<{ children: React.ReactNode }>) {
 
 export function LoginForm({
   errorState,
+  nextPath,
 }: Readonly<{
   errorState: LoginErrorState;
+  nextPath?: string | null;
 }>) {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(
+    errorState ? loginErrorCopy[errorState] : null,
+  );
+  const submitLockRef = React.useRef(false);
   const form = useForm<LoginFormValues>({
     defaultValues: {
       email: '',
@@ -57,9 +67,41 @@ export function LoginForm({
     },
   });
 
-  function onSubmit() {
+  React.useEffect(() => {
+    setErrorMessage(errorState ? loginErrorCopy[errorState] : null);
+  }, [errorState]);
+
+  async function onSubmit(data: LoginFormValues) {
+    if (submitLockRef.current) return;
+
+    submitLockRef.current = true;
     setIsSubmitting(true);
-    window.setTimeout(() => setIsSubmitting(false), 1500);
+    setErrorMessage(null);
+
+    try {
+      const result = await signIn(data.email, data.password);
+
+      if (result.ok) {
+        router.push(safeNextOrDefault(nextPath));
+        router.refresh();
+        return;
+      }
+
+      submitLockRef.current = false;
+      setIsSubmitting(false);
+
+      if (result.error.code === 'invalid_credentials') {
+        setErrorMessage('פרטי ההתחברות שגויים. נסה שוב.');
+      } else if (result.error.code === 'rate_limited') {
+        setErrorMessage('יותר מדי ניסיונות. נסה שוב בעוד דקה.');
+      } else {
+        setErrorMessage('התחברות נכשלה. בדוק שעוגיות מאופשרות בדפדפן.');
+      }
+    } catch {
+      submitLockRef.current = false;
+      setIsSubmitting(false);
+      setErrorMessage('התחברות נכשלה. בדוק שעוגיות מאופשרות בדפדפן.');
+    }
   }
 
   return (
@@ -71,11 +113,8 @@ export function LoginForm({
         <CardTitle className="text-2xl">כניסה למערכת</CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        {errorState ? (
-          <ErrorBanner
-            title="לא ניתן להתחבר"
-            description={loginErrorCopy[errorState]}
-          />
+        {errorMessage ? (
+          <ErrorBanner title="לא ניתן להתחבר" description={errorMessage} />
         ) : null}
 
         <Form {...form}>
@@ -96,6 +135,7 @@ export function LoginForm({
                       type="email"
                       autoComplete="email"
                       className="font-latin"
+                      disabled={isSubmitting}
                       required
                       suppressHydrationWarning
                     />
@@ -117,6 +157,7 @@ export function LoginForm({
                       type="password"
                       autoComplete="current-password"
                       className="font-latin"
+                      disabled={isSubmitting}
                       required
                       suppressHydrationWarning
                     />
@@ -140,6 +181,7 @@ export function LoginForm({
                       onBlur={field.onBlur}
                       name={field.name}
                       ref={field.ref}
+                      disabled={isSubmitting}
                       suppressHydrationWarning
                     />
                   </FormControl>
@@ -162,6 +204,7 @@ export function LoginForm({
                 type="button"
                 variant="link"
                 className="min-h-11 w-full"
+                disabled={isSubmitting}
                 onClick={() => toast.info('פנה למנהל המערכת לאיפוס סיסמה')}
               >
                 שכחתי סיסמה
