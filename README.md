@@ -42,6 +42,7 @@ http://localhost:8288 to see the Inngest dashboard.
 
 The schema lives in [`supabase/migrations/0001_initial_schema.sql`](supabase/migrations/0001_initial_schema.sql).
 It is idempotent.
+Cross-cutting types are defined in `lib/types.ts`. On schema change, update the migration first, then `types.ts`.
 
 ### Option A — Supabase Dashboard (one-time, simplest)
 
