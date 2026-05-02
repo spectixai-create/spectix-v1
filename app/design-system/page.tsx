@@ -3,6 +3,7 @@ import { AlertTriangle, FileText, Gauge, Users } from 'lucide-react';
 import { AdjusterShell } from '@/components/layout/adjuster-shell';
 import { PageHeader } from '@/components/layout/page-header';
 import { SectionDivider } from '@/components/layout/section-divider';
+import { VersionFooter } from '@/components/layout/version-footer';
 import { StatCard } from '@/components/data-display/stat-card';
 import { InfoRow } from '@/components/data-display/info-row';
 import { Tag } from '@/components/data-display/tag';
@@ -144,6 +145,7 @@ export default function DesignSystemPage() {
             </Card>
           </div>
         </section>
+        <VersionFooter />
       </div>
     </AdjusterShell>
   );

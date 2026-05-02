@@ -7,6 +7,7 @@ import { KpiRow } from '@/components/dashboard/kpi-row';
 import { mockStats, sampleClaimRows } from '@/components/dashboard/sample-rows';
 import { AdjusterShell } from '@/components/layout/adjuster-shell';
 import { PageHeader } from '@/components/layout/page-header';
+import { VersionFooter } from '@/components/layout/version-footer';
 import { Button } from '@/components/ui/button';
 
 export default function DashboardPage({
@@ -36,6 +37,7 @@ export default function DashboardPage({
         ) : (
           <ClaimsTable claims={sampleClaimRows} />
         )}
+        <VersionFooter />
       </div>
     </AdjusterShell>
   );
