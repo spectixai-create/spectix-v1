@@ -61,6 +61,16 @@ Currently registered codes:
 - `claim_number_collision`
 - `claim_number_generation_failed`
 - `db_error`
+- `invalid_id`
+- `claim_not_found`
+- `claim_not_acceptable`
+- `file_too_large`
+- `invalid_file_type`
+- `empty_file`
+- `document_limit_reached`
+- `storage_error`
+- `upload_partial_failure`
+- `network_error`
 
 ## Verification
 

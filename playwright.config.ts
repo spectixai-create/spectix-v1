@@ -20,7 +20,8 @@ export default defineConfig({
   projects: [
     {
       name: 'unauthenticated',
-      testMatch: /(auth-flow|auth-and-404|claims-api)\.spec\.ts/,
+      testMatch:
+        /(auth-flow|auth-and-404|claims-api|document-upload)\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
     {

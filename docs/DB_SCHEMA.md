@@ -4,8 +4,9 @@ Canonical sources:
 
 - [supabase/migrations/0001_initial_schema.sql](../supabase/migrations/0001_initial_schema.sql)
 - [supabase/migrations/0002_schema_audit_implementation.sql](../supabase/migrations/0002_schema_audit_implementation.sql)
+- [supabase/migrations/0003_storage_mime_types.sql](../supabase/migrations/0003_storage_mime_types.sql)
 
-Migration #0002 is applied. This document mirrors the production schema for reading. On future migration changes, update this file and [lib/types.ts](../lib/types.ts) in the same PR.
+Migration #0003 is applied. This document mirrors the production schema for reading. On future migration changes, update this file and [lib/types.ts](../lib/types.ts) in the same PR.
 
 ## claims
 
@@ -228,4 +229,4 @@ JSONB: `details` is `Record<string, unknown>` in [lib/types.ts](../lib/types.ts)
 ## Other Schema Details
 
 - RLS is deny-by-default; `service_role` bypasses policies for server-only workflows.
-- Storage bucket: `claim-documents`, private, 32 MB max file size.
+- Storage bucket: `claim-documents`, private, 32 MB max file size, with allowed MIME types `application/pdf`, `image/jpeg`, `image/png`, and `image/heic` from migration #0003.

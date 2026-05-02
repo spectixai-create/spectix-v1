@@ -21,6 +21,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { buildClaimPayload } from '@/lib/intake/build-payload';
+import type { Claim } from '@/lib/types';
 
 export function IntakeForm({
   initialDemoState,
@@ -34,9 +35,7 @@ export function IntakeForm({
   });
   const [status, setStatus] = React.useState<IntakeFormStatus>('idle');
   const [files, setFiles] = React.useState<MockUploadedFile[]>([]);
-  const [successClaimNumber, setSuccessClaimNumber] = React.useState<
-    string | null
-  >(null);
+  const [successClaim, setSuccessClaim] = React.useState<Claim | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | undefined>();
   const [showSlowSubmitHelper, setShowSlowSubmitHelper] = React.useState(false);
   const submittingRef = React.useRef(false);
@@ -71,12 +70,12 @@ export function IntakeForm({
       });
       const json = (await response.json()) as {
         ok?: boolean;
-        data?: { claim?: { claimNumber?: string } };
+        data?: { claim?: Claim };
         error?: { code?: string };
       };
 
       if (response.ok && json.ok) {
-        setSuccessClaimNumber(json.data?.claim?.claimNumber ?? null);
+        setSuccessClaim(json.data?.claim ?? null);
         setStatus('success');
         router.replace('/new', { scroll: false });
       } else {
@@ -111,7 +110,7 @@ export function IntakeForm({
   }
 
   if (status === 'success') {
-    return <SuccessPanel claimNumber={successClaimNumber ?? undefined} />;
+    return <SuccessPanel claim={successClaim ?? undefined} />;
   }
 
   return (
