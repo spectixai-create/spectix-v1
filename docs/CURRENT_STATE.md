@@ -4,11 +4,11 @@ Updated by Codex atomically with each spike PR. CEO updates this file only for d
 
 ## Version
 
-Spectix Spike #12 • 2025-05-02
+Spectix Spike #13 • 2025-05-03
 
 ## Current Phase
 
-Schema gap audit is complete. The next backend step is Migration #0002 to implement the audit findings.
+Migration #0002 is complete. Claim intake API work and document processing are now unblocked.
 
 ## Completed Spikes
 
@@ -24,6 +24,7 @@ Schema gap audit is complete. The next backend step is Migration #0002 to implem
 - #01 - Supabase Auth wiring.
 - #00z-A - Documentation infrastructure.
 - #02c-1 - Schema Gap Audit in [SCHEMA_AUDIT.md](SCHEMA_AUDIT.md).
+- #migration-0002 - Schema audit implementation in [0002_schema_audit_implementation.sql](../supabase/migrations/0002_schema_audit_implementation.sql).
 
 ## Active Spike
 
@@ -31,7 +32,7 @@ None.
 
 ## Next Spike
 
-#migration-0002 - implement schema additions from [SCHEMA_AUDIT.md](SCHEMA_AUDIT.md). This blocks #02c-2 and #03.
+Spike #02c-2 - implement `POST /api/claims` with full field support. Spike #03 document processing is also unblocked.
 
 ## Current Routes
 

@@ -1,7 +1,8 @@
 /**
  * Spectix — source-of-truth types
  *
- * Mirrors /supabase/migrations/0001_initial_schema.sql exactly.
+ * Mirrors /supabase/migrations/0001_initial_schema.sql and
+ * /supabase/migrations/0002_schema_audit_implementation.sql exactly.
  * On schema change: update migration FIRST, then this file.
  * Future migrations may extend; do not add speculative fields here.
  *
@@ -25,19 +26,14 @@ export type ClaimStatus =
   | 'rejected_no_coverage'
   | 'cost_capped';
 
-/**
- * Document derived status — NOT a DB column.
- * Computed from ocr_text and extracted_data presence:
- *   'pending'    -> no ocr_text AND no extracted_data
- *   'processing' -> Inngest job in flight (requires migration #0002 to
- *                   track properly; currently no reliable way to detect)
- *   'processed'  -> extracted_data is not null
- *   'failed'     -> requires migration #0002 (sentinel column or status
- *                   column); currently impossible to derive reliably
- * TODO: Migration #0002 should add a documents.processing_status column
- * to make this derivable from a single source.
- */
-export type DocumentDerivedStatus =
+export type PassStatus =
+  | 'pending'
+  | 'in_progress'
+  | 'completed'
+  | 'skipped'
+  | 'failed';
+
+export type DocumentProcessingStatus =
   | 'pending'
   | 'processing'
   | 'processed'
@@ -49,21 +45,33 @@ export type DocumentDerivedStatus =
  */
 export type FindingSeverity = 'low' | 'medium' | 'high';
 
+export type FindingStatus = 'open' | 'resolved' | 'persisted';
+
 /** Gap status — DB column 'status' default 'open' */
 export type GapStatus = 'open' | 'resolved' | 'ignored';
 
+export type GapFillMethod =
+  | 'auto_api'
+  | 'auto_osint'
+  | 'manual_claimant'
+  | 'manual_adjuster';
+
 /**
  * Question status — DB column 'status' default 'pending'.
- * NOTE: #02b sample data UI used 'closed', urgency, resolvedBy,
- * resolutionNote, closedAt — none exist in current schema.
- * Pre-refactor decision required: either drop these UI features
- * (matches DB), or add migration #0002 to support them. Tracked
- * in project_status.md as decision pending.
+ * Migration #0002 added 'closed' plus question lifecycle fields.
  */
-export type QuestionStatus = 'pending' | 'sent' | 'answered';
+export type QuestionStatus = 'pending' | 'sent' | 'answered' | 'closed';
+
+export type QuestionUrgency = 'urgent' | 'normal';
 
 /** Risk band — used across UI and brief generation */
 export type RiskBand = 'green' | 'yellow' | 'orange' | 'red';
+
+export type BriefRecommendation =
+  | 'approve'
+  | 'request_info'
+  | 'deep_investigation'
+  | 'reject_no_coverage';
 
 /**
  * Claim types — DB column is plain text; this union documents allowed
@@ -120,8 +128,47 @@ export interface Claim {
   currency: string;
   summary: string | null;
   metadata: ClaimMetadata | null;
+  /** Added in migration #0002. */
+  claimantEmail: string | null;
+  /** Added in migration #0002. */
+  claimantPhone: string | null;
+  /** Added in migration #0002. Indexed for R01/R08 queries. */
+  policyNumber: string | null;
+  /**
+   * Pipeline state. DB default 0. Updated atomically by the passes trigger.
+   */
+  currentPass: number;
+  /** Cost cap state. DB default 0. Updated atomically by the passes trigger. */
+  totalLlmCostUsd: number;
+  /** Raw Prompt 09 plain-text output. */
+  briefText: string | null;
+  /** Which pass produced the current brief. */
+  briefPassNumber: number | null;
+  /** Queryable recommendation extracted from the current brief. */
+  briefRecommendation: BriefRecommendation | null;
+  briefGeneratedAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * Pass — mirrors public.passes table from migration #0002.
+ * Pipeline pass state, normalized table replacing earlier passes_history
+ * JSONB design. Failed passes are UPDATEd in place, not re-inserted.
+ */
+export interface Pass {
+  id: string;
+  claimId: string;
+  passNumber: number;
+  status: PassStatus;
+  startedAt: string | null;
+  completedAt: string | null;
+  riskBand: RiskBand | null;
+  findingsCount: number;
+  gapsCount: number;
+  llmCallsMade: number;
+  costUsd: number;
+  createdAt: string;
 }
 
 export interface Document {
@@ -134,6 +181,8 @@ export interface Document {
   mimeType: string | null;
   ocrText: string | null;
   extractedData: ExtractedData | null;
+  /** Added in migration #0002. CHECK constraint enforces valid values. */
+  processingStatus: DocumentProcessingStatus;
   uploadedBy: string | null;
   createdAt: string;
 }
@@ -148,6 +197,16 @@ export interface Finding {
   description: string | null;
   evidence: FindingEvidence | null;
   confidence: number | null;
+  /** Added in migration #0002. */
+  severityAdjustedByContext: boolean;
+  /** Added in migration #0002. Pre-Layer-5 severity for audit trail. */
+  severityOriginal: FindingSeverity | null;
+  /** Added in migration #0002. Tracks finding state across passes. */
+  status: FindingStatus;
+  /** Added in migration #0002. */
+  resolvedInPass: number | null;
+  /** Added in migration #0002. */
+  recommendedAction: string | null;
   createdAt: string;
 }
 
@@ -159,7 +218,14 @@ export interface Gap {
   status: GapStatus;
   resolution: string | null;
   resolvedAt: string | null;
+  /** Added in migration #0002. */
+  fillMethod: GapFillMethod | null;
+  fillTarget: string | null;
+  filledInPass: number | null;
+  filledValue: Record<string, unknown> | null;
   createdAt: string;
+  /** Added in migration #0002. Trigger updates on UPDATE. */
+  updatedAt: string;
 }
 
 export interface ClarificationQuestion {
@@ -170,6 +236,15 @@ export interface ClarificationQuestion {
   status: QuestionStatus;
   answer: string | null;
   answeredAt: string | null;
+  /** Added in migration #0002. CHECK constraint enforces valid values. */
+  urgency: QuestionUrgency;
+  /**
+   * Added in migration #0002. UUID with no DB-level FK to auth.users;
+   * application code validates user existence.
+   */
+  resolvedBy: string | null;
+  resolutionNote: string | null;
+  closedAt: string | null;
   createdAt: string;
 }
 
@@ -214,9 +289,8 @@ export type ClaimMetadata = {
   prevTrips24m?: number;
   prevTripsWithClaims?: number;
   profession?: string;
-  // Pipeline state (will likely become columns in #0002)
-  currentPass?: number;
-  totalLlmCostUsd?: number;
+  country?: string;
+  city?: string;
   // Layer 5 context multiplier
   contextMultiplier?: number;
   contextMultiplierReasons?: string[];

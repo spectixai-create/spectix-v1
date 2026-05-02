@@ -13,7 +13,7 @@ import type {
   CreateClaimRequest,
   CreateClaimResponse,
   Document,
-  DocumentDerivedStatus,
+  DocumentProcessingStatus,
   DocumentProcessFailedEvent,
   DocumentProcessedEvent,
   DocumentType,
@@ -23,6 +23,8 @@ import type {
   Finding,
   FindingEvidence,
   FindingSeverity,
+  FindingStatus,
+  GapFillMethod,
   Gap,
   GapStatus,
   GenericDocumentExtraction,
@@ -30,7 +32,9 @@ import type {
   HotelLetterExtraction,
   Identifiable,
   MedicalReportExtraction,
+  Pass,
   PassCompletedEvent,
+  PassStatus,
   PassStartEvent,
   PhotoExtraction,
   PoliceFormatAnalysis,
@@ -38,9 +42,11 @@ import type {
   ProcessDocumentRequest,
   ProcessDocumentResponse,
   QuestionStatus,
+  QuestionUrgency,
   ReceiptExtraction,
   ReceiptItem,
   RiskBand,
+  BriefRecommendation,
   SpectixInngestEvent,
   Timestamps,
   UpdateClaimStatusRequest,
@@ -61,6 +67,15 @@ const sampleClaim: Claim = {
   currency: 'ILS',
   summary: 'test',
   metadata: null,
+  claimantEmail: null,
+  claimantPhone: null,
+  policyNumber: null,
+  currentPass: 0,
+  totalLlmCostUsd: 0,
+  briefText: null,
+  briefPassNumber: null,
+  briefRecommendation: null,
+  briefGeneratedAt: null,
   createdAt: '2025-01-01T00:00:00Z',
   updatedAt: '2025-01-01T00:00:00Z',
 };
@@ -104,6 +119,7 @@ describe('types compile', () => {
       mimeType: 'application/pdf',
       ocrText: null,
       extractedData,
+      processingStatus: 'processed',
       uploadedBy: null,
       createdAt: '2025-01-01T00:00:00Z',
     };
@@ -121,6 +137,11 @@ describe('types compile', () => {
         contextSnippets: ['excerpt'],
       },
       confidence: 0.91,
+      severityAdjustedByContext: false,
+      severityOriginal: null,
+      status: 'open',
+      resolvedInPass: null,
+      recommendedAction: null,
       createdAt: '2025-01-01T00:00:00Z',
     };
 
@@ -132,7 +153,12 @@ describe('types compile', () => {
       status: 'open',
       resolution: null,
       resolvedAt: null,
+      fillMethod: null,
+      fillTarget: null,
+      filledInPass: null,
+      filledValue: null,
       createdAt: '2025-01-01T00:00:00Z',
+      updatedAt: '2025-01-01T00:00:00Z',
     };
 
     const question: ClarificationQuestion = {
@@ -143,6 +169,10 @@ describe('types compile', () => {
       status: 'pending',
       answer: null,
       answeredAt: null,
+      urgency: 'normal',
+      resolvedBy: null,
+      resolutionNote: null,
+      closedAt: null,
       createdAt: '2025-01-01T00:00:00Z',
     };
 
@@ -314,6 +344,7 @@ describe('types compile', () => {
         mimeType: null,
         ocrText: null,
         extractedData: null,
+        processingStatus: 'pending',
         uploadedBy: null,
         createdAt: '2025-01-01T00:00:00Z',
       },
@@ -374,10 +405,13 @@ describe('types compile', () => {
 
   it('literal unions document allowed values', () => {
     const claimStatus: ClaimStatus = 'ready';
-    const derivedStatus: DocumentDerivedStatus = 'processed';
+    const documentStatus: DocumentProcessingStatus = 'processed';
     const severity: FindingSeverity = 'medium';
+    const findingStatus: FindingStatus = 'persisted';
     const gapStatus: GapStatus = 'resolved';
+    const gapFillMethod: GapFillMethod = 'manual_claimant';
     const questionStatus: QuestionStatus = 'answered';
+    const questionUrgency: QuestionUrgency = 'urgent';
     const claimType: ClaimType = 'medical';
     const documentType: DocumentType = 'police_report';
     const actorType: AuditActorType = 'gap_analyzer';
@@ -408,10 +442,13 @@ describe('types compile', () => {
 
     expect([
       claimStatus,
-      derivedStatus,
+      documentStatus,
       severity,
+      findingStatus,
       gapStatus,
+      gapFillMethod,
       questionStatus,
+      questionUrgency,
       claimType,
       documentType,
       actorType,
@@ -419,7 +456,7 @@ describe('types compile', () => {
       evidence.externalSources?.[0],
       receiptItem.description,
       formatAnalysis.overallAuthenticityScore,
-    ]).toHaveLength(12);
+    ]).toHaveLength(15);
   });
 
   it('individual Inngest event interfaces match the shared union', () => {
@@ -461,5 +498,113 @@ describe('types compile', () => {
     ];
 
     expect(events.map((event) => event.name)).toContain('claim/pass.completed');
+  });
+});
+
+describe('migration #0002 types', () => {
+  it('Pass interface matches DB shape', () => {
+    const p: Pass = {
+      id: 'uuid',
+      claimId: 'uuid',
+      passNumber: 1,
+      status: 'pending',
+      startedAt: null,
+      completedAt: null,
+      riskBand: null,
+      findingsCount: 0,
+      gapsCount: 0,
+      llmCallsMade: 0,
+      costUsd: 0,
+      createdAt: '2025-05-03T00:00:00Z',
+    };
+
+    expect(p.status).toBe('pending');
+  });
+
+  it('PassStatus includes failed', () => {
+    const valid: PassStatus[] = [
+      'pending',
+      'in_progress',
+      'completed',
+      'skipped',
+      'failed',
+    ];
+
+    expect(valid).toHaveLength(5);
+  });
+
+  it('QuestionStatus includes closed', () => {
+    const valid: QuestionStatus[] = ['pending', 'sent', 'answered', 'closed'];
+
+    expect(valid).toHaveLength(4);
+  });
+
+  it('Claim has new pipeline fields', () => {
+    const c: Partial<Claim> = {
+      currentPass: 0,
+      totalLlmCostUsd: 0,
+      briefText: null,
+      briefRecommendation: null,
+      claimantEmail: null,
+      policyNumber: null,
+    };
+
+    expect(c.currentPass).toBe(0);
+  });
+
+  it('BriefRecommendation values', () => {
+    const valid: BriefRecommendation[] = [
+      'approve',
+      'request_info',
+      'deep_investigation',
+      'reject_no_coverage',
+    ];
+
+    expect(valid).toHaveLength(4);
+  });
+
+  it('GapFillMethod values', () => {
+    const valid: GapFillMethod[] = [
+      'auto_api',
+      'auto_osint',
+      'manual_claimant',
+      'manual_adjuster',
+    ];
+
+    expect(valid).toHaveLength(4);
+  });
+
+  it('FindingStatus values', () => {
+    const valid: FindingStatus[] = ['open', 'resolved', 'persisted'];
+
+    expect(valid).toHaveLength(3);
+  });
+
+  it('Gap has new fill fields', () => {
+    const g: Partial<Gap> = {
+      fillMethod: 'manual_claimant',
+      filledInPass: 1,
+      updatedAt: '2025-05-03T00:00:00Z',
+    };
+
+    expect(g.fillMethod).toBe('manual_claimant');
+  });
+
+  it('ClarificationQuestion has urgency', () => {
+    const q: Partial<ClarificationQuestion> = {
+      urgency: 'urgent',
+      resolvedBy: null,
+      closedAt: null,
+    };
+
+    expect(q.urgency).toBe('urgent');
+  });
+
+  it('Document has processingStatus', () => {
+    const d: Partial<Document> = {
+      processingStatus: 'pending',
+    };
+
+    expect(d.processingStatus).toBe('pending');
   });
 });
