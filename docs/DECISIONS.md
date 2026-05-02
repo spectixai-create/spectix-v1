@@ -1,0 +1,59 @@
+# Decisions
+
+Append-only. New decisions are added at the end. Do not edit past decisions; supersede them with a new entry referencing the old one.
+
+## D-001 - Build a POC Around Travel Insurance Claim Investigation
+
+Spectix starts as a focused POC for travel insurance claims rather than a generic insurance automation platform.
+
+## D-002 - Three-Source Value Proposition
+
+The product value is measured through fraud detection, inflation detection, and process optimization for clean claims.
+
+## D-003 - Client-Side Evidence Deferred
+
+Client-side evidence collection is deferred to V1.5. V1 focuses on intake, documents, investigation, and adjuster review.
+
+## D-004 - Three-Pass Iterative Pipeline
+
+The investigation engine uses up to three passes with a Gap Identifier between passes and cost/quality stop conditions.
+
+## D-005 - Human Adjuster Remains Final Decision-Maker
+
+Spectix recommends actions and highlights evidence. It does not autonomously deny claims in V1.
+
+## D-006 - Initial Market Is Small Israeli Insurers
+
+V1 targets Israeli travel insurance teams, especially smaller insurers where manual investigation is economically constrained.
+
+## D-007 - Direct Claude API Integration
+
+V1 uses direct Claude API calls for OCR, extraction, and LLM reasoning. Provider abstraction may be added later.
+
+## D-008 - Design System Skill Deferred
+
+The formal design system skill is deferred. Tailwind/shadcn tokens from Spike #00b act as the de-facto design system until design ownership expands.
+
+## D-009 - Placeholder Screens Are Acceptable Before Backend Wiring
+
+Frontend skeletons may use local sample data while backend contracts are incomplete, provided future refactor notes are documented.
+
+## D-010 - Pass Timeline Is the Fourth Claim View Tab
+
+The claim view has 4 tabs: Brief, Pass Timeline, Documents, and Audit Log.
+
+## D-011 - Design System v1.0
+
+Reusable UI components and layout primitives are part of Design System v1.0. Future UI should extend these rather than create ad hoc patterns.
+
+## D-012 - Runtime Evidence Required
+
+Every UI spike requires runtime evidence: Playwright where applicable, screenshots, Lighthouse accessibility score, and command outputs.
+
+## D-013 - Version Footer Standard
+
+Every UI page includes `VersionFooter`. The canonical version string is in [lib/version.ts](../lib/version.ts) with format `Spectix Spike #N • YYYY-MM-DD`.
+
+## D-014 - Repository Docs Are Canonical
+
+After Spike #00z-A, [docs](.) becomes canonical project documentation. Chat/project knowledge becomes archival context, not the primary source for implementation.
