@@ -7,11 +7,13 @@ import { CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
-export function SuccessPanel() {
+export function SuccessPanel({
+  claimNumber,
+}: Readonly<{
+  claimNumber?: string;
+}>) {
   const router = useRouter();
-  const [claimNumber] = React.useState(() =>
-    String(Math.floor(1000 + Math.random() * 9000)),
-  );
+  const displayNumber = claimNumber ?? '2024-XXXX';
 
   return (
     <Card className="border-risk-green/30 bg-risk-green-bg">
@@ -29,9 +31,14 @@ export function SuccessPanel() {
             יידרשו פרטים נוספים.
           </p>
         </div>
-        <div className="rounded-md border bg-background px-4 py-3">
+        <div
+          className="rounded-md border bg-background px-4 py-3"
+          data-testid="success-panel"
+        >
           <span>מספר תיק: </span>
-          <span className="num font-latin">2024-{claimNumber}</span>
+          <span className="num font-latin" data-testid="claim-number">
+            {displayNumber}
+          </span>
         </div>
         <Button
           type="button"

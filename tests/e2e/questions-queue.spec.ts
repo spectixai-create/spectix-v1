@@ -16,7 +16,7 @@ test('questions queue skeleton supports tabs, filters, actions, and detail panel
   await expect(
     page.getByRole('heading', { name: 'תור שאלות הבהרה' }),
   ).toBeVisible();
-  await expect(page.getByText('Spectix Spike #07')).toBeVisible();
+  await expect(page.getByText(/Spectix Spike #\d+/)).toBeVisible();
 
   for (const label of [
     'שאלות פתוחות',

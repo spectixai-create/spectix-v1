@@ -1,22 +1,29 @@
-// Refactor to import enums from @/lib/types when Spike #00a lands.
-export type IntakeOption = {
-  value: string;
+import type { ClaimMetadata, ClaimType } from '@/lib/types';
+
+type TripPurpose = NonNullable<ClaimMetadata['tripPurpose']>;
+
+export type IntakeOption<TValue extends string = string> = {
+  value: TValue;
   label: string;
 };
 
-export const claimTypeOptions: IntakeOption[] = [
+export const claimTypeOptions: IntakeOption<ClaimType>[] = [
+  { value: 'baggage', label: 'כבודה' },
   { value: 'theft', label: 'גניבה' },
+  { value: 'loss', label: 'אובדן' },
   { value: 'medical', label: 'רפואי' },
-  { value: 'flight', label: 'טיסה' },
+  { value: 'flight_cancellation', label: 'ביטול טיסה' },
+  { value: 'flight_delay', label: 'עיכוב טיסה' },
   { value: 'liability', label: 'חבות' },
   { value: 'emergency', label: 'חירום' },
+  { value: 'misrepresentation', label: 'מצג שווא' },
   { value: 'other', label: 'אחר' },
 ];
 
-export const tripPurposeOptions: IntakeOption[] = [
+export const tripPurposeOptions: IntakeOption<TripPurpose>[] = [
   { value: 'tourism', label: 'תיירות' },
   { value: 'business', label: 'עסקים' },
-  { value: 'family', label: 'ביקור משפחה' },
+  { value: 'family_visit', label: 'ביקור משפחה' },
   { value: 'medical', label: 'רפואי' },
   { value: 'study', label: 'לימודים' },
   { value: 'other', label: 'אחר' },

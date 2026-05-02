@@ -13,6 +13,7 @@ export type IntakeFormValues = {
   country: string;
   otherCountry: string;
   city: string;
+  amountClaimed: string;
   incidentDescription: string;
   tripPurpose: string;
   localConnections: string;
@@ -38,6 +39,7 @@ export const defaultIntakeValues: IntakeFormValues = {
   country: '',
   otherCountry: '',
   city: '',
+  amountClaimed: '',
   incidentDescription: '',
   tripPurpose: '',
   localConnections: '',
