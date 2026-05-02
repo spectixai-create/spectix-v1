@@ -28,13 +28,13 @@ export function AdjusterShell({
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto flex max-w-screen-xl items-center justify-between px-4 py-3">
-          <Link href="/" className="font-semibold">
+          <Link href="/" className="font-semibold" prefetch={false}>
             Spectix
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {navItems.map((item) => (
               <Button key={item.href} asChild variant="ghost" size="sm">
-                <Link href={item.href} className="gap-2">
+                <Link href={item.href} className="gap-2" prefetch={false}>
                   <item.icon className="h-4 w-4" aria-hidden="true" />
                   {item.label}
                 </Link>
@@ -65,7 +65,7 @@ export function AdjusterShell({
                     variant="ghost"
                     className="justify-start gap-2"
                   >
-                    <Link href={item.href}>
+                    <Link href={item.href} prefetch={false}>
                       <item.icon className="h-4 w-4" aria-hidden="true" />
                       {item.label}
                     </Link>
