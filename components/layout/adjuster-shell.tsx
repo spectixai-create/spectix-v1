@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
-import { FileText, LayoutDashboard, Menu } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { FileText, HelpCircle, LayoutDashboard, Menu } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -14,6 +17,7 @@ import {
 
 const navItems = [
   { href: '/dashboard', label: 'תור עבודה', icon: LayoutDashboard },
+  { href: '/questions', label: 'תור שאלות', icon: HelpCircle },
   { href: '/design-system', label: 'Design system', icon: FileText },
 ];
 
@@ -24,6 +28,8 @@ export function AdjusterShell({
   children: React.ReactNode;
   className?: string;
 }>) {
+  const pathname = usePathname();
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
@@ -33,7 +39,14 @@ export function AdjusterShell({
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {navItems.map((item) => (
-              <Button key={item.href} asChild variant="ghost" size="sm">
+              <Button
+                key={item.href}
+                asChild
+                variant={
+                  isActivePath(pathname, item.href) ? 'secondary' : 'ghost'
+                }
+                size="sm"
+              >
                 <Link href={item.href} className="gap-2" prefetch={false}>
                   <item.icon className="h-4 w-4" aria-hidden="true" />
                   {item.label}
@@ -62,7 +75,9 @@ export function AdjusterShell({
                   <Button
                     key={item.href}
                     asChild
-                    variant="ghost"
+                    variant={
+                      isActivePath(pathname, item.href) ? 'secondary' : 'ghost'
+                    }
                     className="justify-start gap-2"
                   >
                     <Link href={item.href} prefetch={false}>
@@ -83,4 +98,8 @@ export function AdjusterShell({
       </main>
     </div>
   );
+}
+
+function isActivePath(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
