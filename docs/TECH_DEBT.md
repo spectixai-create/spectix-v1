@@ -4,8 +4,10 @@
 - [ ] Remove or gate `/api/health` before public launch.
 - [ ] Remove `/design-system` before first customer demo.
 - [ ] Sample-data refactor: import types from [lib/types.ts](../lib/types.ts) in `sample-claim.ts`, `sample-questions.ts`, `sample-rows.ts`, and `intake-options.ts`.
-- [ ] Migration #0002: support question `closed` state, urgency, `resolvedBy`, `resolutionNote`, and `closedAt`.
-- [ ] Migration #0002: add reliable document processing status for `DocumentDerivedStatus`.
+- [x] Migration #0002: support question `closed` state, urgency, `resolvedBy`, `resolutionNote`, and `closedAt`.
+- [x] Migration #0002: add reliable document processing status.
+- [ ] `clarification_questions.resolved_by` has no DB FK to `auth.users` due to Supabase schema permissions. Application code must validate user existence before insert/update.
+- [ ] `PassEvent` type removed: pipeline events now live in `audit_log`. Frontend pass timeline rendering from #00d needs adjustment in #00a-refactor.
 - [ ] Historical archive for older spikes #00, #00b, #00c, #00d, #00e, #02, #02a, #02b. Deferred to Spike #00z-B.
 - [ ] Replace sample dashboard/claim/questions data with real Supabase data once API contracts land.
 
@@ -32,4 +34,4 @@ Blocked or partially blocked spikes:
 - #04+: rules that need `policy_number`, pass state, and context-adjusted severity.
 - #08: clarification flow with full closed-state support.
 
-Migration #0002 is blocking further backend work. If delayed beyond 3 days from #02c-1 merge, re-prioritize against active spikes. Audit findings are not actionable until #migration-0002 lands.
+Migration #0002 landed in Spike #13. Its schema additions unblock #02c-2, #03, and later rules work.
