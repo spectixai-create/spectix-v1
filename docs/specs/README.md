@@ -17,7 +17,7 @@ Specs in this directory are the implementation source for future spikes. Older s
 | #00z-A          | Documentation Infrastructure           | DONE   | docs-infrastructure      | this PR         |
 | #02c-1          | Schema Gap Audit                       | DONE   | backend-schema-audit     | this PR         |
 | #migration-0002 | Schema additions from audit            | DONE   | backend-migration-0002   | this PR         |
-| #02c-2          | Claim intake API                       | NEXT   | TBD                      | pending         |
-| #03             | Document processing                    | READY  | TBD                      | pending         |
+| #02c-2          | Claim intake API                       | DONE   | backend-claims-api       | this PR         |
+| #03             | Document processing                    | NEXT   | TBD                      | pending         |
 
 Use [spike-template.md](spike-template.md) for new specs.

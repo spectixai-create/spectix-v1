@@ -124,6 +124,28 @@ export function SectionIncident({
             </FormItem>
           )}
         />
+        <FormField
+          control={control}
+          name="amountClaimed"
+          render={({ field }) => (
+            <FormItem>
+              <FieldLabel required>סכום התביעה</FieldLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  min={1}
+                  max={10000000}
+                  step={1}
+                  inputMode="decimal"
+                  className="font-latin"
+                  suppressHydrationWarning
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         {country === 'other' ? (
           <FormField
             control={control}
@@ -151,6 +173,7 @@ export function SectionIncident({
               <FieldLabel required>תיאור האירוע</FieldLabel>
               <FormControl>
                 <Textarea
+                  minLength={10}
                   maxLength={2000}
                   className="min-h-[120px]"
                   suppressHydrationWarning

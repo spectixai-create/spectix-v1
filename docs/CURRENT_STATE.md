@@ -4,11 +4,11 @@ Updated by Codex atomically with each spike PR. CEO updates this file only for d
 
 ## Version
 
-Spectix Spike #13 • 2025-05-03
+Spectix Spike #14 • 2025-05-03
 
 ## Current Phase
 
-Migration #0002 is complete. Claim intake API work and document processing are now unblocked.
+Claim intake now writes real claim rows through `POST /api/claims`. Document processing is now unblocked.
 
 ## Completed Spikes
 
@@ -25,6 +25,7 @@ Migration #0002 is complete. Claim intake API work and document processing are n
 - #00z-A - Documentation infrastructure.
 - #02c-1 - Schema Gap Audit in [SCHEMA_AUDIT.md](SCHEMA_AUDIT.md).
 - #migration-0002 - Schema audit implementation in [0002_schema_audit_implementation.sql](../supabase/migrations/0002_schema_audit_implementation.sql).
+- #02c-2 - Public claim intake API and form wiring.
 
 ## Active Spike
 
@@ -32,7 +33,7 @@ None.
 
 ## Next Spike
 
-Spike #02c-2 - implement `POST /api/claims` with full field support. Spike #03 document processing is also unblocked.
+Spike #03 - document processing.
 
 ## Current Routes
 

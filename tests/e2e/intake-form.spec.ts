@@ -4,10 +4,30 @@ test('public intake form renders, keeps values, handles states and mock upload',
   page,
 }) => {
   const errors: string[] = [];
+  let releaseSubmit: () => void = () => undefined;
+  const submitHold = new Promise<void>((resolve) => {
+    releaseSubmit = resolve;
+  });
+
   page.on('console', (message) => {
     if (message.type() === 'error') {
       errors.push(message.text());
     }
+  });
+  await page.route('**/api/claims', async (route) => {
+    await submitHold;
+    await route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        data: {
+          claim: {
+            claimNumber: '2026-999',
+          },
+        },
+      }),
+    });
   });
 
   await page.setViewportSize({ width: 1280, height: 1100 });
@@ -22,7 +42,7 @@ test('public intake form renders, keeps values, handles states and mock upload',
     await expect(page.getByText(label).first()).toBeVisible();
   }
 
-  await expect(page.getByText('*')).toHaveCount(11);
+  await expect(page.getByText('*')).toHaveCount(12);
   await expect(page).toHaveScreenshot('intake-1280-idle.png', {
     fullPage: true,
     animations: 'disabled',
@@ -54,6 +74,7 @@ test('public intake form renders, keeps values, handles states and mock upload',
   await page.getByRole('combobox', { name: 'מדינה' }).click();
   await page.getByRole('option', { name: 'תאילנד' }).click();
   await page.getByLabel('עיר *').fill('בנגקוק');
+  await page.getByLabel('סכום התביעה *').fill('5000');
   await page
     .getByLabel('תיאור האירוע *')
     .fill('התיק נגנב בזמן מעבר בין המלון למרכז הקניות.');
@@ -96,15 +117,16 @@ test('public intake form renders, keeps values, handles states and mock upload',
     fullPage: true,
     animations: 'disabled',
   });
+  releaseSubmit();
   await expect(page.getByRole('heading', { name: 'התקבל. תודה.' })).toBeVisible(
     {
-      timeout: 3000,
+      timeout: 10000,
     },
   );
   await expect(page).toHaveScreenshot('intake-success.png', {
     fullPage: true,
     animations: 'disabled',
-    mask: [page.getByText(/2024-\d{4}/)],
+    mask: [page.getByText(/\d{4}-\d{3}/)],
   });
 
   await page.goto('/new?state=error');

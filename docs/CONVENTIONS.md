@@ -44,6 +44,24 @@
 - [lib/sample-data/intake-options.ts](../lib/sample-data/intake-options.ts) is the current UI mapping source.
 - See [SCHEMA_AUDIT.md](SCHEMA_AUDIT.md) for the full mapping table and the known corrections needed before real intake submission.
 
+## API Error Codes
+
+- All API errors return `ApiResult.error` with `{ code, message, details? }`.
+- `code` is an English snake_case identifier for programmatic handling.
+- `message` is English and is not shown directly to users.
+- Frontend components map `code` to Hebrew UI copy locally. Centralize this mapping when 4 or more form sites need it.
+- `details` is for developer debugging only and must not be displayed to users.
+
+Currently registered codes:
+
+- `invalid_credentials`
+- `unauthorized`
+- `invalid_json`
+- `validation_failed`
+- `claim_number_collision`
+- `claim_number_generation_failed`
+- `db_error`
+
 ## Verification
 
 Run:
