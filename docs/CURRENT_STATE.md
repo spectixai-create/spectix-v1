@@ -4,11 +4,11 @@ Updated by Codex atomically with each spike PR. CEO updates this file only for d
 
 ## Version
 
-Spectix Spike #11 • 2025-05-02
+Spectix Spike #12 • 2025-05-02
 
 ## Current Phase
 
-Documentation infrastructure is complete. Auth wiring is already merged on `main`.
+Schema gap audit is complete. The next backend step is Migration #0002 to implement the audit findings.
 
 ## Completed Spikes
 
@@ -23,6 +23,7 @@ Documentation infrastructure is complete. Auth wiring is already merged on `main
 - #00a - Backend types contract in [lib/types.ts](../lib/types.ts).
 - #01 - Supabase Auth wiring.
 - #00z-A - Documentation infrastructure.
+- #02c-1 - Schema Gap Audit in [SCHEMA_AUDIT.md](SCHEMA_AUDIT.md).
 
 ## Active Spike
 
@@ -30,7 +31,7 @@ None.
 
 ## Next Spike
 
-Spike #03 - Document processing and investigation pipeline integration. A PM-reviewed spec should be added under [docs/specs](specs/) before execution.
+#migration-0002 - implement schema additions from [SCHEMA_AUDIT.md](SCHEMA_AUDIT.md). This blocks #02c-2 and #03.
 
 ## Current Routes
 
