@@ -19,8 +19,22 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'chromium',
+      name: 'unauthenticated',
+      testMatch: /(auth-flow|auth-and-404)\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'setup',
+      testMatch: /auth\.setup\.ts/,
+      dependencies: ['unauthenticated'],
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'chromium',
+      testMatch:
+        /(claim-view|dashboard|questions-queue|design-system|risk-band|empty-state|intake-form)\.spec\.ts/,
+      dependencies: ['setup'],
+      use: { ...devices['Desktop Chrome'], storageState: '.auth/user.json' },
     },
   ],
 });

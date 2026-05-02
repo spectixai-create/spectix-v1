@@ -8,6 +8,8 @@ export type QuestionsViewKey = 'pending' | 'answered' | 'closed';
 
 const viewValues = new Set<QuestionsViewKey>(['pending', 'answered', 'closed']);
 
+export const dynamic = 'force-dynamic';
+
 export default function QuestionsPage({
   searchParams,
 }: Readonly<{

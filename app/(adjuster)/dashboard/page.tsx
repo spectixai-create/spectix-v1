@@ -10,6 +10,8 @@ import { PageHeader } from '@/components/layout/page-header';
 import { VersionFooter } from '@/components/layout/version-footer';
 import { Button } from '@/components/ui/button';
 
+export const dynamic = 'force-dynamic';
+
 export default function DashboardPage({
   searchParams,
 }: Readonly<{

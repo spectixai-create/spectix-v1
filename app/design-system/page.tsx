@@ -21,7 +21,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function DesignSystemPage() {
   return (
-    <AdjusterShell>
+    // Public for POC. Removed before customer demo per #00c.
+    <AdjusterShell publicAccess>
       <div className="space-y-8">
         <PageHeader
           eyebrow="Spike #00c"

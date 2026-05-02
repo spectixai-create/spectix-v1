@@ -4,6 +4,8 @@ import { VersionFooter } from '@/components/layout/version-footer';
 import { ClaimTabs } from '@/components/claim/claim-tabs';
 import { sampleClaim } from '@/lib/sample-data/sample-claim';
 
+export const dynamic = 'force-dynamic';
+
 export default function ClaimPage({
   params,
 }: Readonly<{
