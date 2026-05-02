@@ -1,5 +1,16 @@
 # Spectix v1 — POC
 
+## For Developers and AI Agents
+
+See [AGENTS.md](AGENTS.md) for working conventions.
+
+See [docs](docs/) for project documentation:
+
+- [PRODUCT.md](docs/PRODUCT.md) — what Spectix is
+- [ARCHITECTURE.md](docs/ARCHITECTURE.md) — system design
+- [CURRENT_STATE.md](docs/CURRENT_STATE.md) — what is built and what is next
+- [specs](docs/specs/) — per-spike specifications
+
 Claim investigation and risk analysis. Hebrew/RTL UI. Next.js 14 App Router on Vercel,
 Supabase (DB + Auth + Storage), Inngest for background jobs, Anthropic Claude for the
 investigation pipeline.
