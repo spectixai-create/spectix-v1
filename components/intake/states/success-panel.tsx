@@ -4,16 +4,19 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircle2 } from 'lucide-react';
 
+import { DocumentUploader } from '@/components/intake/document-uploader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import type { Claim } from '@/lib/types';
 
 export function SuccessPanel({
-  claimNumber,
+  claim,
 }: Readonly<{
-  claimNumber?: string;
+  claim?: Claim;
 }>) {
   const router = useRouter();
-  const displayNumber = claimNumber ?? '2024-XXXX';
+  const displayNumber = claim?.claimNumber ?? '2024-XXXX';
+  const uploadClaimId = claim?.id && isUuid(claim.id) ? claim.id : null;
 
   return (
     <Card className="border-risk-green/30 bg-risk-green-bg">
@@ -40,6 +43,18 @@ export function SuccessPanel({
             {displayNumber}
           </span>
         </div>
+        {uploadClaimId ? (
+          <section className="w-full max-w-2xl space-y-3 text-start">
+            <div className="space-y-1 text-center sm:text-start">
+              <h3 className="text-lg font-semibold">מסמכים תומכים</h3>
+              <p className="text-sm leading-6 text-muted-foreground">
+                אפשר להעלות עד 50 מסמכים. גודל מקסימלי 4 MB לקובץ. סוגים נתמכים:
+                PDF, JPEG, PNG, HEIC.
+              </p>
+            </div>
+            <DocumentUploader claimId={uploadClaimId} />
+          </section>
+        ) : null}
         <Button
           type="button"
           variant="secondary"
@@ -49,5 +64,11 @@ export function SuccessPanel({
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value,
   );
 }

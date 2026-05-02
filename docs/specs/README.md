@@ -18,6 +18,7 @@ Specs in this directory are the implementation source for future spikes. Older s
 | #02c-1          | Schema Gap Audit                       | DONE   | backend-schema-audit     | this PR         |
 | #migration-0002 | Schema additions from audit            | DONE   | backend-migration-0002   | this PR         |
 | #02c-2          | Claim intake API                       | DONE   | backend-claims-api       | this PR         |
-| #03             | Document processing                    | NEXT   | TBD                      | pending         |
+| #03a            | File upload + Storage                  | DONE   | backend-document-upload  | this PR         |
+| #03b            | Document processing workflow           | NEXT   | TBD                      | pending         |
 
 Use [spike-template.md](spike-template.md) for new specs.

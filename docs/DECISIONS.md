@@ -57,3 +57,37 @@ Every UI page includes `VersionFooter`. The canonical version string is in [lib/
 ## D-014 - Repository Docs Are Canonical
 
 After Spike #00z-A, [docs](.) becomes canonical project documentation. Chat/project knowledge becomes archival context, not the primary source for implementation.
+
+## D-015 - Supabase Migrations Require Paired down.sql
+
+Date: 2025-05-03
+Status: Active
+Decided by: CEO
+
+Starting with Spike #03a, every Supabase migration pushed to the repo must be
+paired with a matching `down.sql` rollback file in the same PR.
+
+Convention:
+
+- Up file: `supabase/migrations/{NNNN}_{name}.sql`
+- Down file: `supabase/rollbacks/{NNNN}_{name}.down.sql`
+
+Implementation note: Supabase CLI treats every `*.sql` file in
+`supabase/migrations` as an up migration. Rollbacks are kept under
+`supabase/rollbacks` until Supabase offers first-class rollback-file support.
+
+Requirements:
+
+- Future migration specs must include both up and down SQL.
+- Codex verifies the down migration in dev/local Supabase before PR.
+- The PR cannot be merged until the rollback file is reviewed.
+- Migrations #0001 and #0002 remain immutable and do not receive retroactive
+  down files.
+
+Trade-offs accepted:
+
+- Migration spikes take longer.
+- Some data transformations may only support schema rollback; irreversible data
+  loss must be explicitly documented in the down file.
+
+Revisit when automated migration rollback testing exists in CI.

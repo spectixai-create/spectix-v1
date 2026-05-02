@@ -12,6 +12,18 @@
 - [ ] `POST /api/claims` has no idempotency key. Browser-level double-submit prevention only. Possible duplicate claims in edge cases such as network retry or back-and-resubmit. Manual ops cleanup if duplicates appear.
 - [ ] Hebrew error message mapping is currently inlined in form components. Centralize to `lib/i18n/error-messages.ts` when 4 or more form sites use it.
 - [ ] `AuditAction` strings are open-ended in DB. No central registry. Acceptable while fewer than 5 actions exist; centralize when audit dashboard or query patterns require it.
+- [ ] Virus scanning on uploads: current upload flow has no malware scanning. Required before real customer data.
+- [ ] Storage cleanup on claim delete: document rows cascade-delete, but Storage files can become orphans. Add scheduled cleanup once Inngest cron is wired.
+- [ ] Expand allowed upload file types: currently PDF, JPEG, PNG, HEIC. Consider HEIF, WebP, and TIFF after real-user feedback.
+- [ ] Refine minimum file size validation: current 100-byte minimum is broad. Revisit once OCR rejects trivial files.
+- [ ] Resumable uploads: current upload retries from byte 0 after network drops.
+- [ ] Signed URL uploads for files larger than 4 MB: bucket supports 32 MB, but Vercel body limits force the API cap.
+- [ ] Claim ownership / authenticated upload restrictions: public upload is acceptable for POC because claim IDs are UUIDs, but proper ownership is required later.
+- [ ] Document upload abuse without claim_id discovery: attacker with a valid claim ID can upload up to 50 docs. Rate limiting is deferred.
+- [ ] HEAD precheck for claim acceptability before client uploads body: avoids wasting bandwidth on terminal claims.
+- [ ] Structured logger: replace bracket-prefixed `console.error` tags with structured logs when volume justifies.
+- [ ] Rate limit per claim_id: add roughly 10 uploads/hour once public endpoint rate limiting exists.
+- [ ] `documents.document_type` DB-level CHECK constraint: DB is plain text; TypeScript union enforces values for now. Add CHECK after classifier values stabilize.
 - [ ] Historical archive for older spikes #00, #00b, #00c, #00d, #00e, #02, #02a, #02b. Deferred to Spike #00z-B.
 - [ ] Replace sample dashboard/claim/questions data with real Supabase data once API contracts land.
 

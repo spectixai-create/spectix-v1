@@ -18,6 +18,7 @@ Current:
 - `GET /api/health`: temporary diagnostic endpoint. Remove or gate before public launch.
 - `/api/inngest`: webhook endpoint for Inngest. This route is intentionally excluded from cookie auth middleware because Inngest uses signing keys.
 - `POST /api/claims`: public intake endpoint that creates a claim row from the claimant form.
+- `POST /api/claims/[id]/documents`: public multipart upload endpoint for supporting documents.
 
 Planned:
 
@@ -53,6 +54,44 @@ Example request:
   "summary": "Test claim summary, sufficient length to pass validation.",
   "metadata": {
     "tripPurpose": "tourism"
+  }
+}
+```
+
+### POST /api/claims/[id]/documents
+
+- Method: `POST`
+- Path: `/api/claims/[id]/documents`
+- Headers: `Content-Type: multipart/form-data`
+- Auth: public. The claimant intake flow remains public; authenticated sessions are optional and only affect audit attribution.
+- Request body: multipart form data with a required `file` field.
+- Accepted MIME types: `application/pdf`, `image/jpeg`, `image/png`, `image/heic`.
+- Size limit: 4 MB per file at the API layer.
+- Response `201`: `ApiResult<{ document: Document }>`
+- Response `400`: `invalid_id`, `empty_file`, `file_too_large`, `invalid_file_type`, `claim_not_acceptable`, or `document_limit_reached`.
+- Response `404`: `claim_not_found`
+- Response `500`: `storage_error`, `upload_partial_failure`, or `db_error`
+
+Example response:
+
+```json
+{
+  "ok": true,
+  "data": {
+    "document": {
+      "id": "document-uuid",
+      "claimId": "claim-uuid",
+      "documentType": "other",
+      "filePath": "claims/claim-uuid/document-uuid.pdf",
+      "fileName": "receipt.pdf",
+      "fileSize": 51200,
+      "mimeType": "application/pdf",
+      "ocrText": null,
+      "extractedData": null,
+      "processingStatus": "pending",
+      "uploadedBy": null,
+      "createdAt": "2025-05-03T00:00:00Z"
+    }
   }
 }
 ```
