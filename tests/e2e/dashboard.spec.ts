@@ -50,7 +50,9 @@ test('dashboard skeleton renders queue controls and navigates to claim view', as
     animations: 'disabled',
   });
 
-  await page.getByTestId('claim-row-2024-001').click();
+  const firstClaimRow = page.getByTestId('claim-row-2024-001');
+  await firstClaimRow.focus();
+  await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/claim\/2024-001/);
   await expect(
     page.getByRole('heading', { name: 'תיק 2024-001' }),

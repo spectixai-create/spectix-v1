@@ -1,10 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { BetaContentBlockParam } from '@anthropic-ai/sdk/resources/beta/messages/messages';
 
-export const DEFAULT_MODEL = 'claude-sonnet-4-6-20250915';
+export const DEFAULT_MODEL = 'claude-sonnet-4-5-20250929';
 
 // Pricing per million tokens.
-// Source: https://www.anthropic.com/pricing
+// Model source: https://www.anthropic.com/news/claude-sonnet-4-5
+// Pricing source: https://www.anthropic.com/pricing
 // Verified by Codex at 2026-05-03. TECH_DEBT 11h tracks moving this to config.
 const PRICING: Record<string, { input: number; output: number }> = {
   [DEFAULT_MODEL]: { input: 3, output: 15 },
