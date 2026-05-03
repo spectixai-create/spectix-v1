@@ -103,7 +103,8 @@ export async function runProcessDocument({
     return { skipped: true, reason: 'not_pending' };
   }
 
-  await step.run('audit-started', async () => {
+  const processingStartedAtMs = (await step.run('audit-started', async () => {
+    const startedAtMs = Date.now();
     const { error } = await supabaseAdmin.from('audit_log').insert({
       claim_id: claimId,
       actor_type: 'system',
@@ -117,9 +118,10 @@ export async function runProcessDocument({
     if (error) {
       logger.error('[audit-failure]', { documentId, error });
     }
-  });
 
-  const startTime = Date.now();
+    return startedAtMs;
+  })) as number;
+
   const envForceFailure = process.env.SPECTIX_FORCE_DOCUMENT_FAILURE === 'true';
   const fileNameTriggersFailure = (claimed.file_name ?? '').includes('[FAIL]');
   const isForcedFailure = envForceFailure || fileNameTriggersFailure;
@@ -208,7 +210,7 @@ export async function runProcessDocument({
       classifierResult,
     );
     const finalizeOutcome = (await step.run('finalize-failed', async () => {
-      const processingTimeMs = Date.now() - startTime;
+      const processingTimeMs = Date.now() - processingStartedAtMs;
       const { data, error } = await supabaseAdmin
         .from('documents')
         .update({
@@ -283,7 +285,7 @@ export async function runProcessDocument({
   }
 
   const finalizeOutcome = (await step.run('finalize-processed', async () => {
-    const processingTimeMs = Date.now() - startTime;
+    const processingTimeMs = Date.now() - processingStartedAtMs;
     const { data, error } = await supabaseAdmin
       .from('documents')
       .update({
@@ -296,6 +298,7 @@ export async function runProcessDocument({
             document_type: classifierResult.documentType,
             confidence: classifierResult.confidence,
             reasoning: classifierResult.reasoning,
+            modelId: classifierResult.modelId,
           },
           subtype_classifier: {
             document_subtype: subtypeResult.documentSubtype,
@@ -303,6 +306,11 @@ export async function runProcessDocument({
             reasoning: subtypeResult.reasoning,
             skipped: subtypeResult.skipped,
             llm_returned_raw: subtypeResult.llmReturnedRaw,
+            modelId: subtypeResult.modelId,
+          },
+          subtype: {
+            modelId: subtypeResult.modelId,
+            skipped: subtypeResult.skipped,
           },
           processing_time_ms: processingTimeMs,
         },

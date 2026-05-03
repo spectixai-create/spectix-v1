@@ -56,6 +56,11 @@ describe('processDocument Claude integration branches', () => {
       actor_type: 'llm',
       actor_id: MODEL_ID,
     });
+    expect(supabase.document.extracted_data).toMatchObject({
+      classifier: { modelId: MODEL_ID },
+      subtype_classifier: { modelId: MODEL_ID },
+      subtype: { modelId: MODEL_ID, skipped: false },
+    });
   });
 
   it('C8a broad LLM errors audit canonical default model and emit failed', async () => {
@@ -285,6 +290,11 @@ describe('processDocument Claude integration branches', () => {
       actor_type: 'system',
       actor_id: SUBTYPE_DETERMINISTIC_ACTOR_ID,
     });
+    expect(supabase.document.extracted_data).toMatchObject({
+      classifier: { modelId: MODEL_ID },
+      subtype_classifier: { modelId: SUBTYPE_DETERMINISTIC_ACTOR_ID },
+      subtype: { modelId: SUBTYPE_DETERMINISTIC_ACTOR_ID, skipped: true },
+    });
     expect(step.sendEvent).toHaveBeenCalledWith(
       'emit-subtype-classified',
       expect.objectContaining({
@@ -313,6 +323,11 @@ describe('processDocument Claude integration branches', () => {
     ).toMatchObject({
       actor_type: 'llm',
       actor_id: MODEL_ID,
+    });
+    expect(supabase.document.extracted_data).toMatchObject({
+      classifier: { modelId: MODEL_ID },
+      subtype_classifier: { modelId: MODEL_ID },
+      subtype: { modelId: MODEL_ID, skipped: false },
     });
     expect(step.sendEvent).toHaveBeenCalledWith(
       'emit-processed',
