@@ -11,17 +11,26 @@ export default defineConfig({
     channel: 'chrome',
     trace: 'on-first-retry',
   },
-  webServer: {
-    command: 'pnpm dev',
-    url: 'http://localhost:3000/design-system',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: [
+    {
+      command:
+        "powershell -NoProfile -Command \"$env:INNGEST_DEV='1'; $env:INNGEST_BASE_URL='http://localhost:8288'; pnpm dev\"",
+      url: 'http://localhost:3000/design-system',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+    {
+      command: 'pnpm inngest:dev',
+      url: 'http://localhost:8288',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+  ],
   projects: [
     {
       name: 'unauthenticated',
       testMatch:
-        /(auth-flow|auth-and-404|claims-api|document-upload)\.spec\.ts/,
+        /(auth-flow|auth-and-404|claims-api|document-upload|document-processing)\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
     {

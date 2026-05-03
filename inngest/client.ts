@@ -9,13 +9,19 @@
  */
 import { Inngest } from 'inngest';
 
-/**
- * Spike #00: empty event registry — no typed schemas attached yet.
- *
- * Later spikes will introduce typed events with EventSchemas().fromRecord<...>(),
- * following the convention of dot-separated lowercase event names
- * (e.g. "claim/intake.uploaded").
- */
+import { eventSchemas } from './events';
+
+if (
+  process.env.NODE_ENV === 'production' &&
+  process.env.SPECTIX_FORCE_DOCUMENT_FAILURE === 'true'
+) {
+  throw new Error(
+    'SPECTIX_FORCE_DOCUMENT_FAILURE must not be enabled in production. ' +
+      'Remove from Vercel env vars or set NODE_ENV != production.',
+  );
+}
+
 export const inngest = new Inngest({
   id: 'spectix-poc',
+  schemas: eventSchemas,
 });

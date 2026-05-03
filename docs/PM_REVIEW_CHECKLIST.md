@@ -156,7 +156,8 @@ Spec writes to a DB table (API endpoint, Inngest function, server action).
   target_id, details (per #0001).
 - Some specs may invent entity_type, entity_id, metadata — these don't
   exist. Verify against actual migration.
-- actor_type vocabulary: 'system' / 'user' / 'rule_engine' / 'llm'.
+- actor_type vocabulary: 'system' / 'user' / 'rule_engine' / 'llm' /
+  'gap_analyzer'.
 - action: open string, but should follow convention (snake_case verb_phrase).
 - details: jsonb object with relevant context (file_name, file_size,
   rule_id, etc.).
@@ -198,8 +199,8 @@ Spec adds or modifies Inngest functions, events, or related infrastructure.
 
 3.1. **Event naming convention**
 
-- Pattern: 'noun/verb.qualifier' lowercase.
-- Examples: 'document/uploaded', 'claim/processing.started'.
+- Pattern: 'claim/<entity>.<verb>' lowercase.
+- Examples: 'claim/document.uploaded', 'claim/document.processed'.
 - Single source of naming in /docs/CONVENTIONS.md or events.ts.
 
   3.2. **EventSchemas pattern verification**
@@ -289,6 +290,18 @@ Spec adds or modifies Inngest functions, events, or related infrastructure.
   (per migration #0002).
 - Stub functions skip; document defer to LLM-integration spike.
 
+  3.13. **Cross-spike hard-requirement tracking**
+
+- Specs may declare hard requirements binding future spikes.
+- Hard-requirement text alone in a prior spec is not enough; future PMs may
+  miss it.
+- /docs/HARD_REQUIREMENTS.md is the active tracker. Each entry includes source
+  spec, blocking spike, due-by spike, status (open/satisfied), and reference to
+  canonical TECH_DEBT entry.
+- PM checklist for any new spec MUST include: scan
+  /docs/HARD_REQUIREMENTS.md for items where due-by spike is current or earlier;
+  verify the spec satisfies them or explicitly defers with rationale.
+
 ---
 
 ## 4. RLS and Storage specs
@@ -365,11 +378,13 @@ Apply to all spec types.
 
   5.2. **actor_type vocabulary in audit_log**
 
-- Canonical values: 'system' / 'user' / 'rule_engine' / 'llm'.
+- Canonical values: 'system' / 'user' / 'rule_engine' / 'llm' /
+  'gap_analyzer'.
 - 'system' for automated actions without authenticated user.
 - 'user' for adjuster-authenticated actions.
 - 'rule_engine' for R01-R09 rule executions.
 - 'llm' for Claude API calls.
+- 'gap_analyzer' for Prompt 10 gap detection.
 - Distinguish via 'action' field and target_table when actor_type same.
 
   5.3. **Public route pattern**

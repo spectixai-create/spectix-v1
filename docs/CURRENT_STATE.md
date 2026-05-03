@@ -4,11 +4,11 @@ Updated by Codex atomically with each spike PR. CEO updates this file only for d
 
 ## Version
 
-Spectix Spike #15 • 2025-05-03
+Spectix Spike #16 • 2025-05-03
 
 ## Current Phase
 
-Claim intake writes real claim rows and supports post-submit document upload to Supabase Storage.
+Claim intake writes real claim rows, uploads supporting documents to Supabase Storage, and dispatches document processing through Inngest.
 
 ## Completed Spikes
 
@@ -27,6 +27,7 @@ Claim intake writes real claim rows and supports post-submit document upload to 
 - #migration-0002 - Schema audit implementation in [0002_schema_audit_implementation.sql](../supabase/migrations/0002_schema_audit_implementation.sql).
 - #02c-2 - Public claim intake API and form wiring.
 - #03a - File upload and Storage foundation.
+- #03b - Inngest document processing state machine.
 
 ## Active Spike
 
@@ -34,7 +35,7 @@ None.
 
 ## Next Spike
 
-Spike #03b - document processing workflow foundation.
+Spike #03g - Claude document classification and extraction.
 
 ## Current Routes
 
