@@ -119,9 +119,40 @@ describe('processDocument Claude integration branches', () => {
       subtypeClassifier: async () => subtypeResult('general_receipt'),
     });
 
-    expect(supabase.lastAudit('document_processing_failed')).toMatchObject({
+    const failedAudit = supabase.lastAudit('document_processing_failed');
+    expect(failedAudit).toMatchObject({
       actor_type: 'system',
       actor_id: SYSTEM_ACTOR_ID,
+    });
+    expect(failedAudit?.details).toMatchObject({
+      failure_phase: 'forced',
+    });
+    expect(supabase.document.extracted_data).toMatchObject({
+      failure_phase: 'forced',
+    });
+  });
+
+  it('C8e filename-forced failures record forced phase in audit and document data', async () => {
+    const supabase = new FakeSupabase();
+    supabase.document.file_name = 'receipt_[FAIL].pdf';
+
+    await runProcessDocument({
+      event: uploadedEvent(),
+      step: createStep(),
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: async () => classifierResult('receipt'),
+      subtypeClassifier: async () => subtypeResult('general_receipt'),
+    });
+
+    const failedAudit = supabase.lastAudit('document_processing_failed');
+    expect(failedAudit?.details).toMatchObject({
+      failure_category: 'forced',
+      failure_phase: 'forced',
+    });
+    expect(supabase.document.extracted_data).toMatchObject({
+      failure_category: 'forced',
+      failure_phase: 'forced',
     });
   });
 
@@ -324,9 +355,14 @@ describe('processDocument Claude integration branches', () => {
     expect(supabase.document.extracted_data).toMatchObject({
       failure_phase: 'subtype',
     });
-    expect(supabase.lastAudit('document_processing_failed')).toMatchObject({
+    const failedAudit = supabase.lastAudit('document_processing_failed');
+    expect(failedAudit).toMatchObject({
       actor_type: 'llm',
       actor_id: DEFAULT_MODEL,
+    });
+    expect(failedAudit?.details).toMatchObject({
+      cost_usd: 0.02,
+      failure_phase: 'subtype',
     });
   });
 

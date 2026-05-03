@@ -57,7 +57,7 @@ type ClaimedDocument = {
 };
 
 type FailureCategory = 'forced' | 'pre_call' | 'llm_call';
-type FailurePhase = 'broad' | 'subtype';
+type FailurePhase = 'broad' | 'subtype' | 'forced';
 
 type ProcessDocumentArgs = {
   event: DocumentUploadedEvent;
@@ -135,6 +135,7 @@ export async function runProcessDocument({
       ? 'forced_via_env_var'
       : 'forced_via_filename';
     failureCategory = 'forced';
+    failurePhase = 'forced';
   } else {
     try {
       classifierResult = (await step.run('claude-classify', async () =>

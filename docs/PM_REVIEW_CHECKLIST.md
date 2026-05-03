@@ -515,16 +515,34 @@ PM runs these queries weekly and files an issue if any trigger fires:
   If result > 60000 (ms), file issue tagged `tech-debt-11n`.
 - TECH_DEBT 11o (RPC dedup key): query
   ```sql
-  select claim_id,
-         (select sum((details->>'cost_usd')::numeric) from audit_log
-           where claim_id = c.id and action like 'document_%_completed')
-           as audit_total,
-         c.total_llm_cost_usd
-    from claims c
-   where created_at > now() - interval '7 days';
+  -- TECH_DEBT 11o: passes <-> audit cost reconciliation
+  -- Includes failed-document audits where cost was incurred before failure
+  -- (BLOCKER 2 path: broad succeeded but subtype failed; broad cost recorded).
+  select
+    c.id as claim_id,
+    c.total_llm_cost_usd,
+    coalesce(audit_sums.audit_total, 0) as audit_total,
+    coalesce(audit_sums.audit_total, 0) - c.total_llm_cost_usd as drift
+  from claims c
+  left join (
+    select
+      claim_id,
+      sum((details->>'cost_usd')::numeric) as audit_total
+    from audit_log
+    where created_at > now() - interval '7 days'
+      and action in (
+        'document_processing_completed',
+        'document_subtype_classification_completed',
+        'document_processing_failed'
+      )
+      and (details->>'cost_usd') is not null
+    group by claim_id
+  ) audit_sums on audit_sums.claim_id = c.id
+  where c.created_at > now() - interval '7 days';
   ```
-  Compute relative diff per row. If 10+ rows show >5% diff, file issue
-  tagged `tech-debt-11o`.
+  Compute relative diff per row:
+  `abs(drift) / nullif(c.total_llm_cost_usd, 0)`. If 10+ rows show >5%,
+  file issue tagged `tech-debt-11o`.
 
 ---
 
