@@ -113,3 +113,40 @@ New uploads accept PDF, JPEG, and PNG only. HEIC is removed from the
 `claim-documents` bucket allowlist because Claude classification does not
 support it in the current pipeline. Existing HEIC objects remain accessible;
 only new uploads are rejected.
+
+## D-018 - Two-Tier Document Classification
+
+Date: 2025-05-03
+Status: Active
+Decided by: CEO
+
+Document classification uses two stages: a broad `DocumentType` and a fine
+`DocumentSubtype`.
+
+- Broad `DocumentType` remains the existing 8-value union and is set by Prompt 01.
+- Fine `DocumentSubtype` is a 37-value union persisted in
+  `public.documents.document_subtype` by migration #0005.
+- The mapping from broad type to allowed subtype values lives in
+  [lib/llm/document-subtypes.ts](../lib/llm/document-subtypes.ts).
+- When a broad type maps to exactly one subtype, Prompt 01b is skipped and the
+  subtype is set deterministically. This applies to `police_report`,
+  `hotel_letter`, `witness_letter`, and `photo`.
+- When the LLM returns a subtype outside the allowed list, the persisted
+  `document_subtype` is `NULL` and the audit log records the raw invalid value.
+  Data integrity is preferred over fabricating a default subtype.
+- Subtype IDs are stable English `snake_case`. Hebrew labels live in
+  `SUBTYPE_LABELS_HE`.
+
+Refinement: the taxonomy item "prescriptions and pharmacy" is split into
+`pharmacy_receipt` under `receipt` and `prescription` under `medical_report`.
+This keeps both physical document shapes reachable from the broad classifier.
+
+Trade-offs accepted:
+
+- Ambiguous broad types require a second LLM call.
+- Adding a new subtype requires a migration plus code changes.
+- Invalid subtype responses leave `document_subtype` null until a future
+  reprocessing flow retries.
+
+Revisit when production data shows a subtype consistently misclassified or a
+customer requires a new document subtype.

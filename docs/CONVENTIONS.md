@@ -110,7 +110,18 @@ Run `pnpm test:e2e` for UI, routing, auth, or interaction changes.
   The environment trigger is guarded against production startup.
 - Claude classifier failures use audit actor discipline:
   pre-call errors are `system/classifier:pre-call-failure`; wrapper/API errors
-  after a Claude attempt are `llm/classifier:wrapper-error`; successful
-  classifier audits are `llm/<model id>`.
+  after a Claude attempt are recorded with `actor_type: 'llm'` and
+  `actor_id: DEFAULT_MODEL` (imported from `/lib/llm/client.ts`). Same
+  convention applies to subtype classifier failures. Successful classifier
+  audits (`document_processing_completed` and
+  `document_subtype_classification_completed`) use the real model id returned
+  by the SDK — see those entries above.
+- Subtype classification audits use
+  `document_subtype_classification_completed`. Deterministic single-subtype
+  mappings use `system/system:single-subtype-mapping`; subtype pre-call errors
+  use `system/subtype-classifier:pre-call-failure`; subtype LLM failures use
+  `llm/<default model id>`.
+- `SPECTIX_FAKE_CLAUDE_CLASSIFIER=true` enables the non-production fake
+  classifier path for both broad and subtype classification.
 - Public document status endpoints must verify both `claim_id` and document
   `id` before returning status.

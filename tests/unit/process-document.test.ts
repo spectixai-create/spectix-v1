@@ -4,6 +4,7 @@ import { runProcessDocument } from '@/inngest/functions/process-document';
 import type {
   DocumentProcessFailedEvent,
   DocumentProcessedEvent,
+  DocumentSubtype,
   DocumentType,
   DocumentUploadedEvent,
 } from '@/lib/types';
@@ -34,6 +35,7 @@ describe('processDocument state machine', () => {
       logger: createLogger(),
       supabaseAdmin: supabase as never,
       classifier: fakeClassifier,
+      subtypeClassifier: fakeSubtypeClassifier,
     });
 
     expect(result).toEqual({
@@ -42,7 +44,7 @@ describe('processDocument state machine', () => {
       transitioned: true,
     });
     expect(supabase.document.processing_status).toBe('processed');
-    expect(supabase.document.extracted_data?.spike).toBe('03c');
+    expect(supabase.document.extracted_data?.spike).toBe('03d-1a');
   });
 
   it('U2 skips when status is processing', async () => {
@@ -123,6 +125,7 @@ describe('processDocument state machine', () => {
       logger,
       supabaseAdmin: supabase as never,
       classifier: fakeClassifier,
+      subtypeClassifier: fakeSubtypeClassifier,
     });
 
     expect(result).toEqual({
@@ -155,6 +158,7 @@ describe('processDocument state machine', () => {
       logger: createLogger(),
       supabaseAdmin: supabase as never,
       classifier: fakeClassifier,
+      subtypeClassifier: fakeSubtypeClassifier,
     });
 
     expect(step.sendEvent).toHaveBeenCalledWith('emit-processed', expected);
@@ -235,6 +239,7 @@ class FakeSupabase {
     claim_id: string;
     file_name: string | null;
     document_type: DocumentType;
+    document_subtype: DocumentSubtype | null;
     processing_status: 'pending' | 'processing' | 'processed' | 'failed';
     extracted_data: Record<string, unknown> | null;
   };
@@ -246,6 +251,7 @@ class FakeSupabase {
       claim_id: claimId,
       file_name: options.fileName ?? 'evidence.pdf',
       document_type: options.documentType ?? 'other',
+      document_subtype: null,
       processing_status: options.processingStatus,
       extracted_data: null,
     };
@@ -293,6 +299,20 @@ async function fakeClassifier() {
     inputTokens: 100,
     outputTokens: 20,
     costUsd: 0.0006,
+  };
+}
+
+async function fakeSubtypeClassifier() {
+  return {
+    documentSubtype: 'claim_form' as const,
+    confidence: 0.9,
+    reasoning: 'test subtype',
+    modelId: 'test-model',
+    inputTokens: 80,
+    outputTokens: 20,
+    costUsd: 0.00054,
+    llmReturnedRaw: 'claim_form',
+    skipped: false,
   };
 }
 

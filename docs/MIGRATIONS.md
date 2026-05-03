@@ -46,3 +46,6 @@ data loss.
   `claim-documents`.
 - `0004_classifier_prep.sql`: document type CHECK, HEIC allowlist removal, and
   `upsert_pass_increment` RPC for D-016 pass accounting.
+- `0005_document_subtype.sql`: nullable `documents.document_subtype` column,
+  37-value CHECK constraint, and partial subtype index for D-018 two-tier
+  classification.

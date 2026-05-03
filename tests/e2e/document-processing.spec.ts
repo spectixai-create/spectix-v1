@@ -27,7 +27,7 @@ test.describe('document processing pipeline', () => {
     const actions = await auditActions(document.id);
 
     expect(row?.processing_status).toBe('processed');
-    expect(row?.extracted_data?.spike).toBe('03c');
+    expect(row?.extracted_data?.spike).toBe('03d-1a');
     expect(actions).toEqual(
       expect.arrayContaining([
         'document_uploaded',

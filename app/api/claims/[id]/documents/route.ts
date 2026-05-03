@@ -35,6 +35,7 @@ type DbDocumentRow = {
   id: string;
   claim_id: string;
   document_type: Document['documentType'];
+  document_subtype?: Document['documentSubtype'];
   file_path: string;
   file_name: string;
   file_size: number | string | null;
@@ -284,6 +285,7 @@ function mapDbRowToDocument(row: DbDocumentRow): Document {
     id: row.id,
     claimId: row.claim_id,
     documentType: row.document_type,
+    documentSubtype: row.document_subtype ?? null,
     filePath: row.file_path,
     fileName: row.file_name,
     fileSize: toNullableNumber(row.file_size),
