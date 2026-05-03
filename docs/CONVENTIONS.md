@@ -85,3 +85,24 @@ pnpm build
 ```
 
 Run `pnpm test:e2e` for UI, routing, auth, or interaction changes.
+
+## Inngest
+
+- Event names use `claim/<entity>.<verb>`, for example
+  `claim/document.uploaded`, `claim/document.processed`, and
+  `claim/document.process_failed`.
+- Event types are declared in [lib/types.ts](../lib/types.ts) and wired through
+  `EventSchemas().fromUnion<SpectixInngestEvent>()`; do not locally redefine
+  event payloads.
+- State transitions use atomic `UPDATE ... WHERE current_status=expected`
+  guards. A no-row result can be a valid skip when another worker already
+  claimed or finalized the row.
+- Audit actions for background state machines use the triplet pattern
+  `<noun>_<verb>_started`, `<noun>_<verb>_completed`, and
+  `<noun>_<verb>_failed`.
+- Current audit actor vocabulary is `system`, `user`, `rule_engine`, `llm`,
+  and `gap_analyzer`. `gap_analyzer` is vocabulary-only until the gap analyzer
+  pipeline lands.
+- Test-only document processing failure triggers are
+  `SPECTIX_FORCE_DOCUMENT_FAILURE=true` and filenames containing `[FAIL]`.
+  The environment trigger is guarded against production startup.

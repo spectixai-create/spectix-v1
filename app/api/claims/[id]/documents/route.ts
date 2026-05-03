@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { inngest } from '@/inngest/client';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import type { ApiResult, Document } from '@/lib/types';
@@ -215,6 +216,15 @@ export async function POST(
       documentCount: newCount,
       documentId,
     });
+  }
+
+  try {
+    await inngest.send({
+      name: 'claim/document.uploaded',
+      data: { claimId, documentId },
+    });
+  } catch (error) {
+    console.error('[inngest-send-failure]', { documentId, error });
   }
 
   return NextResponse.json(

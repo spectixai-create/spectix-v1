@@ -36,6 +36,44 @@ pnpm build
 pnpm test:e2e
 ```
 
+## Inngest Dev Server
+
+E2E tests for document processing require the Inngest dev server alongside
+Next.js.
+
+### Local (two terminals)
+
+Terminal 1:
+
+```bash
+pnpm dev
+```
+
+Terminal 2:
+
+```bash
+pnpm inngest:dev
+```
+
+View runs at [http://localhost:8288](http://localhost:8288).
+
+Playwright starts Next with `INNGEST_DEV=1` and
+`INNGEST_BASE_URL=http://localhost:8288` so route handlers send events to the
+local dev server.
+
+### CI
+
+Suggested future script:
+
+```bash
+concurrently --kill-others --success first "pnpm dev" "pnpm inngest:dev" "sleep 5 && pnpm test:e2e"
+```
+
+### Vercel
+
+Inngest Cloud routes through `/api/inngest`. Verify function registration in
+the Inngest dashboard after deployment.
+
 Seed an adjuster:
 
 ```bash

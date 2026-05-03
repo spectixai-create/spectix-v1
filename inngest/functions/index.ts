@@ -7,4 +7,6 @@
  * The /api/inngest route auto-registers everything in this array.
  */
 
-export const functions = [] as const;
+import { processDocument } from './process-document';
+
+export const functions = [processDocument] as const;

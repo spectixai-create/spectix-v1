@@ -14,7 +14,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "seed:adjuster": "tsx scripts/seed/create-adjuster.ts",
-    "inngest:dev": "npx inngest-cli@latest dev",
+    "inngest:dev": "npx inngest-cli@latest dev -u http://localhost:3000/api/inngest",
     "check-env": "tsx scripts/check-env.ts"
   },
   "dependencies": {

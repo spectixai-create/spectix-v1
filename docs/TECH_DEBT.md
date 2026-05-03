@@ -24,6 +24,13 @@
 - [ ] Structured logger: replace bracket-prefixed `console.error` tags with structured logs when volume justifies.
 - [ ] Rate limit per claim_id: add roughly 10 uploads/hour once public endpoint rate limiting exists.
 - [ ] `documents.document_type` DB-level CHECK constraint: DB is plain text; TypeScript union enforces values for now. Add CHECK after classifier values stabilize.
+- [ ] 10m. CHECK constraint on `audit_log.actor_type`: current DB is `text not null` with no CHECK. Required before production launch or first out-of-vocabulary row: pre-flight distinct invalid actor types, then add CHECK for `system`, `user`, `rule_engine`, `llm`, `gap_analyzer` with paired rollback.
+- [ ] 11a. Recovery job for orphaned pending documents: if `inngest.send` fails from upload endpoint, document stays `pending`. Add scheduled Inngest cron that scans old pending docs and re-fires `claim/document.uploaded`.
+- [ ] 11b. Stuck-document watchdog (HARD-REQUIRED before #03g, HR-001): documents stuck in `processing` need scheduled transition to `failed` or retry. If `documents.updated_at` is too noisy, add a dedicated `claimed_at` migration.
+- [ ] 11c. Inngest event registry split: split `SpectixInngestEvent` by domain once the union has 10+ members.
+- [ ] 11d. Pass tracking: deferred to #03g. Claude API calls must record `llm_calls_made` and `cost_usd` to `passes`.
+- [ ] 11e. Inngest concurrency limits for Claude API: deferred to #03g. Add `concurrency: { limit: 5, key: 'event.data.claimId' }` when Claude processing lands.
+- [ ] 11f. UI feedback regression after upload: uploader shows "הועלה בהצלחה" immediately and does not reflect processing failures. Add polling status UI in #03g.
 - [ ] Historical archive for older spikes #00, #00b, #00c, #00d, #00e, #02, #02a, #02b. Deferred to Spike #00z-B.
 - [ ] Replace sample dashboard/claim/questions data with real Supabase data once API contracts land.
 

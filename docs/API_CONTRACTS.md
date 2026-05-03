@@ -128,8 +128,14 @@ Post Spike #01:
 
 Defined in `SpectixInngestEvent`:
 
-- `claim/document.uploaded`
-- `claim/document.processed`
-- `claim/document.process_failed`
+- `claim/document.uploaded`: `{ claimId: string; documentId: string }`.
+  Fired by `POST /api/claims/[id]/documents` after the document row and upload
+  audit record are persisted.
+- `claim/document.processed`:
+  `{ claimId: string; documentId: string; documentType: DocumentType }`. Fired
+  after the processing function commits `processing_status='processed'`.
+- `claim/document.process_failed`:
+  `{ claimId: string; documentId: string; error: string }`. Fired after the
+  processing function commits `processing_status='failed'`.
 - `claim/pass.start`
 - `claim/pass.completed`
