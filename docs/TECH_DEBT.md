@@ -14,7 +14,7 @@
 - [ ] `AuditAction` strings are open-ended in DB. No central registry. Acceptable while fewer than 5 actions exist; centralize when audit dashboard or query patterns require it.
 - [ ] Virus scanning on uploads: current upload flow has no malware scanning. Required before real customer data.
 - [ ] Storage cleanup on claim delete: document rows cascade-delete, but Storage files can become orphans. Add scheduled cleanup once Inngest cron is wired.
-- [ ] Expand allowed upload file types: currently PDF, JPEG, PNG, HEIC. Consider HEIF, WebP, and TIFF after real-user feedback.
+- [ ] Expand allowed upload file types: currently PDF, JPEG, PNG. Consider HEIC/HEIF conversion, WebP, and TIFF after real-user feedback.
 - [ ] Refine minimum file size validation: current 100-byte minimum is broad. Revisit once OCR rejects trivial files.
 - [ ] Resumable uploads: current upload retries from byte 0 after network drops.
 - [ ] Signed URL uploads for files larger than 4 MB: bucket supports 32 MB, but Vercel body limits force the API cap.
@@ -26,11 +26,15 @@
 - [ ] `documents.document_type` DB-level CHECK constraint: DB is plain text; TypeScript union enforces values for now. Add CHECK after classifier values stabilize.
 - [ ] 10m. CHECK constraint on `audit_log.actor_type`: current DB is `text not null` with no CHECK. Required before production launch or first out-of-vocabulary row: pre-flight distinct invalid actor types, then add CHECK for `system`, `user`, `rule_engine`, `llm`, `gap_analyzer` with paired rollback.
 - [ ] 11a. Recovery job for orphaned pending documents: if `inngest.send` fails from upload endpoint, document stays `pending`. Add scheduled Inngest cron that scans old pending docs and re-fires `claim/document.uploaded`.
-- [ ] 11b. Stuck-document watchdog (HARD-REQUIRED before #03g, HR-001): documents stuck in `processing` need scheduled transition to `failed` or retry. If `documents.updated_at` is too noisy, add a dedicated `claimed_at` migration.
+- [x] 11b. Stuck-document watchdog (HR-001): #03g adds a scheduled watchdog using `documents.created_at` as the available proxy. If false positives appear, add a dedicated `claimed_at` migration.
 - [ ] 11c. Inngest event registry split: split `SpectixInngestEvent` by domain once the union has 10+ members.
-- [ ] 11d. Pass tracking: deferred to #03g. Claude API calls must record `llm_calls_made` and `cost_usd` to `passes`.
-- [ ] 11e. Inngest concurrency limits for Claude API: deferred to #03g. Add `concurrency: { limit: 5, key: 'event.data.claimId' }` when Claude processing lands.
-- [ ] 11f. UI feedback regression after upload: uploader shows "הועלה בהצלחה" immediately and does not reflect processing failures. Add polling status UI in #03g.
+- [x] 11d. Pass tracking: #03g records classifier LLM calls and cost through `upsert_pass_increment`.
+- [x] 11e. Inngest concurrency limits for Claude API: #03g adds `concurrency: { limit: 5, key: 'event.data.claimId' }`.
+- [x] 11f. UI feedback regression after upload: #03g adds polling status UI after upload.
+- [ ] 11g. Claude classifier pricing is hardcoded in `lib/llm/client.ts`. Move pricing to env/config when model pricing changes or multiple models are active.
+- [ ] 11h. Real OCR/extraction prompts are still pending. #03g classifies document type only; downstream extraction remains for later #03 spikes.
+- [ ] 11i. Status polling is client-side every 2 seconds for 30 seconds. Replace with realtime/subscription or server push if processing latency grows.
+- [ ] 11j. `upsert_pass_increment` lacks an idempotency key. If the gap between summed classifier audit costs and `claims.total_llm_cost_usd` exceeds 5% or 10 entries, add an idempotency-keyed accounting table/RPC.
 - [ ] Historical archive for older spikes #00, #00b, #00c, #00d, #00e, #02, #02a, #02b. Deferred to Spike #00z-B.
 - [ ] Replace sample dashboard/claim/questions data with real Supabase data once API contracts land.
 

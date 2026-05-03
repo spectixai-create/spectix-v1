@@ -1,4 +1,10 @@
 import { inngest } from '../client';
+import {
+  ClassifierLLMError,
+  ClassifierPreCallError,
+  classifyDocumentFromStorage,
+  type ClassifyDocumentResult,
+} from '@/lib/llm/classify-document';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type {
   DocumentProcessFailedEvent,
@@ -6,6 +12,16 @@ import type {
   DocumentUploadedEvent,
   DocumentType,
 } from '@/lib/types';
+
+export const SYSTEM_ACTOR_ID = 'inngest:process-document';
+export const CLASSIFIER_PRECALL_SENTINEL = 'classifier:pre-call-failure';
+export const CLASSIFIER_WRAPPER_SENTINEL = 'classifier:wrapper-error';
+
+export const PROCESS_DOCUMENT_CONFIG = {
+  id: 'process-document',
+  retries: 3,
+  concurrency: { limit: 5, key: 'event.data.claimId' },
+} as const;
 
 type LoggerLike = {
   info: (message: string, metadata?: Record<string, unknown>) => void;
@@ -15,7 +31,6 @@ type LoggerLike = {
 
 type StepLike = {
   run: (name: string, fn: () => Promise<unknown>) => Promise<unknown>;
-  sleep: (name: string, duration: string) => Promise<void>;
   sendEvent: (
     name: string,
     payload: DocumentProcessedEvent | DocumentProcessFailedEvent,
@@ -31,11 +46,14 @@ type ClaimedDocument = {
   document_type: DocumentType;
 };
 
+type FailureCategory = 'forced' | 'pre_call' | 'llm_call';
+
 type ProcessDocumentArgs = {
   event: DocumentUploadedEvent;
   step: StepLike;
   logger: LoggerLike;
   supabaseAdmin?: SupabaseLike;
+  classifier?: typeof classifyDocumentFromStorage;
 };
 
 export async function runProcessDocument({
@@ -43,6 +61,7 @@ export async function runProcessDocument({
   step,
   logger,
   supabaseAdmin = createAdminClient(),
+  classifier = classifyDocumentFromStorage,
 }: ProcessDocumentArgs) {
   const { documentId, claimId } = event.data;
 
@@ -70,7 +89,7 @@ export async function runProcessDocument({
     const { error } = await supabaseAdmin.from('audit_log').insert({
       claim_id: claimId,
       actor_type: 'system',
-      actor_id: null,
+      actor_id: SYSTEM_ACTOR_ID,
       action: 'document_processing_started',
       target_table: 'documents',
       target_id: documentId,
@@ -83,26 +102,62 @@ export async function runProcessDocument({
   });
 
   const startTime = Date.now();
-  await step.sleep('stub-work', '1s');
-
   const envForceFailure = process.env.SPECTIX_FORCE_DOCUMENT_FAILURE === 'true';
   const fileNameTriggersFailure = (claimed.file_name ?? '').includes('[FAIL]');
-  const shouldFail = envForceFailure || fileNameTriggersFailure;
+  const isForcedFailure = envForceFailure || fileNameTriggersFailure;
 
-  if (shouldFail) {
-    const failureReason = envForceFailure ? 'env_var' : 'file_name_pattern';
+  let classifierResult: ClassifyDocumentResult | null = null;
+  let failureReason: string | null = null;
+  let failureCategory: FailureCategory | null = null;
 
-    await step.run('finalize-failed', async () => {
+  if (isForcedFailure) {
+    failureReason = envForceFailure
+      ? 'forced_via_env_var'
+      : 'forced_via_filename';
+    failureCategory = 'forced';
+  } else {
+    try {
+      classifierResult = (await step.run('claude-classify', async () =>
+        classifier({
+          documentId: claimed.id,
+          fileName: claimed.file_name ?? 'unknown',
+        }),
+      )) as ClassifyDocumentResult;
+    } catch (error) {
+      failureReason = error instanceof Error ? error.message : String(error);
+      failureCategory =
+        error instanceof ClassifierPreCallError ? 'pre_call' : 'llm_call';
+    }
+  }
+
+  if (failureCategory === null || failureCategory === 'llm_call') {
+    await step.run('upsert-pass-1', async () => {
+      const { error } = await supabaseAdmin.rpc('upsert_pass_increment', {
+        p_claim_id: claimId,
+        p_pass_number: 1,
+        p_calls_increment: classifierResult ? 1 : 0,
+        p_cost_increment: classifierResult?.costUsd ?? 0,
+      });
+
+      if (error) {
+        throw new Error(`upsert_pass_increment failed: ${error.message}`);
+      }
+    });
+  }
+
+  if (failureReason !== null) {
+    const auditActor = getFailureAuditActor(failureCategory, classifierResult);
+    const finalizeOutcome = (await step.run('finalize-failed', async () => {
       const processingTimeMs = Date.now() - startTime;
       const { data, error } = await supabaseAdmin
         .from('documents')
         .update({
           processing_status: 'failed',
           extracted_data: {
-            stub: true,
-            error: 'simulated_failure',
-            trigger: failureReason,
+            spike: '03c',
+            error: failureReason,
             processing_time_ms: processingTimeMs,
+            failure_category: failureCategory,
           },
         })
         .eq('id', documentId)
@@ -118,46 +173,68 @@ export async function runProcessDocument({
           expected: 'processing',
         });
 
-        return;
+        return { transitioned: false };
       }
 
       const { error: auditError } = await supabaseAdmin
         .from('audit_log')
         .insert({
           claim_id: claimId,
-          actor_type: 'system',
-          actor_id: null,
+          actor_type: auditActor.actorType,
+          actor_id: auditActor.actorId,
           action: 'document_processing_failed',
           target_table: 'documents',
           target_id: documentId,
           details: {
-            error: 'simulated_failure',
-            trigger: failureReason,
+            error: failureReason,
+            failure_category: failureCategory,
             processing_time_ms: processingTimeMs,
+            cost_usd: classifierResult?.costUsd ?? 0,
           },
         });
 
       if (auditError) {
         logger.error('[audit-failure]', { documentId, error: auditError });
       }
-    });
 
-    const failedEvent: DocumentProcessFailedEvent = {
-      name: 'claim/document.process_failed',
-      data: { claimId, documentId, error: 'simulated_failure' },
+      return { transitioned: true };
+    })) as { transitioned: boolean };
+
+    if (finalizeOutcome.transitioned) {
+      const failedEvent: DocumentProcessFailedEvent = {
+        name: 'claim/document.process_failed',
+        data: { claimId, documentId, error: failureReason },
+      };
+      await step.sendEvent('emit-process-failed', failedEvent);
+    }
+
+    return {
+      status: 'failed',
+      documentId,
+      transitioned: finalizeOutcome.transitioned,
     };
-    await step.sendEvent('emit-process-failed', failedEvent);
-
-    return { status: 'failed', documentId };
   }
 
-  await step.run('finalize-processed', async () => {
+  if (!classifierResult) {
+    throw new Error('classifierResult unexpectedly null in happy path');
+  }
+
+  const finalizeOutcome = (await step.run('finalize-processed', async () => {
     const processingTimeMs = Date.now() - startTime;
     const { data, error } = await supabaseAdmin
       .from('documents')
       .update({
         processing_status: 'processed',
-        extracted_data: { stub: true, processing_time_ms: processingTimeMs },
+        document_type: classifierResult.documentType,
+        extracted_data: {
+          spike: '03c',
+          classifier: {
+            document_type: classifierResult.documentType,
+            confidence: classifierResult.confidence,
+            reasoning: classifierResult.reasoning,
+          },
+          processing_time_ms: processingTimeMs,
+        },
       })
       .eq('id', documentId)
       .eq('processing_status', 'processing')
@@ -172,39 +249,72 @@ export async function runProcessDocument({
         expected: 'processing',
       });
 
-      return;
+      return { transitioned: false };
     }
 
     const { error: auditError } = await supabaseAdmin.from('audit_log').insert({
       claim_id: claimId,
-      actor_type: 'system',
-      actor_id: null,
+      actor_type: 'llm',
+      actor_id: classifierResult.modelId,
       action: 'document_processing_completed',
       target_table: 'documents',
       target_id: documentId,
-      details: { stub: true, processing_time_ms: processingTimeMs },
+      details: {
+        document_type: classifierResult.documentType,
+        confidence: classifierResult.confidence,
+        processing_time_ms: processingTimeMs,
+        cost_usd: classifierResult.costUsd,
+        input_tokens: classifierResult.inputTokens,
+        output_tokens: classifierResult.outputTokens,
+      },
     });
 
     if (auditError) {
       logger.error('[audit-failure]', { documentId, error: auditError });
     }
-  });
 
-  const processedEvent: DocumentProcessedEvent = {
-    name: 'claim/document.processed',
-    data: {
-      claimId,
-      documentId,
-      documentType: claimed.document_type,
-    },
+    return { transitioned: true };
+  })) as { transitioned: boolean };
+
+  if (finalizeOutcome.transitioned) {
+    const processedEvent: DocumentProcessedEvent = {
+      name: 'claim/document.processed',
+      data: {
+        claimId,
+        documentId,
+        documentType: classifierResult.documentType,
+      },
+    };
+    await step.sendEvent('emit-processed', processedEvent);
+  }
+
+  return {
+    status: 'processed',
+    documentId,
+    transitioned: finalizeOutcome.transitioned,
   };
-  await step.sendEvent('emit-processed', processedEvent);
+}
 
-  return { status: 'processed', documentId };
+function getFailureAuditActor(
+  failureCategory: FailureCategory | null,
+  classifierResult: ClassifyDocumentResult | null,
+): { actorType: 'system' | 'llm'; actorId: string } {
+  if (failureCategory === 'forced') {
+    return { actorType: 'system', actorId: SYSTEM_ACTOR_ID };
+  }
+
+  if (failureCategory === 'pre_call') {
+    return { actorType: 'system', actorId: CLASSIFIER_PRECALL_SENTINEL };
+  }
+
+  return {
+    actorType: 'llm',
+    actorId: classifierResult?.modelId ?? CLASSIFIER_WRAPPER_SENTINEL,
+  };
 }
 
 export const processDocument = inngest.createFunction(
-  { id: 'process-document', retries: 3 },
+  PROCESS_DOCUMENT_CONFIG,
   { event: 'claim/document.uploaded' },
   async ({ event, step, logger }) =>
     runProcessDocument({

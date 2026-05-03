@@ -49,7 +49,7 @@ export function SuccessPanel({
               <h3 className="text-lg font-semibold">מסמכים תומכים</h3>
               <p className="text-sm leading-6 text-muted-foreground">
                 אפשר להעלות עד 50 מסמכים. גודל מקסימלי 4 MB לקובץ. סוגים נתמכים:
-                PDF, JPEG, PNG, HEIC.
+                PDF, JPEG, PNG.
               </p>
             </div>
             <DocumentUploader claimId={uploadClaimId} />

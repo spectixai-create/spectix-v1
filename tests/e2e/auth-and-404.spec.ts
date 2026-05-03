@@ -6,11 +6,18 @@ function collectConsoleErrors(page: Page) {
   const errors: string[] = [];
 
   page.on('console', (message) => {
+    const nextDevRscFallback = message
+      .text()
+      .startsWith('Failed to fetch RSC payload for ');
     const expectedNotFoundNavigation =
       message.text() ===
       'Failed to load resource: the server responded with a status of 404 (Not Found)';
 
-    if (message.type() === 'error' && !expectedNotFoundNavigation) {
+    if (
+      message.type() === 'error' &&
+      !expectedNotFoundNavigation &&
+      !nextDevRscFallback
+    ) {
       errors.push(message.text());
     }
   });

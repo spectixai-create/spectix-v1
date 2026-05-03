@@ -10,7 +10,11 @@ test('public intake form renders, keeps values, handles states and mock upload',
   });
 
   page.on('console', (message) => {
-    if (message.type() === 'error') {
+    const nextDevRscFallback = message
+      .text()
+      .startsWith('Failed to fetch RSC payload for ');
+
+    if (message.type() === 'error' && !nextDevRscFallback) {
       errors.push(message.text());
     }
   });
@@ -110,6 +114,8 @@ test('public intake form renders, keeps values, handles states and mock upload',
 
   await page.getByRole('button', { name: 'שמור כטיוטה' }).click();
   await expect(page.getByText('הטיוטה נשמרה')).toBeVisible();
+  await page.getByRole('button', { name: 'Close toast' }).click();
+  await expect(page.getByText('הטיוטה נשמרה')).toHaveCount(0);
 
   await page.getByRole('button', { name: 'שלח לבדיקה' }).click();
   await expect(page.getByRole('button', { name: 'שולח...' })).toBeVisible();

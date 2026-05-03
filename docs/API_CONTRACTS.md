@@ -65,12 +65,22 @@ Example request:
 - Headers: `Content-Type: multipart/form-data`
 - Auth: public. The claimant intake flow remains public; authenticated sessions are optional and only affect audit attribution.
 - Request body: multipart form data with a required `file` field.
-- Accepted MIME types: `application/pdf`, `image/jpeg`, `image/png`, `image/heic`.
+- Accepted MIME types: `application/pdf`, `image/jpeg`, `image/png`.
 - Size limit: 4 MB per file at the API layer.
 - Response `201`: `ApiResult<{ document: Document }>`
 - Response `400`: `invalid_id`, `empty_file`, `file_too_large`, `invalid_file_type`, `claim_not_acceptable`, or `document_limit_reached`.
 - Response `404`: `claim_not_found`
 - Response `500`: `storage_error`, `upload_partial_failure`, or `db_error`
+
+### GET /api/claims/[id]/documents/[docId]/status
+
+- Method: `GET`
+- Path: `/api/claims/[id]/documents/[docId]/status`
+- Auth: public. Uses a double-key check: both `claim_id` and `id` must match.
+- Response `200`: `ApiResult<{ documentId: string; processing_status: DocumentProcessingStatus; document_type: DocumentType; error_message?: string }>`
+- Response `400`: `invalid_id`
+- Response `404`: `document_not_found`
+- Response `500`: `db_error`
 
 Example response:
 

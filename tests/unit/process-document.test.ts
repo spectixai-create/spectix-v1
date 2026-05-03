@@ -33,11 +33,16 @@ describe('processDocument state machine', () => {
       step,
       logger: createLogger(),
       supabaseAdmin: supabase as never,
+      classifier: fakeClassifier,
     });
 
-    expect(result).toEqual({ status: 'processed', documentId });
+    expect(result).toEqual({
+      status: 'processed',
+      documentId,
+      transitioned: true,
+    });
     expect(supabase.document.processing_status).toBe('processed');
-    expect(supabase.document.extracted_data?.stub).toBe(true);
+    expect(supabase.document.extracted_data?.spike).toBe('03c');
   });
 
   it('U2 skips when status is processing', async () => {
@@ -75,9 +80,13 @@ describe('processDocument state machine', () => {
       supabaseAdmin: supabase as never,
     });
 
-    expect(result).toEqual({ status: 'failed', documentId });
+    expect(result).toEqual({
+      status: 'failed',
+      documentId,
+      transitioned: true,
+    });
     expect(supabase.document.processing_status).toBe('failed');
-    expect(supabase.document.extracted_data?.trigger).toBe('env_var');
+    expect(supabase.document.extracted_data?.failure_category).toBe('forced');
   });
 
   it('U5 file_name containing [FAIL] triggers failed branch', async () => {
@@ -93,8 +102,12 @@ describe('processDocument state machine', () => {
       supabaseAdmin: supabase as never,
     });
 
-    expect(result).toEqual({ status: 'failed', documentId });
-    expect(supabase.document.extracted_data?.trigger).toBe('file_name_pattern');
+    expect(result).toEqual({
+      status: 'failed',
+      documentId,
+      transitioned: true,
+    });
+    expect(supabase.document.extracted_data?.failure_category).toBe('forced');
   });
 
   it('U6 finalize sees state changed mid-processing and exits gracefully', async () => {
@@ -109,9 +122,14 @@ describe('processDocument state machine', () => {
       step: createStep(),
       logger,
       supabaseAdmin: supabase as never,
+      classifier: fakeClassifier,
     });
 
-    expect(result).toEqual({ status: 'processed', documentId });
+    expect(result).toEqual({
+      status: 'processed',
+      documentId,
+      transitioned: false,
+    });
     expect(logger.warn).toHaveBeenCalledWith(
       '[skip-finalize] state changed mid-processing',
       { documentId, expected: 'processing' },
@@ -136,6 +154,7 @@ describe('processDocument state machine', () => {
       step,
       logger: createLogger(),
       supabaseAdmin: supabase as never,
+      classifier: fakeClassifier,
     });
 
     expect(step.sendEvent).toHaveBeenCalledWith('emit-processed', expected);
@@ -155,7 +174,7 @@ describe('processDocument state machine', () => {
     });
     const expected: DocumentProcessFailedEvent = {
       name: 'claim/document.process_failed',
-      data: { claimId, documentId, error: 'simulated_failure' },
+      data: { claimId, documentId, error: 'forced_via_env_var' },
     };
 
     await runProcessDocument({
@@ -210,6 +229,7 @@ type FakeSupabaseOptions = {
 
 class FakeSupabase {
   readonly auditLog: Array<Record<string, unknown>> = [];
+  readonly rpcCalls: Array<Record<string, unknown>> = [];
   readonly document: {
     id: string;
     claim_id: string;
@@ -236,6 +256,11 @@ class FakeSupabase {
     return new FakeQuery(this, table);
   }
 
+  rpc(name: string, payload: Record<string, unknown>) {
+    this.rpcCalls.push({ name, payload });
+    return Promise.resolve({ error: null });
+  }
+
   updateDocument(
     payload: Record<string, unknown>,
     filters: Record<string, unknown>,
@@ -257,6 +282,18 @@ class FakeSupabase {
     Object.assign(this.document, payload);
     return { ...this.document };
   }
+}
+
+async function fakeClassifier() {
+  return {
+    documentType: 'other' as const,
+    confidence: 0.9,
+    reasoning: 'test',
+    modelId: 'test-model',
+    inputTokens: 100,
+    outputTokens: 20,
+    costUsd: 0.0006,
+  };
 }
 
 class FakeQuery {

@@ -91,3 +91,25 @@ Trade-offs accepted:
   loss must be explicitly documented in the down file.
 
 Revisit when automated migration rollback testing exists in CI.
+
+## D-016 - Pass Accounting Is Claim-Level and Cumulative
+
+Date: 2025-05-03
+Status: Active
+Decided by: CEO
+
+The `passes` table is keyed by claim and pass number. LLM accounting increments
+the claim-level pass row through `public.upsert_pass_increment`, accumulating
+`llm_calls_made` and `cost_usd`. The migration #0002 trigger updates
+`claims.total_llm_cost_usd` when pass cost changes.
+
+## D-017 - HEIC Removed From New Uploads
+
+Date: 2025-05-03
+Status: Active
+Decided by: CEO
+
+New uploads accept PDF, JPEG, and PNG only. HEIC is removed from the
+`claim-documents` bucket allowlist because Claude classification does not
+support it in the current pipeline. Existing HEIC objects remain accessible;
+only new uploads are rejected.

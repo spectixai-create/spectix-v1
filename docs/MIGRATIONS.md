@@ -44,3 +44,5 @@ data loss.
   audit.
 - `0003_storage_mime_types.sql`: authoritative MIME allowlist for
   `claim-documents`.
+- `0004_classifier_prep.sql`: document type CHECK, HEIC allowlist removal, and
+  `upsert_pass_increment` RPC for D-016 pass accounting.

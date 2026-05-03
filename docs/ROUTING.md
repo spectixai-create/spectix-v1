@@ -13,3 +13,7 @@
 | `not-found`      | root         | Public               | Next.js 404                                  |
 
 Auth behavior is implemented in [middleware.ts](../middleware.ts) and [lib/auth](../lib/auth/).
+
+Document upload and status APIs are public for the claimant intake flow. Status
+routes must use a double-key check so a document ID is only visible under its
+own claim ID.
