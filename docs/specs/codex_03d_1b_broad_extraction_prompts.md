@@ -38,7 +38,9 @@ Modify:
 
 - No new DB migration.
 - Use option A: extend `process-document` after subtype classification.
+- Successful extraction writes route-scoped `extracted_data` with `kind: 'extraction'`, the extraction `route`, original `documentType`/`documentSubtype`, and the route-compatible payload. This avoids pretending that `hotel_generic` payloads are `witness_letter` or `flight_doc` payloads.
 - Extraction failure is degraded success: `processing_status` remains `processed`, broad/subtype data stays persisted, `extraction_error` is added to `extracted_data`, `document_extraction_failed` is audited, and `claim/document.extraction_failed` is emitted.
+- Deferred extraction inserts `document_extraction_deferred` audit and emits `claim/document.extraction_deferred`.
 - Skip routes do not call Claude extraction.
 - Unit tests must avoid real LLM calls.
 
@@ -61,7 +63,7 @@ Modify:
 2. Unit tests increase from 92 to at least 116.
 3. Route tests cover all 37 subtypes.
 4. Receipt, police, hotel-generic, and medical extractors have success, prompt, dirty JSON, pre-call, LLM failure, and parsed-null coverage.
-5. `process-document` covers extraction success, deferred, failed, and discriminated union shape.
+5. `process-document` covers extraction success, deferred, failed, affected-row verification, and route-scoped discriminated union shape.
 6. `lib/types.ts` includes extraction events.
 7. No DB migration is added.
 8. `lib/version.ts` is bumped to Spike #19.

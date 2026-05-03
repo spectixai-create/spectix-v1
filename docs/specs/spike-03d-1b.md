@@ -17,6 +17,7 @@ Add the four broad extraction prompts after broad + subtype classification:
 - Prompt 05: medical report extraction
 
 The pipeline writes structured extraction output into `documents.extracted_data`.
+Successful extraction uses `kind: 'extraction'` plus an explicit extraction `route` so hotel-generic payloads do not masquerade as unrelated broad document types.
 
 ## Architecture
 
@@ -33,6 +34,8 @@ If extraction fails after classification succeeds:
 - Add `extraction_error` inside `extracted_data`.
 - Insert `audit_log.action = 'document_extraction_failed'`.
 - Emit `claim/document.extraction_failed`.
+
+If extraction is deferred because the route is `skip_dedicated` or `skip_other`, insert `audit_log.action = 'document_extraction_deferred'` and emit `claim/document.extraction_deferred`.
 
 ## Events
 

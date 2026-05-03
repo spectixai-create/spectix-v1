@@ -358,6 +358,8 @@ export type ClaimMetadata = {
  * Spike #03 finalizes the prompts.
  */
 export type ExtractedData =
+  | DocumentClassificationMetadata
+  | RoutedExtractionData
   | { kind: 'police_report'; data: PoliceReportExtraction }
   | { kind: 'hotel_letter'; data: HotelLetterExtraction }
   | { kind: 'receipt'; data: ReceiptExtraction }
@@ -366,6 +368,76 @@ export type ExtractedData =
   | { kind: 'flight_doc'; data: GenericDocumentExtraction }
   | { kind: 'photo'; data: PhotoExtraction }
   | { kind: 'other'; data: GenericDocumentExtraction };
+
+export interface DocumentClassificationMetadata {
+  kind: 'classification';
+  spike: string;
+  classifier: Record<string, unknown>;
+  subtype_classifier: Record<string, unknown>;
+  subtype: Record<string, unknown>;
+  processing_time_ms: number;
+  extraction_error?: {
+    route?: string;
+    error: string;
+  };
+}
+
+export type RoutedExtractionData = DocumentExtractionTopLevelMetadata &
+  (
+    | {
+        kind: 'extraction';
+        route: 'receipt';
+        documentType: DocumentType;
+        documentSubtype: DocumentSubtype | null;
+        data: ReceiptExtraction;
+        metadata: DocumentExtractionMetadata;
+      }
+    | {
+        kind: 'extraction';
+        route: 'police';
+        documentType: DocumentType;
+        documentSubtype: DocumentSubtype | null;
+        data: PoliceReportExtraction;
+        metadata: DocumentExtractionMetadata;
+      }
+    | {
+        kind: 'extraction';
+        route: 'hotel_generic';
+        documentType: DocumentType;
+        documentSubtype: DocumentSubtype | null;
+        data: HotelLetterExtraction;
+        metadata: DocumentExtractionMetadata;
+      }
+    | {
+        kind: 'extraction';
+        route: 'medical';
+        documentType: DocumentType;
+        documentSubtype: DocumentSubtype | null;
+        data: MedicalReportExtraction;
+        metadata: DocumentExtractionMetadata;
+      }
+  );
+
+export interface DocumentExtractionTopLevelMetadata {
+  classifier: Record<string, unknown>;
+  subtype_classifier: Record<string, unknown>;
+  subtype: Record<string, unknown>;
+  processing_time_ms: number;
+}
+
+export interface DocumentExtractionMetadata {
+  classifier: Record<string, unknown>;
+  subtype_classifier: Record<string, unknown>;
+  subtype: Record<string, unknown>;
+  processing_time_ms: number;
+  extraction: {
+    route: 'receipt' | 'police' | 'hotel_generic' | 'medical';
+    modelId: string;
+    inputTokens: number;
+    outputTokens: number;
+    costUsd: number;
+  };
+}
 
 /**
  * PoliceReportExtraction — from llm_prompts.md Prompt 03.

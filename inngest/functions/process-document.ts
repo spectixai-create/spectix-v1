@@ -43,6 +43,7 @@ import type {
   DocumentSubtypeClassifiedEvent,
   DocumentUploadedEvent,
   DocumentType,
+  RoutedExtractionData,
 } from '@/lib/types';
 
 export const SYSTEM_ACTOR_ID = 'inngest:process-document';
@@ -315,6 +316,7 @@ export async function runProcessDocument({
   const finalizeOutcome = (await step.run('finalize-processed', async () => {
     const processingTimeMs = Date.now() - processingStartedAtMs;
     const classificationExtractedData = {
+      kind: 'classification',
       spike: '03d-1b',
       classifier: {
         document_type: classifierResult.documentType,
@@ -463,6 +465,26 @@ export async function runProcessDocument({
   );
 
   if (route === 'skip_dedicated' || route === 'skip_other') {
+    await step.run('audit-extraction-deferred', async () => {
+      const { error } = await supabaseAdmin.from('audit_log').insert({
+        claim_id: claimId,
+        actor_type: 'system',
+        actor_id: SYSTEM_ACTOR_ID,
+        action: 'document_extraction_deferred',
+        target_table: 'documents',
+        target_id: documentId,
+        details: {
+          route,
+          document_type: classifierResult.documentType,
+          document_subtype: subtypeResult.documentSubtype,
+        },
+      });
+
+      if (error) {
+        logger.error('[audit-failure]', { documentId, error });
+      }
+    });
+
     const deferredEvent: DocumentExtractionDeferredEvent = {
       name: 'claim/document.extraction_deferred',
       data: { claimId, documentId, reason: route },
@@ -494,39 +516,28 @@ export async function runProcessDocument({
   }
 
   if (extractionFailureReason !== null) {
-    await step.run('finalize-extraction-failed', async () => {
-      const extractionData = {
-        ...finalizeOutcome.extractedData,
-        extraction_error: {
+    const failedPersistOutcome = (await step.run(
+      'finalize-extraction-failed',
+      async () =>
+        persistExtractionFailure({
+          supabaseAdmin,
+          logger,
+          claimId,
+          documentId,
           route,
-          error: extractionFailureReason,
-        },
+          base: finalizeOutcome.extractedData,
+          errorMessage: extractionFailureReason,
+        }),
+    )) as { persisted: boolean };
+
+    if (!failedPersistOutcome.persisted) {
+      return {
+        status: 'processed',
+        documentId,
+        transitioned: true,
+        extraction: 'failed_unpersisted',
       };
-      const { error } = await supabaseAdmin
-        .from('documents')
-        .update({ extracted_data: extractionData })
-        .eq('id', documentId)
-        .eq('processing_status', 'processed')
-        .maybeSingle();
-
-      if (error) throw error;
-
-      const { error: auditError } = await supabaseAdmin
-        .from('audit_log')
-        .insert({
-          claim_id: claimId,
-          actor_type: 'system',
-          actor_id: SYSTEM_ACTOR_ID,
-          action: 'document_extraction_failed',
-          target_table: 'documents',
-          target_id: documentId,
-          details: { route, error: extractionFailureReason },
-        });
-
-      if (auditError) {
-        logger.error('[audit-failure]', { documentId, error: auditError });
-      }
-    });
+    }
 
     const failedEvent: DocumentExtractionFailedEvent = {
       name: 'claim/document.extraction_failed',
@@ -546,6 +557,48 @@ export async function runProcessDocument({
     throw new Error('extractionResult unexpectedly null in extraction path');
   }
 
+  const extractedData = buildRoutedExtractionData({
+    route,
+    classifierResult,
+    subtypeResult,
+    extractionResult,
+    base: finalizeOutcome.extractedData,
+  });
+
+  if (!extractedData) {
+    const inconsistentReason = `Inconsistent extraction payload for route: ${route}`;
+    const failedPersistOutcome = (await step.run(
+      'finalize-extraction-inconsistent',
+      async () =>
+        persistExtractionFailure({
+          supabaseAdmin,
+          logger,
+          claimId,
+          documentId,
+          route,
+          base: finalizeOutcome.extractedData,
+          errorMessage: inconsistentReason,
+        }),
+    )) as { persisted: boolean };
+
+    if (failedPersistOutcome.persisted) {
+      const failedEvent: DocumentExtractionFailedEvent = {
+        name: 'claim/document.extraction_failed',
+        data: { claimId, documentId, error: inconsistentReason },
+      };
+      await step.sendEvent('emit-extraction-failed', failedEvent);
+    }
+
+    return {
+      status: 'processed',
+      documentId,
+      transitioned: true,
+      extraction: failedPersistOutcome.persisted
+        ? 'failed'
+        : 'failed_unpersisted',
+    };
+  }
+
   await step.run('upsert-pass-extraction-cost', async () => {
     const { error } = await supabaseAdmin.rpc('upsert_pass_increment', {
       p_claim_id: claimId,
@@ -559,52 +612,64 @@ export async function runProcessDocument({
     }
   });
 
-  await step.run('finalize-extraction-success', async () => {
-    const extractedData = {
-      kind: classifierResult.documentType,
-      data: extractionResult.data,
-      classifier: finalizeOutcome.extractedData.classifier,
-      subtype_classifier: finalizeOutcome.extractedData.subtype_classifier,
-      subtype: finalizeOutcome.extractedData.subtype,
-      processing_time_ms: finalizeOutcome.extractedData.processing_time_ms,
-      extraction: {
-        route,
-        modelId: extractionResult.modelId,
-        inputTokens: extractionResult.inputTokens,
-        outputTokens: extractionResult.outputTokens,
-        costUsd: extractionResult.costUsd,
-      },
+  const successPersistOutcome = (await step.run(
+    'finalize-extraction-success',
+    async () => {
+      const { data, error } = await supabaseAdmin
+        .from('documents')
+        .update({ extracted_data: extractedData })
+        .eq('id', documentId)
+        .eq('processing_status', 'processed')
+        .select('id')
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) {
+        logger.warn(
+          '[skip-extraction-finalize] state changed before success persistence',
+          {
+            documentId,
+            expected: 'processed',
+          },
+        );
+
+        return { persisted: false };
+      }
+
+      const { error: auditError } = await supabaseAdmin
+        .from('audit_log')
+        .insert({
+          claim_id: claimId,
+          actor_type: 'llm',
+          actor_id: extractionResult.modelId,
+          action: 'document_extraction_completed',
+          target_table: 'documents',
+          target_id: documentId,
+          details: {
+            route,
+            document_type: classifierResult.documentType,
+            document_subtype: subtypeResult.documentSubtype,
+            cost_usd: extractionResult.costUsd,
+            input_tokens: extractionResult.inputTokens,
+            output_tokens: extractionResult.outputTokens,
+          },
+        });
+
+      if (auditError) {
+        logger.error('[audit-failure]', { documentId, error: auditError });
+      }
+      return { persisted: true };
+    },
+  )) as { persisted: boolean };
+
+  if (!successPersistOutcome.persisted) {
+    return {
+      status: 'processed',
+      documentId,
+      transitioned: true,
+      extraction: 'completed_unpersisted',
     };
-    const { error } = await supabaseAdmin
-      .from('documents')
-      .update({ extracted_data: extractedData })
-      .eq('id', documentId)
-      .eq('processing_status', 'processed')
-      .maybeSingle();
-
-    if (error) throw error;
-
-    const { error: auditError } = await supabaseAdmin.from('audit_log').insert({
-      claim_id: claimId,
-      actor_type: 'llm',
-      actor_id: extractionResult.modelId,
-      action: 'document_extraction_completed',
-      target_table: 'documents',
-      target_id: documentId,
-      details: {
-        route,
-        document_type: classifierResult.documentType,
-        document_subtype: subtypeResult.documentSubtype,
-        cost_usd: extractionResult.costUsd,
-        input_tokens: extractionResult.inputTokens,
-        output_tokens: extractionResult.outputTokens,
-      },
-    });
-
-    if (auditError) {
-      logger.error('[audit-failure]', { documentId, error: auditError });
-    }
-  });
+  }
 
   const extractedEvent: DocumentExtractedEvent = {
     name: 'claim/document.extracted',
@@ -630,6 +695,136 @@ type ExtractionResult =
   | ExtractPoliceResult
   | ExtractHotelGenericResult
   | ExtractMedicalResult;
+
+type BuildExtractionDataInput = {
+  route: Exclude<ExtractionRoute, 'skip_dedicated' | 'skip_other'>;
+  classifierResult: ClassifyDocumentResult;
+  subtypeResult: ClassifySubtypeResult;
+  extractionResult: ExtractionResult;
+  base: Record<string, unknown>;
+};
+
+function buildRoutedExtractionData({
+  route,
+  classifierResult,
+  subtypeResult,
+  extractionResult,
+  base,
+}: BuildExtractionDataInput): RoutedExtractionData | null {
+  if (!isExtractionPayloadConsistent(route, extractionResult)) return null;
+
+  return {
+    kind: 'extraction',
+    route,
+    documentType: classifierResult.documentType,
+    documentSubtype: subtypeResult.documentSubtype,
+    data: extractionResult.data,
+    classifier: asRecord(base.classifier),
+    subtype_classifier: asRecord(base.subtype_classifier),
+    subtype: asRecord(base.subtype),
+    processing_time_ms:
+      typeof base.processing_time_ms === 'number' ? base.processing_time_ms : 0,
+    metadata: {
+      classifier: asRecord(base.classifier),
+      subtype_classifier: asRecord(base.subtype_classifier),
+      subtype: asRecord(base.subtype),
+      processing_time_ms:
+        typeof base.processing_time_ms === 'number'
+          ? base.processing_time_ms
+          : 0,
+      extraction: {
+        route,
+        modelId: extractionResult.modelId,
+        inputTokens: extractionResult.inputTokens,
+        outputTokens: extractionResult.outputTokens,
+        costUsd: extractionResult.costUsd,
+      },
+    },
+  } as RoutedExtractionData;
+}
+
+function isExtractionPayloadConsistent(
+  route: Exclude<ExtractionRoute, 'skip_dedicated' | 'skip_other'>,
+  extractionResult: ExtractionResult,
+): boolean {
+  const data = extractionResult.data as unknown as Record<string, unknown>;
+
+  switch (route) {
+    case 'receipt':
+      return 'items' in data && 'total' in data;
+    case 'police':
+      return 'formatAnalysis' in data && 'itemsReported' in data;
+    case 'hotel_generic':
+      return 'hotelName' in data && 'redFlags' in data;
+    case 'medical':
+      return 'diagnosisBrief' in data && 'anomalies' in data;
+  }
+}
+
+async function persistExtractionFailure(input: {
+  supabaseAdmin: SupabaseLike;
+  logger: LoggerLike;
+  claimId: string;
+  documentId: string;
+  route: Exclude<ExtractionRoute, 'skip_dedicated' | 'skip_other'>;
+  base: Record<string, unknown>;
+  errorMessage: string;
+}): Promise<{ persisted: boolean }> {
+  const extractionData = {
+    ...input.base,
+    extraction_error: {
+      route: input.route,
+      error: input.errorMessage,
+    },
+  };
+  const { data, error } = await input.supabaseAdmin
+    .from('documents')
+    .update({ extracted_data: extractionData })
+    .eq('id', input.documentId)
+    .eq('processing_status', 'processed')
+    .select('id')
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    input.logger.warn(
+      '[skip-extraction-finalize] state changed before failure persistence',
+      {
+        documentId: input.documentId,
+        expected: 'processed',
+      },
+    );
+
+    return { persisted: false };
+  }
+
+  const { error: auditError } = await input.supabaseAdmin
+    .from('audit_log')
+    .insert({
+      claim_id: input.claimId,
+      actor_type: 'system',
+      actor_id: SYSTEM_ACTOR_ID,
+      action: 'document_extraction_failed',
+      target_table: 'documents',
+      target_id: input.documentId,
+      details: { route: input.route, error: input.errorMessage },
+    });
+
+  if (auditError) {
+    input.logger.error('[audit-failure]', {
+      documentId: input.documentId,
+      error: auditError,
+    });
+  }
+
+  return { persisted: true };
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object'
+    ? (value as Record<string, unknown>)
+    : {};
+}
 
 export async function runExtractionByRoute(
   route: Exclude<ExtractionRoute, 'skip_dedicated' | 'skip_other'>,

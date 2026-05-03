@@ -1,4 +1,7 @@
-import { ALL_DOCUMENT_SUBTYPES } from '@/lib/llm/document-subtypes';
+import {
+  ALL_DOCUMENT_SUBTYPES,
+  SUBTYPES_BY_DOCUMENT_TYPE,
+} from '@/lib/llm/document-subtypes';
 import type { DocumentSubtype, DocumentType } from '@/lib/types';
 
 export type ExtractionRoute =
@@ -59,6 +62,12 @@ export function routeBySubtype(
 ): ExtractionRoute {
   if (subtype === null) return 'skip_other';
   if (broad === 'other') return 'skip_other';
+
+  if (!SUBTYPES_BY_DOCUMENT_TYPE[broad].includes(subtype)) {
+    throw new Error(
+      `Impossible broad/subtype pair: ${broad} + ${subtype}. Check classifier output.`,
+    );
+  }
 
   const route = SUBTYPE_TO_PROMPT_ROUTE[subtype];
   if (!route) {

@@ -66,7 +66,9 @@ describe('processDocument Claude integration branches', () => {
       subtype: { modelId: MODEL_ID, skipped: false },
     });
     expect(supabase.document.extracted_data).toMatchObject({
-      kind: 'receipt',
+      kind: 'extraction',
+      route: 'receipt',
+      documentType: 'receipt',
       data: { storeName: 'Pharmacy' },
     });
   });
@@ -479,6 +481,9 @@ describe('processDocument Claude integration branches', () => {
       'emit-extraction-deferred',
       expect.objectContaining({ name: 'claim/document.extraction_deferred' }),
     );
+    expect(supabase.lastAudit('document_extraction_deferred')).toMatchObject({
+      action: 'document_extraction_deferred',
+    });
   });
 
   it('extractor failure keeps document processed and emits failed extraction event', async () => {
@@ -540,6 +545,122 @@ describe('processDocument Claude integration branches', () => {
       expect.objectContaining({
         data: expect.objectContaining({ reason: 'skip_dedicated' }),
       }),
+    );
+    expect(supabase.lastAudit('document_extraction_deferred')).toMatchObject({
+      action: 'document_extraction_deferred',
+    });
+  });
+
+  it('hotel_generic extraction stores route-scoped payload for witness broad', async () => {
+    const supabase = new FakeSupabase();
+    const step = createStep();
+
+    await runProcessDocument({
+      event: uploadedEvent(),
+      step,
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: async () => classifierResult('witness_letter', 0.02),
+      subtypeClassifier: async () =>
+        subtypeResult('witnesses', 0, {
+          skipped: true,
+          modelId: SUBTYPE_DETERMINISTIC_ACTOR_ID,
+          llmReturnedRaw: null,
+        }),
+      extractor: async () => hotelExtractionResult(),
+    });
+
+    expect(supabase.document.extracted_data).toMatchObject({
+      kind: 'extraction',
+      route: 'hotel_generic',
+      documentType: 'witness_letter',
+      documentSubtype: 'witnesses',
+      data: { hotelName: 'Provider Letter' },
+    });
+    expect(supabase.document.extracted_data).not.toMatchObject({
+      kind: 'witness_letter',
+    });
+  });
+
+  it('inconsistent extraction payload degrades to extraction failure', async () => {
+    const supabase = new FakeSupabase();
+    const step = createStep();
+
+    const result = await runProcessDocument({
+      event: uploadedEvent(),
+      step,
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: async () => classifierResult('receipt', 0.02),
+      subtypeClassifier: async () => subtypeResult('general_receipt', 0.003),
+      extractor: async () => hotelExtractionResult(),
+    });
+
+    expect(result).toMatchObject({
+      status: 'processed',
+      extraction: 'failed',
+    });
+    expect(supabase.document.extracted_data).toMatchObject({
+      extraction_error: {
+        route: 'receipt',
+        error: 'Inconsistent extraction payload for route: receipt',
+      },
+    });
+    expect(step.sendEvent).toHaveBeenCalledWith(
+      'emit-extraction-failed',
+      expect.objectContaining({ name: 'claim/document.extraction_failed' }),
+    );
+  });
+
+  it('does not emit extracted event when success persistence affects no row', async () => {
+    const supabase = new FakeSupabase({ extractionUpdateNoRow: true });
+    const step = createStep();
+
+    const result = await runProcessDocument({
+      event: uploadedEvent(),
+      step,
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: async () => classifierResult('receipt', 0.02),
+      subtypeClassifier: async () => subtypeResult('general_receipt', 0.003),
+      extractor: async () => extractionResult('receipt'),
+    });
+
+    expect(result).toMatchObject({
+      status: 'processed',
+      extraction: 'completed_unpersisted',
+    });
+    expect(supabase.lastAudit('document_extraction_completed')).toBeUndefined();
+    expect(step.sendEvent).not.toHaveBeenCalledWith(
+      'emit-extracted',
+      expect.anything(),
+    );
+  });
+
+  it('does not emit extraction failed event when failure persistence affects no row', async () => {
+    const supabase = new FakeSupabase({ extractionUpdateNoRow: true });
+    const step = createStep();
+
+    const result = await runProcessDocument({
+      event: uploadedEvent(),
+      step,
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: async () => classifierResult('receipt', 0.02),
+      subtypeClassifier: async () => subtypeResult('general_receipt', 0.003),
+      extractor: async () => {
+        throw new Error('extractor down');
+      },
+    });
+
+    expect(result).toMatchObject({
+      status: 'processed',
+      extraction: 'failed_unpersisted',
+    });
+    expect(supabase.lastAudit('document_extraction_failed')).toBeUndefined();
+    expect(step.sendEvent).not.toHaveBeenCalledWith(
+      'emit-extraction-failed',
+      expect.anything(),
     );
   });
 });
@@ -632,6 +753,29 @@ function extractionResult(
   } as ExtractReceiptResult | ExtractPoliceResult;
 }
 
+function hotelExtractionResult() {
+  return {
+    data: {
+      hotelName: 'Provider Letter',
+      hotelAddress: null,
+      letterDate: null,
+      guestName: null,
+      stayStartDate: null,
+      stayEndDate: null,
+      incidentReportedToHotel: null,
+      hotelActions: null,
+      signedBy: null,
+      onLetterhead: null,
+      languageQuality: null,
+      redFlags: [],
+    },
+    modelId: MODEL_ID,
+    inputTokens: 50,
+    outputTokens: 20,
+    costUsd: 0.001,
+  };
+}
+
 function createLogger() {
   return { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
 }
@@ -657,7 +801,10 @@ class FakeSupabase {
   };
 
   constructor(
-    private readonly options: { changeStateBeforeFinalize?: boolean } = {},
+    private readonly options: {
+      changeStateBeforeFinalize?: boolean;
+      extractionUpdateNoRow?: boolean;
+    } = {},
   ) {}
 
   from(table: string) {
@@ -685,6 +832,12 @@ class FakeSupabase {
       filters.processing_status === 'processing'
     ) {
       this.document.processing_status = 'processed';
+      return null;
+    }
+    if (
+      this.options.extractionUpdateNoRow &&
+      filters.processing_status === 'processed'
+    ) {
       return null;
     }
     Object.assign(this.document, payload);
