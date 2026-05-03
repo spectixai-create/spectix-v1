@@ -6,8 +6,9 @@ Canonical sources:
 - [supabase/migrations/0002_schema_audit_implementation.sql](../supabase/migrations/0002_schema_audit_implementation.sql)
 - [supabase/migrations/0003_storage_mime_types.sql](../supabase/migrations/0003_storage_mime_types.sql)
 - [supabase/migrations/0004_classifier_prep.sql](../supabase/migrations/0004_classifier_prep.sql)
+- [supabase/migrations/0005_document_subtype.sql](../supabase/migrations/0005_document_subtype.sql)
 
-Migration #0004 is applied. This document mirrors the production schema for reading. On future migration changes, update this file and [lib/types.ts](../lib/types.ts) in the same PR.
+Migration #0005 is applied. This document mirrors the production schema for reading. On future migration changes, update this file and [lib/types.ts](../lib/types.ts) in the same PR.
 
 ## claims
 
@@ -88,6 +89,7 @@ Columns:
 - `id uuid primary key default gen_random_uuid()`
 - `claim_id uuid not null references claims(id) on delete cascade`
 - `document_type text not null`
+- `document_subtype text null` (migration #0005)
 - `file_path text not null`
 - `file_name text not null`
 - `file_size bigint null`
@@ -98,12 +100,13 @@ Columns:
 - `uploaded_by uuid null`
 - `created_at timestamptz not null default now()`
 
-Indexes: `documents_claim_id_idx`, `documents_document_type_idx`.
+Indexes: `documents_claim_id_idx`, `documents_document_type_idx`, `documents_document_subtype_idx` (partial: `WHERE document_subtype IS NOT NULL`).
 
 CHECK constraints:
 
 - `documents_processing_status_valid`: `pending`, `processing`, `processed`, `failed`.
 - `documents_document_type_check`: `police_report`, `hotel_letter`, `receipt`, `medical_report`, `witness_letter`, `flight_doc`, `photo`, `other`.
+- `documents_document_subtype_check`: nullable; if not null, must be one of the 37 values matching `DocumentSubtype` in [lib/types.ts](../lib/types.ts).
 
 JSONB: `extracted_data` maps to `ExtractedData` in [lib/types.ts](../lib/types.ts).
 
@@ -241,4 +244,4 @@ JSONB: `details` is `Record<string, unknown>` in [lib/types.ts](../lib/types.ts)
 ## Other Schema Details
 
 - RLS is deny-by-default; `service_role` bypasses policies for server-only workflows.
-- Storage bucket: `claim-documents`, private, 32 MB max file size, with allowed MIME types `application/pdf`, `image/jpeg`, `image/png`, and `image/heic` from migration #0003.
+- Storage bucket: `claim-documents`, private, 32 MB max file size, with allowed MIME types `application/pdf`, `image/jpeg`, and `image/png`.

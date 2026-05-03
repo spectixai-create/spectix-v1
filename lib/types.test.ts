@@ -16,6 +16,8 @@ import type {
   DocumentProcessingStatus,
   DocumentProcessFailedEvent,
   DocumentProcessedEvent,
+  DocumentSubtype,
+  DocumentSubtypeClassifiedEvent,
   DocumentType,
   DocumentUploadedEvent,
   EnrichmentCache,
@@ -113,6 +115,7 @@ describe('types compile', () => {
       id: 'document-uuid',
       claimId: sampleClaim.id,
       documentType: 'receipt',
+      documentSubtype: null,
       filePath: 'claim-uuid/receipt.pdf',
       fileName: 'receipt.pdf',
       fileSize: 12345,
@@ -338,6 +341,7 @@ describe('types compile', () => {
         id: processRequest.documentId,
         claimId: sampleClaim.id,
         documentType: 'other',
+        documentSubtype: null,
         filePath: 'claim-uuid/file.txt',
         fileName: 'file.txt',
         fileSize: null,
@@ -385,6 +389,15 @@ describe('types compile', () => {
         },
       },
       {
+        name: 'claim/document.subtype_classified',
+        data: {
+          claimId: sampleClaim.id,
+          documentId: 'document-uuid',
+          documentType: 'receipt',
+          documentSubtype: 'general_receipt',
+        },
+      },
+      {
         name: 'claim/pass.start',
         data: { claimId: sampleClaim.id, passNumber: 1 },
       },
@@ -400,12 +413,13 @@ describe('types compile', () => {
     expect(updateStatus.status).toBe('processing');
     expect(apiResult.ok).toBe(true);
     expect(apiError.code).toBe('bad_request');
-    expect(events).toHaveLength(5);
+    expect(events).toHaveLength(6);
   });
 
   it('literal unions document allowed values', () => {
     const claimStatus: ClaimStatus = 'ready';
     const documentStatus: DocumentProcessingStatus = 'processed';
+    const documentSubtype: DocumentSubtype = 'pharmacy_receipt';
     const severity: FindingSeverity = 'medium';
     const findingStatus: FindingStatus = 'persisted';
     const gapStatus: GapStatus = 'resolved';
@@ -451,12 +465,13 @@ describe('types compile', () => {
       questionUrgency,
       claimType,
       documentType,
+      documentSubtype,
       actorType,
       metadata.tripPurpose,
       evidence.externalSources?.[0],
       receiptItem.description,
       formatAnalysis.overallAuthenticityScore,
-    ]).toHaveLength(15);
+    ]).toHaveLength(16);
   });
 
   it('individual Inngest event interfaces match the shared union', () => {
@@ -480,6 +495,15 @@ describe('types compile', () => {
         error: 'failed',
       },
     };
+    const subtypeClassified: DocumentSubtypeClassifiedEvent = {
+      name: 'claim/document.subtype_classified',
+      data: {
+        claimId: sampleClaim.id,
+        documentId: 'document-uuid',
+        documentType: 'receipt',
+        documentSubtype: 'medical_receipt',
+      },
+    };
     const started: PassStartEvent = {
       name: 'claim/pass.start',
       data: { claimId: sampleClaim.id, passNumber: 1 },
@@ -493,6 +517,7 @@ describe('types compile', () => {
       uploaded,
       processed,
       failed,
+      subtypeClassified,
       started,
       completed,
     ];

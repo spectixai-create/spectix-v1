@@ -1,8 +1,8 @@
 /**
  * Spectix — source-of-truth types
  *
- * Mirrors /supabase/migrations/0001_initial_schema.sql and
- * /supabase/migrations/0002_schema_audit_implementation.sql exactly.
+ * Mirrors /supabase/migrations/0001_initial_schema.sql through
+ * /supabase/migrations/0005_document_subtype.sql.
  * On schema change: update migration FIRST, then this file.
  * Future migrations may extend; do not add speculative fields here.
  *
@@ -103,6 +103,52 @@ export type DocumentType =
   | 'photo'
   | 'other';
 
+/**
+ * Document subtypes — fine-grained classification per D-018.
+ *
+ * 37 values matching public.documents.document_subtype CHECK in migration 0005.
+ * IDs are stable snake_case English. Hebrew display labels live in
+ * /lib/llm/document-subtypes.ts.
+ */
+export type DocumentSubtype =
+  | 'claim_form'
+  | 'policy'
+  | 'policy_terms'
+  | 'insurance_proposal'
+  | 'id_or_passport'
+  | 'bank_account_confirmation'
+  | 'power_of_attorney'
+  | 'medical_confidentiality_waiver'
+  | 'flight_booking'
+  | 'flight_ticket'
+  | 'boarding_pass'
+  | 'border_records'
+  | 'incident_affidavit'
+  | 'police_report'
+  | 'pir_report'
+  | 'hotel_letter'
+  | 'general_receipt'
+  | 'photos'
+  | 'serial_or_imei'
+  | 'witnesses'
+  | 'medical_visit'
+  | 'discharge_summary'
+  | 'medical_receipt'
+  | 'pharmacy_receipt'
+  | 'prescription'
+  | 'medical_record_12mo'
+  | 'medical_evacuation'
+  | 'flight_cancellation_letter'
+  | 'replacement_booking'
+  | 'damage_report'
+  | 'rental_contract'
+  | 'driver_license'
+  | 'repair_estimate_or_invoice'
+  | 'third_party_details'
+  | 'travel_advisory'
+  | 'embassy_contact_proof'
+  | 'employer_letter';
+
 /** Audit actor types */
 export type AuditActorType =
   | 'system'
@@ -175,6 +221,11 @@ export interface Document {
   id: string;
   claimId: string;
   documentType: DocumentType;
+  /**
+   * Added in migration #0005 (D-018). Null until subtype classifier runs,
+   * and remains null when the subtype classifier returns an invalid id.
+   */
+  documentSubtype: DocumentSubtype | null;
   filePath: string;
   fileName: string;
   fileSize: number | null;
@@ -523,6 +574,20 @@ export interface DocumentProcessFailedEvent {
   };
 }
 
+/**
+ * Emitted when subtype classification completes with a valid subtype.
+ * Not emitted when the LLM returned an invalid subtype id.
+ */
+export interface DocumentSubtypeClassifiedEvent {
+  name: 'claim/document.subtype_classified';
+  data: {
+    claimId: string;
+    documentId: string;
+    documentType: DocumentType;
+    documentSubtype: DocumentSubtype;
+  };
+}
+
 export interface PassStartEvent {
   name: 'claim/pass.start';
   data: {
@@ -543,5 +608,6 @@ export type SpectixInngestEvent =
   | DocumentUploadedEvent
   | DocumentProcessedEvent
   | DocumentProcessFailedEvent
+  | DocumentSubtypeClassifiedEvent
   | PassStartEvent
   | PassCompletedEvent;
