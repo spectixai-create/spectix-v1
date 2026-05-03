@@ -44,11 +44,19 @@ Copy-Item C:\Users\smart\spectix\docs\agents\openclaw.config.template.json5 ~/.o
 ## Safe First-Run Process
 
 1. Start with all channels disabled.
-2. Run the dummy routing test in `/docs/agents/DUMMY_ROUTING_TEST.md`.
-3. Verify logs show task ID, status changes, routing decisions, and stop points.
-4. Verify OpenClaw refuses to route implementation work before `ceo_dev_approved`.
-5. Verify OpenClaw refuses merge/deploy without CEO final approval.
-6. Only then enable one non-production chat channel at a time.
+2. Create a local runtime directory at `C:\Users\smart\spectix\.openclaw-local`.
+   This directory is ignored by git and may hold `tasks.json`, `state.json`,
+   and local dry-run logs.
+3. Run `openclaw config validate`. The installed OpenClaw CLI reads
+   `~/.openclaw/openclaw.json`; if you copied the repo's JSON5 template,
+   adapt it to the active CLI schema before validation. Keep the Spectix
+   safety intent unchanged: no channels, no cron, no auto-merge, and no
+   auto-deploy.
+4. Run the dummy routing test in `/docs/agents/DUMMY_ROUTING_TEST.md`.
+5. Verify logs show task ID, status changes, routing decisions, and stop points.
+6. Verify OpenClaw refuses to route implementation work before `ceo_dev_approved`.
+7. Verify OpenClaw refuses merge/deploy without CEO final approval.
+8. Only then enable one non-production chat channel at a time.
 
 ## Dummy Routing Test
 
