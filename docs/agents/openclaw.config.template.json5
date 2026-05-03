@@ -1,0 +1,93 @@
+{
+  // Spectix OpenClaw safe template.
+  // Copy to ~/.openclaw/openclaw.json and fill locally.
+  // Do not commit a filled config.
+
+  repo: {
+    name: "spectix-v1",
+    owner: "spectixai-create",
+    repoRoot: "C:/Users/smart/spectix", // Example only; adjust locally.
+    defaultBranch: "main",
+  },
+
+  safety: {
+    sandboxEnabled: true,
+    autoMerge: false,
+    autoDeploy: false,
+    cronEnabled: false,
+    requireTaskId: true,
+    preserveTaskIds: true,
+    stopOnConflictingInstructions: true,
+    stopOnMissingContext: true,
+    forbidSecretsInLogs: true,
+    forbiddenChanges: [
+      "secrets",
+      "env_vars",
+      "api_keys",
+      "billing",
+      "pricing",
+      "auth_credentials",
+      "production_settings",
+      "db_schema_without_explicit_ceo_approval",
+    ],
+  },
+
+  approvalGates: {
+    implementationRequiresStatus: "ceo_dev_approved",
+    mergeRequiresStatus: "ready_to_merge",
+    mergeRequiresCeoFinalApproval: true,
+    deployRequiresCeoFinalApproval: true,
+    highRiskRequiresExplicitCeoApproval: true,
+  },
+
+  statuses: [
+    "idea",
+    "ceo_intent_ready",
+    "architect_review",
+    "pm_spec_ready",
+    "ceo_dev_approved",
+    "in_dev",
+    "dev_done",
+    "qa_review",
+    "qa_failed",
+    "qa_approved",
+    "code_review",
+    "ceo_final_review",
+    "ready_to_merge",
+    "done",
+    "blocked",
+  ],
+
+  channels: {
+    // Disabled placeholders. Add local credentials outside the repo.
+    humanOwner: { enabled: false, provider: "placeholder", channelId: "" },
+    ceo: { enabled: false, provider: "placeholder", channelId: "" },
+    architect: { enabled: false, provider: "placeholder", channelId: "" },
+    pm: { enabled: false, provider: "placeholder", channelId: "" },
+    codex: { enabled: false, provider: "placeholder", channelId: "" },
+    qa: { enabled: false, provider: "placeholder", channelId: "" },
+  },
+
+  models: {
+    // Placeholders only. Configure in local OpenClaw settings.
+    ceo: "model-placeholder",
+    architect: "model-placeholder",
+    pm: "model-placeholder",
+    qa: "model-placeholder",
+  },
+
+  github: {
+    enabled: false,
+    tokenEnvVar: "OPENCLAW_GITHUB_TOKEN_PLACEHOLDER",
+    allowPrComments: false,
+    allowBranchPush: false,
+    allowMerge: false,
+  },
+
+  logging: {
+    enabled: true,
+    path: "~/.openclaw/logs/spectix-routing.log",
+    includeSecrets: false,
+    includeClaimPii: false,
+  },
+}
