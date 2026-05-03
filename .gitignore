@@ -22,6 +22,7 @@ logs
 test-results
 output
 .auth
+.openclaw-local/
 
 # local env files
 .env*.local
