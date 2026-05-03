@@ -12,7 +12,7 @@ work.
 
 | ID     | Source spec | Description             | Satisfied by | TECH_DEBT ref | Status    |
 | ------ | ----------- | ----------------------- | ------------ | ------------- | --------- |
-| HR-001 | #03b        | Stuck-document watchdog | #03g         | 11b           | satisfied |
+| HR-001 | #03b        | Stuck-document watchdog | [PR #14](https://github.com/spectixai-create/spectix-v1/pull/14) | 11b | satisfied |
 
 ## Process
 
