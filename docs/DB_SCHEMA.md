@@ -5,8 +5,9 @@ Canonical sources:
 - [supabase/migrations/0001_initial_schema.sql](../supabase/migrations/0001_initial_schema.sql)
 - [supabase/migrations/0002_schema_audit_implementation.sql](../supabase/migrations/0002_schema_audit_implementation.sql)
 - [supabase/migrations/0003_storage_mime_types.sql](../supabase/migrations/0003_storage_mime_types.sql)
+- [supabase/migrations/0004_classifier_prep.sql](../supabase/migrations/0004_classifier_prep.sql)
 
-Migration #0003 is applied. This document mirrors the production schema for reading. On future migration changes, update this file and [lib/types.ts](../lib/types.ts) in the same PR.
+Migration #0004 is applied. This document mirrors the production schema for reading. On future migration changes, update this file and [lib/types.ts](../lib/types.ts) in the same PR.
 
 ## claims
 
@@ -102,8 +103,19 @@ Indexes: `documents_claim_id_idx`, `documents_document_type_idx`.
 CHECK constraints:
 
 - `documents_processing_status_valid`: `pending`, `processing`, `processed`, `failed`.
+- `documents_document_type_check`: `police_report`, `hotel_letter`, `receipt`, `medical_report`, `witness_letter`, `flight_doc`, `photo`, `other`.
 
 JSONB: `extracted_data` maps to `ExtractedData` in [lib/types.ts](../lib/types.ts).
+
+## RPC helpers
+
+- `public.upsert_pass_increment(p_claim_id uuid, p_pass_number int, p_calls_increment int, p_cost_increment numeric)`: claim-level cumulative pass accounting. Inserts or updates the `(claim_id, pass_number)` row and increments `llm_calls_made` and `cost_usd`. The migration #0002 `passes_update_claim_state` trigger fires on `UPDATE OF cost_usd` and keeps `claims.total_llm_cost_usd` synchronized.
+
+## Storage
+
+Bucket `claim-documents` remains private with 32 MB bucket limit. Migration
+#0004 restricts new uploads to `application/pdf`, `image/jpeg`, and
+`image/png`. The API endpoint enforces a stricter 4 MB limit.
 
 ## findings
 

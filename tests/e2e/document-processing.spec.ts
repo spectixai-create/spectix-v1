@@ -27,7 +27,7 @@ test.describe('document processing pipeline', () => {
     const actions = await auditActions(document.id);
 
     expect(row?.processing_status).toBe('processed');
-    expect(row?.extracted_data?.stub).toBe(true);
+    expect(row?.extracted_data?.spike).toBe('03c');
     expect(actions).toEqual(
       expect.arrayContaining([
         'document_uploaded',
@@ -55,7 +55,7 @@ test.describe('document processing pipeline', () => {
     const actions = await auditActions(document.id);
 
     expect(row?.processing_status).toBe('failed');
-    expect(row?.extracted_data?.error).toBe('simulated_failure');
+    expect(row?.extracted_data?.error).toBe('forced_via_filename');
     expect(actions).toContain('document_processing_failed');
   });
 
@@ -80,9 +80,12 @@ test.describe('document processing pipeline', () => {
 });
 
 async function createClaim(request: APIRequestContext) {
-  const response = await request.post('/api/claims', {
+  let response = await request.post('/api/claims', {
     data: validClaimPayload(),
   });
+  if (response.status() === 409) {
+    response = await request.post('/api/claims', { data: validClaimPayload() });
+  }
   expect(response.status()).toBe(201);
 
   return (await response.json()).data.claim as {

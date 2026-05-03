@@ -4,9 +4,13 @@ import * as React from 'react';
 import { FileUp } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import type { Document } from '@/lib/types';
+import type {
+  Document,
+  DocumentProcessingStatus,
+  DocumentType,
+} from '@/lib/types';
 
-type UploadStatus = 'queued' | 'uploading' | 'success' | 'error';
+type UploadStatus = 'queued' | 'uploading' | 'processing' | 'success' | 'error';
 
 type UploadEntry = {
   id: string;
@@ -20,13 +24,13 @@ const ALLOWED_MIME_TYPES = new Set([
   'application/pdf',
   'image/jpeg',
   'image/png',
-  'image/heic',
 ]);
 
 const STATUS_LABELS: Record<UploadStatus, string> = {
   queued: 'ממתין להעלאה',
   uploading: 'מעלה...',
-  success: 'הועלה בהצלחה',
+  processing: 'מעבד...',
+  success: 'מוכן',
   error: 'נכשל',
 };
 
@@ -128,7 +132,7 @@ export function DocumentUploader({
         <div>
           <p className="font-medium">גרור לכאן מסמכים או בחר קבצים</p>
           <p className="text-sm text-muted-foreground">
-            PDF, JPEG, PNG, HEIC עד 4 MB לקובץ
+            PDF, JPEG, PNG עד 4 MB לקובץ
           </p>
         </div>
         <Button type="button" variant="secondary" size="sm">
@@ -138,7 +142,7 @@ export function DocumentUploader({
           ref={inputRef}
           type="file"
           className="sr-only"
-          accept="application/pdf,image/jpeg,image/png,image/heic"
+          accept="application/pdf,image/jpeg,image/png"
           multiple
           onChange={(event) => {
             handleFiles(event.target.files);
@@ -200,7 +204,8 @@ async function uploadSingleFile(
     };
 
     if (response.ok && json.ok && json.data?.document) {
-      update({ status: 'success' });
+      update({ status: 'processing' });
+      await pollDocumentStatus(claimId, json.data.document.id, update);
       return json.data.document;
     }
 
@@ -249,7 +254,74 @@ function mapUploadError(code: string): string {
       return 'שגיאת אחסון. נסה שוב.';
     case 'upload_partial_failure':
       return 'ההעלאה נכשלה. נסה שוב.';
+    case 'document_not_found':
+      return 'המסמך לא נמצא';
+    case 'processing_failed':
+      return 'עיבוד המסמך נכשל';
     default:
       return 'שגיאת רשת. נסה שוב.';
   }
+}
+
+type DocumentStatusResponse = {
+  documentId: string;
+  processing_status: DocumentProcessingStatus;
+  document_type: DocumentType;
+  error_message?: string;
+};
+
+async function pollDocumentStatus(
+  claimId: string,
+  documentId: string,
+  update: (entry: Partial<UploadEntry>) => void,
+) {
+  const deadline = Date.now() + 30_000;
+
+  while (Date.now() < deadline) {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 5_000);
+    let response: Response;
+    try {
+      response = await fetch(
+        `/api/claims/${claimId}/documents/${documentId}/status`,
+        { cache: 'no-store', signal: controller.signal },
+      );
+    } catch {
+      window.clearTimeout(timeout);
+      await new Promise((resolve) => setTimeout(resolve, 2_000));
+      continue;
+    }
+    window.clearTimeout(timeout);
+
+    const json = (await response.json()) as {
+      ok?: boolean;
+      data?: DocumentStatusResponse;
+      error?: { code?: string };
+    };
+
+    if (!response.ok || !json.ok || !json.data) {
+      update({
+        status: 'error',
+        error: mapUploadError(json.error?.code ?? 'network_error'),
+      });
+      return;
+    }
+
+    if (json.data.processing_status === 'processed') {
+      update({ status: 'success' });
+      return;
+    }
+
+    if (json.data.processing_status === 'failed') {
+      update({
+        status: 'error',
+        error: json.data.error_message ?? mapUploadError('processing_failed'),
+      });
+      return;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 2_000));
+  }
+
+  update({ status: 'processing' });
 }

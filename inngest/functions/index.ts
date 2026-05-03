@@ -8,5 +8,6 @@
  */
 
 import { processDocument } from './process-document';
+import { watchdogStuckDocuments } from './watchdog-stuck-documents';
 
-export const functions = [processDocument] as const;
+export const functions = [processDocument, watchdogStuckDocuments] as const;

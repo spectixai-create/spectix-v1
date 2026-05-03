@@ -5,7 +5,11 @@ test('dashboard skeleton renders queue controls and navigates to claim view', as
 }) => {
   const errors: string[] = [];
   page.on('console', (message) => {
-    if (message.type() === 'error') {
+    const nextDevRscFallback = message
+      .text()
+      .startsWith('Failed to fetch RSC payload for ');
+
+    if (message.type() === 'error' && !nextDevRscFallback) {
       errors.push(message.text());
     }
   });

@@ -17,14 +17,12 @@ const ALLOWED_MIME_TYPES = new Set([
   'application/pdf',
   'image/jpeg',
   'image/png',
-  'image/heic',
 ]);
 
 const MIME_TO_EXTENSION: Record<string, string> = {
   'application/pdf': 'pdf',
   'image/jpeg': 'jpg',
   'image/png': 'png',
-  'image/heic': 'heic',
 };
 
 type RouteContext = {

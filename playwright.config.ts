@@ -14,7 +14,7 @@ export default defineConfig({
   webServer: [
     {
       command:
-        "powershell -NoProfile -Command \"$env:INNGEST_DEV='1'; $env:INNGEST_BASE_URL='http://localhost:8288'; pnpm dev\"",
+        "powershell -NoProfile -Command \"$env:INNGEST_DEV='1'; $env:INNGEST_BASE_URL='http://localhost:8288'; $env:SPECTIX_FAKE_CLAUDE_CLASSIFIER='true'; pnpm dev\"",
       url: 'http://localhost:3000/design-system',
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
@@ -30,7 +30,7 @@ export default defineConfig({
     {
       name: 'unauthenticated',
       testMatch:
-        /(auth-flow|auth-and-404|claims-api|document-upload|document-processing)\.spec\.ts/,
+        /(auth-flow|auth-and-404|claims-api|document-upload|document-processing|document-classification|watchdog)\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
     {

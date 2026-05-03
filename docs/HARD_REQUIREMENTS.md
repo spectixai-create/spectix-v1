@@ -5,13 +5,14 @@ work.
 
 ## Open
 
-| ID     | Source spec | Description             | Due-by spike | TECH_DEBT ref | Status |
-| ------ | ----------- | ----------------------- | ------------ | ------------- | ------ |
-| HR-001 | #03b        | Stuck-document watchdog | #03g         | 11b           | open   |
+| ID  | Source spec | Description | Due-by spike | TECH_DEBT ref | Status |
+| --- | ----------- | ----------- | ------------ | ------------- | ------ |
 
 ## Satisfied
 
-(none yet)
+| ID     | Source spec | Description             | Satisfied by | TECH_DEBT ref | Status    |
+| ------ | ----------- | ----------------------- | ------------ | ------------- | --------- |
+| HR-001 | #03b        | Stuck-document watchdog | #03g         | 11b           | satisfied |
 
 ## Process
 

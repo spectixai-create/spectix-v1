@@ -137,6 +137,8 @@ test.describe('document upload API', () => {
   test('public /new flow uploads PDF with anonymous audit trail', async ({
     page,
   }) => {
+    test.setTimeout(90_000);
+
     await page.goto('/new');
     await fillValidClaimForm(page);
     await page.getByRole('button', { name: 'שלח לבדיקה' }).click();
@@ -158,8 +160,8 @@ test.describe('document upload API', () => {
     });
 
     await uploader.dispatchEvent('drop', { dataTransfer: transfer });
-    await expect(page.getByText('הועלה בהצלחה')).toBeVisible({
-      timeout: 10000,
+    await expect(page.getByText('מוכן')).toBeVisible({
+      timeout: 75000,
     });
 
     const supabase = createAdminClientForTests();

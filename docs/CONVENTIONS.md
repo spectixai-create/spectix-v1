@@ -71,6 +71,8 @@ Currently registered codes:
 - `storage_error`
 - `upload_partial_failure`
 - `network_error`
+- `document_not_found`
+- `processing_failed`
 
 ## Verification
 
@@ -106,3 +108,9 @@ Run `pnpm test:e2e` for UI, routing, auth, or interaction changes.
 - Test-only document processing failure triggers are
   `SPECTIX_FORCE_DOCUMENT_FAILURE=true` and filenames containing `[FAIL]`.
   The environment trigger is guarded against production startup.
+- Claude classifier failures use audit actor discipline:
+  pre-call errors are `system/classifier:pre-call-failure`; wrapper/API errors
+  after a Claude attempt are `llm/classifier:wrapper-error`; successful
+  classifier audits are `llm/<model id>`.
+- Public document status endpoints must verify both `claim_id` and document
+  `id` before returning status.

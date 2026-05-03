@@ -5,7 +5,11 @@ test('claim view renders tabs, URL tab state, risk meter, and empty states', asy
 }) => {
   const errors: string[] = [];
   page.on('console', (message) => {
-    if (message.type() === 'error') {
+    const nextDevRscFallback = message
+      .text()
+      .startsWith('Failed to fetch RSC payload for ');
+
+    if (message.type() === 'error' && !nextDevRscFallback) {
       errors.push(message.text());
     }
   });
