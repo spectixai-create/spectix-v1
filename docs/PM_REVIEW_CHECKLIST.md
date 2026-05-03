@@ -450,6 +450,24 @@ Apply to all spec types.
 - /docs/CURRENT_STATE.md updated in same PR.
 - Spike numbers documented in /docs/specs/README.md index.
 
+  5.11. **External API identifier verification**
+
+- Specs that name an external API model id, version string, endpoint path,
+  or SDK identifier must cite the vendor source used to obtain it.
+- Codex verifies the identifier against the cited source before merging.
+- Reject specs that use identifiers from memory without a citation.
+- Origin: PR #15 hotfix. Model id `claude-sonnet-4-6-20250915` was invented
+  from CEO memory; production failed at first run.
+
+  5.12. **Dirty-input tests for parsing/sanitization**
+
+- Specs that include parsing, normalization, or sanitization logic require at
+  least one test where the input contains the artifact being stripped.
+- Clean-input tests do not satisfy this requirement.
+- Origin: PR #15 hotfix. JSON parser added code-fence cleanup but tests used
+  clean JSON; Sonnet 4.5 returned fenced JSON in production and broke strict
+  parsing.
+
 ---
 
 ## 6. Review reply format
@@ -482,6 +500,31 @@ from", the answer is in /docs/PM_REVIEW_CHECKLIST.md section X.Y.
 - Bump version at top when content changes meaningfully.
 - Don't fork by spec type — keep one canonical file. PMs working
   different spike streams reference the same checklist.
+
+  7.X. **Weekly tech-debt watch queries**
+
+PM runs these queries weekly and files an issue if any trigger fires:
+
+- TECH_DEBT 11n (watchdog threshold): query
+  ```sql
+  select percentile_cont(0.95) within group (order by (details->>'processing_time_ms')::numeric)
+  from audit_log
+  where action = 'document_processing_completed'
+    and created_at > now() - interval '7 days';
+  ```
+  If result > 60000 (ms), file issue tagged `tech-debt-11n`.
+- TECH_DEBT 11o (RPC dedup key): query
+  ```sql
+  select claim_id,
+         (select sum((details->>'cost_usd')::numeric) from audit_log
+           where claim_id = c.id and action like 'document_%_completed')
+           as audit_total,
+         c.total_llm_cost_usd
+    from claims c
+   where created_at > now() - interval '7 days';
+  ```
+  Compute relative diff per row. If 10+ rows show >5% diff, file issue
+  tagged `tech-debt-11o`.
 
 ---
 

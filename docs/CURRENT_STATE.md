@@ -4,11 +4,11 @@ Updated by Codex atomically with each spike PR. CEO updates this file only for d
 
 ## Version
 
-Spectix Spike #17 • 2025-05-03
+Spectix Spike #18 • 2025-05-03
 
 ## Current Phase
 
-Claim intake writes real claim rows, uploads supporting documents to Supabase Storage, and classifies documents through the Inngest + Claude classifier pipeline.
+Claim intake writes real claim rows, uploads supporting documents to Supabase Storage, and classifies documents through the Inngest + Claude broad + subtype classifier pipeline.
 
 ## Completed Spikes
 
@@ -29,6 +29,7 @@ Claim intake writes real claim rows, uploads supporting documents to Supabase St
 - #03a - File upload and Storage foundation.
 - #03b - Inngest document processing state machine.
 - #03g - Claude document classifier (Prompt 01), pass accounting, and status polling.
+- #03ד-1a - Document subtype classification foundation (Prompt 01b).
 
 ## Active Spike
 
@@ -36,7 +37,7 @@ None.
 
 ## Next Spike
 
-Next document-processing spike: OCR/extraction prompts for classified documents.
+Next document-processing spike: #03ד-1b broad extraction prompts (02-05) and `extracted_data` wiring.
 
 ## Current Routes
 

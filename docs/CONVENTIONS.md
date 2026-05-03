@@ -112,5 +112,12 @@ Run `pnpm test:e2e` for UI, routing, auth, or interaction changes.
   pre-call errors are `system/classifier:pre-call-failure`; wrapper/API errors
   after a Claude attempt are `llm/classifier:wrapper-error`; successful
   classifier audits are `llm/<model id>`.
+- Subtype classification audits use
+  `document_subtype_classification_completed`. Deterministic single-subtype
+  mappings use `system/system:single-subtype-mapping`; subtype pre-call errors
+  use `system/subtype-classifier:pre-call-failure`; subtype LLM failures use
+  `llm/<default model id>`.
+- `SPECTIX_FAKE_CLAUDE_CLASSIFIER=true` enables the non-production fake
+  classifier path for both broad and subtype classification.
 - Public document status endpoints must verify both `claim_id` and document
   `id` before returning status.
