@@ -4,11 +4,11 @@ Updated by Codex atomically with each spike PR. CEO updates this file only for d
 
 ## Version
 
-Spectix Spike #18 • 2025-05-03
+Spectix Spike #19 • 2026-05-03
 
 ## Current Phase
 
-Claim intake writes real claim rows, uploads supporting documents to Supabase Storage, and classifies documents through the Inngest + Claude broad + subtype classifier pipeline.
+Claim intake writes real claim rows, uploads supporting documents to Supabase Storage, classifies documents through the Inngest + Claude broad + subtype classifier pipeline, and is adding broad extraction prompts into `documents.extracted_data`.
 
 ## Completed Spikes
 
@@ -33,11 +33,11 @@ Claim intake writes real claim rows, uploads supporting documents to Supabase St
 
 ## Active Spike
 
-None.
+#03ד-1b - Broad extraction prompts (02-05) and `extracted_data` wiring.
 
 ## Next Spike
 
-Next document-processing spike: #03ד-1b broad extraction prompts (02-05) and `extracted_data` wiring.
+Next document-processing spike: dedicated extraction prompts for subtype-specific documents.
 
 ## Current Routes
 

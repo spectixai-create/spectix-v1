@@ -42,9 +42,11 @@ describe('processDocument state machine', () => {
       status: 'processed',
       documentId,
       transitioned: true,
+      extraction: 'deferred',
+      reason: 'skip_other',
     });
     expect(supabase.document.processing_status).toBe('processed');
-    expect(supabase.document.extracted_data?.spike).toBe('03d-1a');
+    expect(supabase.document.extracted_data?.spike).toBe('03d-1b');
   });
 
   it('U2 skips when status is processing', async () => {

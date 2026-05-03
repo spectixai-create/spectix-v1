@@ -22,5 +22,6 @@ Specs in this directory are the implementation source for future spikes. Older s
 | #03b            | Inngest document processing pipeline   | DONE   | backend-document-pipeline           | this PR         |
 | #03g            | Claude document classification         | DONE   | backend-document-classifier         | this PR         |
 | #03ד-1a         | Document subtype classification        | DONE   | backend-document-subtype-foundation | this PR         |
+| #03ד-1b         | Broad extraction prompts (02-05)       | ACTIVE | backend-broad-extraction-prompts    | pending         |
 
 Use [spike-template.md](spike-template.md) for new specs.
