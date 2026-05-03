@@ -13,8 +13,31 @@ import {
   classifySubtypeFromStorage,
   type ClassifySubtypeResult,
 } from '@/lib/llm/classify-subtype';
+import {
+  extractHotelGenericFromStorage,
+  type ExtractHotelGenericResult,
+} from '@/lib/llm/extract/extract-hotel-generic';
+import {
+  extractMedicalFromStorage,
+  type ExtractMedicalResult,
+} from '@/lib/llm/extract/extract-medical';
+import {
+  extractPoliceFromStorage,
+  type ExtractPoliceResult,
+} from '@/lib/llm/extract/extract-police';
+import {
+  extractReceiptFromStorage,
+  type ExtractReceiptResult,
+} from '@/lib/llm/extract/extract-receipt';
+import {
+  routeBySubtype,
+  type ExtractionRoute,
+} from '@/lib/llm/extract/route-by-subtype';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type {
+  DocumentExtractedEvent,
+  DocumentExtractionDeferredEvent,
+  DocumentExtractionFailedEvent,
   DocumentProcessFailedEvent,
   DocumentProcessedEvent,
   DocumentSubtypeClassifiedEvent,
@@ -40,7 +63,10 @@ type LoggerLike = {
 type StepEvent =
   | DocumentProcessedEvent
   | DocumentProcessFailedEvent
-  | DocumentSubtypeClassifiedEvent;
+  | DocumentSubtypeClassifiedEvent
+  | DocumentExtractedEvent
+  | DocumentExtractionFailedEvent
+  | DocumentExtractionDeferredEvent;
 
 type StepLike = {
   run: (name: string, fn: () => Promise<unknown>) => Promise<unknown>;
@@ -66,6 +92,7 @@ type ProcessDocumentArgs = {
   supabaseAdmin?: SupabaseLike;
   classifier?: typeof classifyDocumentFromStorage;
   subtypeClassifier?: typeof classifySubtypeFromStorage;
+  extractor?: typeof runExtractionByRoute;
 };
 
 type FailureAuditActor = {
@@ -80,6 +107,7 @@ export async function runProcessDocument({
   supabaseAdmin = createAdminClient(),
   classifier = classifyDocumentFromStorage,
   subtypeClassifier = classifySubtypeFromStorage,
+  extractor = runExtractionByRoute,
 }: ProcessDocumentArgs) {
   const { documentId, claimId } = event.data;
 
@@ -286,34 +314,35 @@ export async function runProcessDocument({
 
   const finalizeOutcome = (await step.run('finalize-processed', async () => {
     const processingTimeMs = Date.now() - processingStartedAtMs;
+    const classificationExtractedData = {
+      spike: '03d-1b',
+      classifier: {
+        document_type: classifierResult.documentType,
+        confidence: classifierResult.confidence,
+        reasoning: classifierResult.reasoning,
+        modelId: classifierResult.modelId,
+      },
+      subtype_classifier: {
+        document_subtype: subtypeResult.documentSubtype,
+        confidence: subtypeResult.confidence,
+        reasoning: subtypeResult.reasoning,
+        skipped: subtypeResult.skipped,
+        llm_returned_raw: subtypeResult.llmReturnedRaw,
+        modelId: subtypeResult.modelId,
+      },
+      subtype: {
+        modelId: subtypeResult.modelId,
+        skipped: subtypeResult.skipped,
+      },
+      processing_time_ms: processingTimeMs,
+    };
     const { data, error } = await supabaseAdmin
       .from('documents')
       .update({
         processing_status: 'processed',
         document_type: classifierResult.documentType,
         document_subtype: subtypeResult.documentSubtype,
-        extracted_data: {
-          spike: '03d-1a',
-          classifier: {
-            document_type: classifierResult.documentType,
-            confidence: classifierResult.confidence,
-            reasoning: classifierResult.reasoning,
-            modelId: classifierResult.modelId,
-          },
-          subtype_classifier: {
-            document_subtype: subtypeResult.documentSubtype,
-            confidence: subtypeResult.confidence,
-            reasoning: subtypeResult.reasoning,
-            skipped: subtypeResult.skipped,
-            llm_returned_raw: subtypeResult.llmReturnedRaw,
-            modelId: subtypeResult.modelId,
-          },
-          subtype: {
-            modelId: subtypeResult.modelId,
-            skipped: subtypeResult.skipped,
-          },
-          processing_time_ms: processingTimeMs,
-        },
+        extracted_data: classificationExtractedData,
       })
       .eq('id', documentId)
       .eq('processing_status', 'processing')
@@ -328,7 +357,10 @@ export async function runProcessDocument({
         expected: 'processing',
       });
 
-      return { transitioned: false };
+      return {
+        transitioned: false,
+        extractedData: classificationExtractedData,
+      };
     }
 
     const { error: broadAuditError } = await supabaseAdmin
@@ -386,8 +418,11 @@ export async function runProcessDocument({
       logger.error('[audit-failure]', { documentId, error: subtypeAuditError });
     }
 
-    return { transitioned: true };
-  })) as { transitioned: boolean };
+    return { transitioned: true, extractedData: classificationExtractedData };
+  })) as {
+    transitioned: boolean;
+    extractedData: Record<string, unknown>;
+  };
 
   if (finalizeOutcome.transitioned) {
     const processedEvent: DocumentProcessedEvent = {
@@ -414,11 +449,202 @@ export async function runProcessDocument({
     }
   }
 
+  if (!finalizeOutcome.transitioned) {
+    return {
+      status: 'processed',
+      documentId,
+      transitioned: false,
+    };
+  }
+
+  const route = routeBySubtype(
+    classifierResult.documentType,
+    subtypeResult.documentSubtype,
+  );
+
+  if (route === 'skip_dedicated' || route === 'skip_other') {
+    const deferredEvent: DocumentExtractionDeferredEvent = {
+      name: 'claim/document.extraction_deferred',
+      data: { claimId, documentId, reason: route },
+    };
+    await step.sendEvent('emit-extraction-deferred', deferredEvent);
+
+    return {
+      status: 'processed',
+      documentId,
+      transitioned: true,
+      extraction: 'deferred',
+      reason: route,
+    };
+  }
+
+  let extractionResult: ExtractionResult | null = null;
+  let extractionFailureReason: string | null = null;
+
+  try {
+    extractionResult = (await step.run('claude-extract', async () =>
+      extractor(route, {
+        documentId: claimed.id,
+        fileName: claimed.file_name ?? 'unknown',
+      }),
+    )) as ExtractionResult;
+  } catch (error) {
+    extractionFailureReason =
+      error instanceof Error ? error.message : String(error);
+  }
+
+  if (extractionFailureReason !== null) {
+    await step.run('finalize-extraction-failed', async () => {
+      const extractionData = {
+        ...finalizeOutcome.extractedData,
+        extraction_error: {
+          route,
+          error: extractionFailureReason,
+        },
+      };
+      const { error } = await supabaseAdmin
+        .from('documents')
+        .update({ extracted_data: extractionData })
+        .eq('id', documentId)
+        .eq('processing_status', 'processed')
+        .maybeSingle();
+
+      if (error) throw error;
+
+      const { error: auditError } = await supabaseAdmin
+        .from('audit_log')
+        .insert({
+          claim_id: claimId,
+          actor_type: 'system',
+          actor_id: SYSTEM_ACTOR_ID,
+          action: 'document_extraction_failed',
+          target_table: 'documents',
+          target_id: documentId,
+          details: { route, error: extractionFailureReason },
+        });
+
+      if (auditError) {
+        logger.error('[audit-failure]', { documentId, error: auditError });
+      }
+    });
+
+    const failedEvent: DocumentExtractionFailedEvent = {
+      name: 'claim/document.extraction_failed',
+      data: { claimId, documentId, error: extractionFailureReason },
+    };
+    await step.sendEvent('emit-extraction-failed', failedEvent);
+
+    return {
+      status: 'processed',
+      documentId,
+      transitioned: true,
+      extraction: 'failed',
+    };
+  }
+
+  if (!extractionResult) {
+    throw new Error('extractionResult unexpectedly null in extraction path');
+  }
+
+  await step.run('upsert-pass-extraction-cost', async () => {
+    const { error } = await supabaseAdmin.rpc('upsert_pass_increment', {
+      p_claim_id: claimId,
+      p_pass_number: 1,
+      p_calls_increment: 1,
+      p_cost_increment: extractionResult.costUsd,
+    });
+
+    if (error) {
+      throw new Error(`upsert_pass_increment failed: ${error.message}`);
+    }
+  });
+
+  await step.run('finalize-extraction-success', async () => {
+    const extractedData = {
+      kind: classifierResult.documentType,
+      data: extractionResult.data,
+      classifier: finalizeOutcome.extractedData.classifier,
+      subtype_classifier: finalizeOutcome.extractedData.subtype_classifier,
+      subtype: finalizeOutcome.extractedData.subtype,
+      processing_time_ms: finalizeOutcome.extractedData.processing_time_ms,
+      extraction: {
+        route,
+        modelId: extractionResult.modelId,
+        inputTokens: extractionResult.inputTokens,
+        outputTokens: extractionResult.outputTokens,
+        costUsd: extractionResult.costUsd,
+      },
+    };
+    const { error } = await supabaseAdmin
+      .from('documents')
+      .update({ extracted_data: extractedData })
+      .eq('id', documentId)
+      .eq('processing_status', 'processed')
+      .maybeSingle();
+
+    if (error) throw error;
+
+    const { error: auditError } = await supabaseAdmin.from('audit_log').insert({
+      claim_id: claimId,
+      actor_type: 'llm',
+      actor_id: extractionResult.modelId,
+      action: 'document_extraction_completed',
+      target_table: 'documents',
+      target_id: documentId,
+      details: {
+        route,
+        document_type: classifierResult.documentType,
+        document_subtype: subtypeResult.documentSubtype,
+        cost_usd: extractionResult.costUsd,
+        input_tokens: extractionResult.inputTokens,
+        output_tokens: extractionResult.outputTokens,
+      },
+    });
+
+    if (auditError) {
+      logger.error('[audit-failure]', { documentId, error: auditError });
+    }
+  });
+
+  const extractedEvent: DocumentExtractedEvent = {
+    name: 'claim/document.extracted',
+    data: {
+      claimId,
+      documentId,
+      documentType: classifierResult.documentType,
+      documentSubtype: subtypeResult.documentSubtype,
+    },
+  };
+  await step.sendEvent('emit-extracted', extractedEvent);
+
   return {
     status: 'processed',
     documentId,
     transitioned: finalizeOutcome.transitioned,
+    extraction: 'completed',
   };
+}
+
+type ExtractionResult =
+  | ExtractReceiptResult
+  | ExtractPoliceResult
+  | ExtractHotelGenericResult
+  | ExtractMedicalResult;
+
+export async function runExtractionByRoute(
+  route: Exclude<ExtractionRoute, 'skip_dedicated' | 'skip_other'>,
+  input: { documentId: string; fileName: string },
+): Promise<ExtractionResult> {
+  switch (route) {
+    case 'receipt':
+      return extractReceiptFromStorage(input);
+    case 'police':
+      return extractPoliceFromStorage(input);
+    case 'hotel_generic':
+      return extractHotelGenericFromStorage(input);
+    case 'medical':
+      return extractMedicalFromStorage(input);
+  }
 }
 
 function getFailureAuditActor(

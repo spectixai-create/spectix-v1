@@ -121,6 +121,11 @@ Run `pnpm test:e2e` for UI, routing, auth, or interaction changes.
   mappings use `system/system:single-subtype-mapping`; subtype pre-call errors
   use `system/subtype-classifier:pre-call-failure`; subtype LLM failures use
   `llm/<default model id>`.
+- Broad extraction audits use `document_extraction_completed`,
+  `document_extraction_failed`, and `document_extraction_deferred`.
+  Extraction failure is degraded success: document processing remains
+  `processed`, classifier/subtype data remains persisted, and
+  `extraction_error` is written into `documents.extracted_data`.
 - `SPECTIX_FAKE_CLAUDE_CLASSIFIER=true` enables the non-production fake
   classifier path for both broad and subtype classification.
 - Public document status endpoints must verify both `claim_id` and document

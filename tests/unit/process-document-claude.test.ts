@@ -17,6 +17,8 @@ import {
   SubtypeClassifierLLMError,
   SubtypeClassifierPreCallError,
 } from '@/lib/llm/classify-subtype';
+import type { ExtractPoliceResult } from '@/lib/llm/extract/extract-police';
+import type { ExtractReceiptResult } from '@/lib/llm/extract/extract-receipt';
 import type {
   DocumentSubtype,
   DocumentUploadedEvent,
@@ -44,14 +46,16 @@ describe('processDocument Claude integration branches', () => {
       supabaseAdmin: supabase as never,
       classifier: async () => classifierResult('receipt'),
       subtypeClassifier: async () => subtypeResult('general_receipt'),
+      extractor: async () => extractionResult('receipt'),
     });
 
     expect(result).toEqual({
       status: 'processed',
       documentId,
       transitioned: true,
+      extraction: 'completed',
     });
-    expect(step.sendEvent).toHaveBeenCalledTimes(2);
+    expect(step.sendEvent).toHaveBeenCalledTimes(3);
     expect(supabase.lastAudit('document_processing_completed')).toMatchObject({
       actor_type: 'llm',
       actor_id: MODEL_ID,
@@ -60,6 +64,10 @@ describe('processDocument Claude integration branches', () => {
       classifier: { modelId: MODEL_ID },
       subtype_classifier: { modelId: MODEL_ID },
       subtype: { modelId: MODEL_ID, skipped: false },
+    });
+    expect(supabase.document.extracted_data).toMatchObject({
+      kind: 'receipt',
+      data: { storeName: 'Pharmacy' },
     });
   });
 
@@ -192,6 +200,7 @@ describe('processDocument Claude integration branches', () => {
       supabaseAdmin: supabase as never,
       classifier: async () => classifierResult('receipt', 0.02),
       subtypeClassifier: async () => subtypeResult('general_receipt', 0.003),
+      extractor: async () => extractionResult('receipt', 0.004),
     });
 
     expect(supabase.rpcCalls).toEqual([
@@ -211,6 +220,15 @@ describe('processDocument Claude integration branches', () => {
           p_pass_number: 1,
           p_calls_increment: 1,
           p_cost_increment: 0.003,
+        },
+      },
+      {
+        name: 'upsert_pass_increment',
+        payload: {
+          p_claim_id: claimId,
+          p_pass_number: 1,
+          p_calls_increment: 1,
+          p_cost_increment: 0.004,
         },
       },
     ]);
@@ -254,7 +272,7 @@ describe('processDocument Claude integration branches', () => {
     });
   });
 
-  it('U-NEW-1 skip-subtype broad writes deterministic subtype and broad cost only', async () => {
+  it('U-NEW-1 skip-subtype broad writes deterministic subtype and extraction cost', async () => {
     const supabase = new FakeSupabase();
     const step = createStep();
 
@@ -270,6 +288,7 @@ describe('processDocument Claude integration branches', () => {
           modelId: SUBTYPE_DETERMINISTIC_ACTOR_ID,
           llmReturnedRaw: null,
         }),
+      extractor: async () => extractionResult('police'),
     });
 
     expect(supabase.document.document_subtype).toBe('police_report');
@@ -281,6 +300,15 @@ describe('processDocument Claude integration branches', () => {
           p_pass_number: 1,
           p_calls_increment: 1,
           p_cost_increment: 0.02,
+        },
+      },
+      {
+        name: 'upsert_pass_increment',
+        payload: {
+          p_claim_id: claimId,
+          p_pass_number: 1,
+          p_calls_increment: 1,
+          p_cost_increment: 0.001,
         },
       },
     ]);
@@ -301,6 +329,10 @@ describe('processDocument Claude integration branches', () => {
         name: 'claim/document.subtype_classified',
       }),
     );
+    expect(step.sendEvent).toHaveBeenCalledWith(
+      'emit-extracted',
+      expect.objectContaining({ name: 'claim/document.extracted' }),
+    );
   });
 
   it('U-NEW-2 LLM subtype success writes subtype, audits, and emits both events', async () => {
@@ -314,10 +346,11 @@ describe('processDocument Claude integration branches', () => {
       supabaseAdmin: supabase as never,
       classifier: async () => classifierResult('receipt', 0.02),
       subtypeClassifier: async () => subtypeResult('medical_receipt', 0.003),
+      extractor: async () => extractionResult('receipt'),
     });
 
     expect(supabase.document.document_subtype).toBe('medical_receipt');
-    expect(supabase.rpcCalls).toHaveLength(2);
+    expect(supabase.rpcCalls).toHaveLength(3);
     expect(
       supabase.lastAudit('document_subtype_classification_completed'),
     ).toMatchObject({
@@ -336,6 +369,10 @@ describe('processDocument Claude integration branches', () => {
     expect(step.sendEvent).toHaveBeenCalledWith(
       'emit-subtype-classified',
       expect.objectContaining({ name: 'claim/document.subtype_classified' }),
+    );
+    expect(step.sendEvent).toHaveBeenCalledWith(
+      'emit-extracted',
+      expect.objectContaining({ name: 'claim/document.extracted' }),
     );
   });
 
@@ -438,6 +475,72 @@ describe('processDocument Claude integration branches', () => {
       'emit-subtype-classified',
       expect.anything(),
     );
+    expect(step.sendEvent).toHaveBeenCalledWith(
+      'emit-extraction-deferred',
+      expect.objectContaining({ name: 'claim/document.extraction_deferred' }),
+    );
+  });
+
+  it('extractor failure keeps document processed and emits failed extraction event', async () => {
+    const supabase = new FakeSupabase();
+    const step = createStep();
+
+    const result = await runProcessDocument({
+      event: uploadedEvent(),
+      step,
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: async () => classifierResult('receipt', 0.02),
+      subtypeClassifier: async () => subtypeResult('general_receipt', 0.003),
+      extractor: async () => {
+        throw new Error('extractor down');
+      },
+    });
+
+    expect(result).toMatchObject({
+      status: 'processed',
+      extraction: 'failed',
+    });
+    expect(supabase.document.processing_status).toBe('processed');
+    expect(supabase.document.extracted_data).toMatchObject({
+      extraction_error: { route: 'receipt', error: 'extractor down' },
+    });
+    expect(supabase.lastAudit('document_extraction_failed')).toMatchObject({
+      action: 'document_extraction_failed',
+    });
+    expect(step.sendEvent).toHaveBeenCalledWith(
+      'emit-extraction-failed',
+      expect.objectContaining({ name: 'claim/document.extraction_failed' }),
+    );
+  });
+
+  it('skip_dedicated extraction route emits deferred event without extractor call', async () => {
+    const supabase = new FakeSupabase();
+    const step = createStep();
+    const extractor = vi.fn(async () => extractionResult('receipt'));
+
+    const result = await runProcessDocument({
+      event: uploadedEvent(),
+      step,
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: async () => classifierResult('flight_doc', 0.02),
+      subtypeClassifier: async () => subtypeResult('boarding_pass', 0.003),
+      extractor,
+    });
+
+    expect(result).toMatchObject({
+      status: 'processed',
+      extraction: 'deferred',
+      reason: 'skip_dedicated',
+    });
+    expect(extractor).not.toHaveBeenCalled();
+    expect(step.sendEvent).toHaveBeenCalledWith(
+      'emit-extraction-deferred',
+      expect.objectContaining({
+        data: expect.objectContaining({ reason: 'skip_dedicated' }),
+      }),
+    );
   });
 });
 
@@ -477,6 +580,56 @@ function subtypeResult(
     llmReturnedRaw: overrides.llmReturnedRaw ?? documentSubtype,
     skipped: overrides.skipped ?? false,
   };
+}
+
+function extractionResult(
+  kind: 'receipt' | 'police',
+  costUsd = 0.001,
+): ExtractReceiptResult | ExtractPoliceResult {
+  const data =
+    kind === 'receipt'
+      ? {
+          storeName: 'Pharmacy',
+          storeAddress: null,
+          storePhone: null,
+          receiptDate: null,
+          receiptNumber: null,
+          items: [],
+          subtotal: null,
+          tax: null,
+          total: 42,
+          currency: 'ILS',
+          paymentMethod: null,
+        }
+      : {
+          caseNumber: '123',
+          reportDate: null,
+          incidentDate: null,
+          stationName: null,
+          stationCity: null,
+          officerName: null,
+          officerRank: null,
+          reporterName: null,
+          incidentSummary: null,
+          itemsReported: [],
+          formatAnalysis: {
+            caseNumberFormatMatch: true,
+            caseNumberFormatNotes: '',
+            elementsPresent: [],
+            elementsMissing: [],
+            anomaliesDetected: [],
+            overallAuthenticityScore: null,
+            scoreReasoning: '',
+          },
+        };
+
+  return {
+    data,
+    modelId: MODEL_ID,
+    inputTokens: 50,
+    outputTokens: 20,
+    costUsd,
+  } as ExtractReceiptResult | ExtractPoliceResult;
 }
 
 function createLogger() {

@@ -588,6 +588,34 @@ export interface DocumentSubtypeClassifiedEvent {
   };
 }
 
+export interface DocumentExtractedEvent {
+  name: 'claim/document.extracted';
+  data: {
+    claimId: string;
+    documentId: string;
+    documentType: DocumentType;
+    documentSubtype: DocumentSubtype | null;
+  };
+}
+
+export interface DocumentExtractionFailedEvent {
+  name: 'claim/document.extraction_failed';
+  data: {
+    claimId: string;
+    documentId: string;
+    error: string;
+  };
+}
+
+export interface DocumentExtractionDeferredEvent {
+  name: 'claim/document.extraction_deferred';
+  data: {
+    claimId: string;
+    documentId: string;
+    reason: 'skip_dedicated' | 'skip_other';
+  };
+}
+
 export interface PassStartEvent {
   name: 'claim/pass.start';
   data: {
@@ -609,5 +637,8 @@ export type SpectixInngestEvent =
   | DocumentProcessedEvent
   | DocumentProcessFailedEvent
   | DocumentSubtypeClassifiedEvent
+  | DocumentExtractedEvent
+  | DocumentExtractionFailedEvent
+  | DocumentExtractionDeferredEvent
   | PassStartEvent
   | PassCompletedEvent;
