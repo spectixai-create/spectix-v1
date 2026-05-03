@@ -60,7 +60,7 @@ Rollback responsibilities:
 
 ## 6. Claude API Client
 
-Create `/lib/llm/client.ts` with Anthropic SDK initialization, `DEFAULT_MODEL = 'claude-sonnet-4-6-20250915'`, static pricing, and `callClaudeJSON`.
+Create `/lib/llm/client.ts` with Anthropic SDK initialization, `DEFAULT_MODEL = 'claude-sonnet-4-5-20250929'`, static pricing, and `callClaudeJSON`.
 
 ## 7. Classifier
 

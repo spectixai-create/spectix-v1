@@ -15,7 +15,7 @@ import type { DocumentUploadedEvent, DocumentType } from '@/lib/types';
 
 const claimId = '11111111-1111-4111-8111-111111111111';
 const documentId = '22222222-2222-4222-8222-222222222222';
-const MODEL_ID = 'claude-sonnet-4-6-20250915';
+const MODEL_ID = 'claude-sonnet-4-5-20250929';
 
 describe('processDocument Claude integration branches', () => {
   afterEach(() => {

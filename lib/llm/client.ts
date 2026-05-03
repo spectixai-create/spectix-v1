@@ -1,10 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { BetaContentBlockParam } from '@anthropic-ai/sdk/resources/beta/messages/messages';
 
-export const DEFAULT_MODEL = 'claude-sonnet-4-6-20250915';
+export const DEFAULT_MODEL = 'claude-sonnet-4-5-20250929';
 
 // Pricing per million tokens.
-// Source: https://www.anthropic.com/pricing
+// Model source: https://www.anthropic.com/news/claude-sonnet-4-5
+// Pricing source: https://www.anthropic.com/pricing
 // Verified by Codex at 2026-05-03. TECH_DEBT 11h tracks moving this to config.
 const PRICING: Record<string, { input: number; output: number }> = {
   [DEFAULT_MODEL]: { input: 3, output: 15 },
@@ -48,28 +49,17 @@ export async function callClaudeJSON<T>({
     .trim();
   const inputTokens = message.usage.input_tokens;
   const outputTokens = message.usage.output_tokens;
+  const { parsed, error: parseError } = parseClaudeJSON<T>(rawText);
 
-  try {
-    return {
-      parsed: JSON.parse(rawText) as T,
-      parseError: null,
-      rawText,
-      modelId: message.model,
-      inputTokens,
-      outputTokens,
-      costUsd: calculateCostUsd(model, inputTokens, outputTokens),
-    };
-  } catch (error) {
-    return {
-      parsed: null,
-      parseError: error instanceof Error ? error.message : String(error),
-      rawText,
-      modelId: message.model,
-      inputTokens,
-      outputTokens,
-      costUsd: calculateCostUsd(model, inputTokens, outputTokens),
-    };
-  }
+  return {
+    parsed,
+    parseError,
+    rawText,
+    modelId: message.model,
+    inputTokens,
+    outputTokens,
+    costUsd: calculateCostUsd(model, inputTokens, outputTokens),
+  };
 }
 
 export function calculateCostUsd(
@@ -87,4 +77,40 @@ export function calculateCostUsd(
 
 function createAnthropicClient() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+}
+
+export function parseClaudeJSON<T>(rawText: string): {
+  parsed: T | null;
+  error: string | null;
+} {
+  const cleaned = rawText
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/```\s*$/i, '')
+    .trim();
+
+  try {
+    return { parsed: JSON.parse(cleaned) as T, error: null };
+  } catch {
+    const objectMatch = cleaned.match(/\{[\s\S]*\}/);
+    const arrayMatch = cleaned.match(/\[[\s\S]*\]/);
+    const candidate = objectMatch?.[0] ?? arrayMatch?.[0];
+
+    if (!candidate) {
+      return {
+        parsed: null,
+        error: `No JSON object/array found in response. Raw (first 200 chars): ${rawText.slice(0, 200)}`,
+      };
+    }
+
+    try {
+      return { parsed: JSON.parse(candidate) as T, error: null };
+    } catch (error) {
+      return {
+        parsed: null,
+        error: `JSON parse failed even after cleanup: ${
+          error instanceof Error ? error.message : String(error)
+        }. Raw (first 200 chars): ${rawText.slice(0, 200)}`,
+      };
+    }
+  }
 }
