@@ -2,41 +2,68 @@
 
 ## Purpose
 
-Verify OpenClaw routing without touching app code, DB schema, auth, billing, secrets, deployments, or production settings.
+Verify the local OpenClaw dispatcher can route a controlled docs-only dummy task
+without touching app code, DB schema, auth, billing, secrets, deployments, cron,
+24/7 automation, or external channels.
 
 ## Test Task
 
 Task ID: `DUMMY-OPENCLAW-001`
 
-Goal: create `/docs/agents/dummy-output.md` with one line:
+Goal: create or update only:
 
-```markdown
-# Dummy OpenClaw Routing Output
+```text
+docs/agents/dummy-output.md
+```
+
+## Command Sequence
+
+Run from the repo root:
+
+```powershell
+node scripts/openclaw-local-dispatcher.mjs init
+node scripts/openclaw-local-dispatcher.mjs status
+node scripts/openclaw-local-dispatcher.mjs create-dummy
+node scripts/openclaw-local-dispatcher.mjs show DUMMY-OPENCLAW-001
+node scripts/openclaw-local-dispatcher.mjs dispatch
+node scripts/openclaw-local-dispatcher.mjs approve-dev DUMMY-OPENCLAW-001
+node scripts/openclaw-local-dispatcher.mjs run-codex-dummy DUMMY-OPENCLAW-001
+node scripts/openclaw-local-dispatcher.mjs qa DUMMY-OPENCLAW-001
+node scripts/openclaw-local-dispatcher.mjs final-approve DUMMY-OPENCLAW-001
+node scripts/openclaw-local-dispatcher.mjs audit
+node scripts/openclaw-local-dispatcher.mjs status
 ```
 
 ## Expected Flow
 
-1. Human Owner creates harmless docs-only task.
-2. OpenClaw routes `idea` to CEO GPT.
-3. CEO GPT sets `ceo_intent_ready` and routes to PM GPT. Architect review is skipped because this is docs-only and low risk.
-4. PM GPT writes a tiny spec and recommends CEO development approval.
-5. CEO GPT approves status `ceo_dev_approved`.
-6. OpenClaw routes to Codex.
-7. Codex creates only `/docs/agents/dummy-output.md`, runs `git diff --check`, and reports `dev_done`.
-8. OpenClaw routes to QA GPT.
-9. QA GPT verifies only the dummy file changed and recommends `qa_approved`.
-10. CEO GPT gives final approval and may mark `ready_to_merge`.
+1. `create-dummy` creates the task in `.openclaw-local/inbox/`.
+2. `dispatch` creates a PM prompt and deterministic PM spec, then moves the task
+   to `pm_spec_ready`.
+3. `approve-dev` simulates CEO development approval and moves the task to
+   `ceo_dev_approved`.
+4. `run-codex-dummy` writes only `docs/agents/dummy-output.md` and moves the
+   task to `dev_done`.
+5. `qa` verifies the dispatcher ledger for the dummy output and moves the task
+   to `qa_approved`.
+6. `final-approve` simulates CEO final approval, moves the task to `done`, and
+   archives the task JSON under `.openclaw-local/archive/`.
 
 ## Expected Stops
 
-- If Codex is requested before `ceo_dev_approved`, OpenClaw stops.
-- If any agent asks to modify app code, DB, auth, billing, secrets, or deploy settings, OpenClaw stops.
-- If merge/deploy is requested before CEO final approval, OpenClaw stops.
+- If Codex is requested before `ceo_dev_approved`, the dispatcher stops.
+- If the dummy task allows anything except `docs/agents/dummy-output.md`, the
+  dispatcher stops.
+- If a task allows app code, DB, auth, billing, pricing, secrets, env,
+  deployment, Supabase, migration, or Vercel paths, the dispatcher stops.
+- The dispatcher has no merge, deploy, git push, branch deletion, external API,
+  cron, 24/7, or external-channel command.
 
 ## Pass Criteria
 
 - Task ID is preserved in every handoff.
-- Status transitions are logged.
-- OpenClaw routes by status, not by vague prose.
-- Only `/docs/agents/dummy-output.md` is proposed for modification.
+- Status transitions are logged in task history.
+- Only `docs/agents/dummy-output.md` is written by the Codex simulation.
+- `.openclaw-local/` runtime files remain ignored and uncommitted.
+- `node scripts/openclaw-local-dispatcher.mjs audit` passes.
+- `git diff --check` passes.
 - No automatic merge or deploy occurs.

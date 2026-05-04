@@ -13,6 +13,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "oc:init": "node scripts/openclaw-local-dispatcher.mjs init",
+    "oc:status": "node scripts/openclaw-local-dispatcher.mjs status",
+    "oc:create-dummy": "node scripts/openclaw-local-dispatcher.mjs create-dummy",
+    "oc:dispatch": "node scripts/openclaw-local-dispatcher.mjs dispatch",
+    "oc:audit": "node scripts/openclaw-local-dispatcher.mjs audit",
     "seed:adjuster": "tsx scripts/seed/create-adjuster.ts",
     "inngest:dev": "npx inngest-cli@latest dev -u http://localhost:3000/api/inngest",
     "check-env": "tsx scripts/check-env.ts"

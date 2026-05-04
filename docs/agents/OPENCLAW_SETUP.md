@@ -179,6 +179,22 @@ Next exact activation step: define a local filesystem task queue format for
 OpenClaw command that registers or imports that local task as a durable TaskFlow.
 Only after that succeeds should route bindings be revisited.
 
+## Current Activation Path: Local Dispatcher First
+
+TASK-018 adds a local filesystem dispatcher as the immediate activation path for
+Spectix agent workflow testing. Use it before any external channel, cron loop,
+24/7 service, merge automation, or deployment automation.
+
+Read:
+
+- [LOCAL_DISPATCHER.md](LOCAL_DISPATCHER.md)
+- [local-task-queue-spec.md](local-task-queue-spec.md)
+
+GitHub issue and PR comments remain unsupported as an OpenClaw channel in this
+install. The local dispatcher keeps runtime files under ignored
+`.openclaw-local/`, enforces the CEO/PM/Codex/QA gates locally, and supports
+only the docs-only dummy route for Codex simulation.
+
 ## Dummy Routing Test
 
 Use `/docs/agents/DUMMY_ROUTING_TEST.md`. It is docs-only and writes only `/docs/agents/dummy-output.md`. No app code, DB, auth, billing, secrets, or deployment settings are touched.
