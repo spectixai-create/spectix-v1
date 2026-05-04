@@ -1,0 +1,141 @@
+// Template only. Do not paste real tokens into this repo.
+// Target local file, if CEO approves Slack setup:
+// C:\Users\smart\.openclaw\openclaw.json
+{
+  gateway: {
+    mode: "local",
+    bind: "loopback",
+    port: 18789,
+  },
+
+  cron: {
+    enabled: false,
+  },
+
+  automation: {
+    autoMerge: false,
+    autoDeploy: false,
+  },
+
+  channels: {
+    slack: {
+      enabled: true,
+      mode: "socket",
+      // Use local env/secret references only. Never commit real values.
+      botToken: {
+        source: "env",
+        provider: "slack",
+        id: "SLACK_BOT_TOKEN",
+      },
+      appToken: {
+        source: "env",
+        provider: "slack",
+        id: "SLACK_APP_TOKEN",
+      },
+      // Optional. Needed only if HTTP Events API is ever enabled later.
+      signingSecret: {
+        source: "env",
+        provider: "slack",
+        id: "SLACK_SIGNING_SECRET",
+      },
+      commands: {
+        native: false,
+        nativeSkills: false,
+      },
+      configWrites: false,
+      thread: {
+        historyScope: "thread",
+        inheritParent: false,
+      },
+      execApprovals: {
+        enabled: false,
+      },
+      // Replace with approved private channel IDs only after CEO approval.
+      channels: {
+        "C_APPROVED_PRIVATE_CONTROL_CHANNEL": {
+          enabled: true,
+          requireMention: true,
+          allowBots: false,
+          users: ["U_APPROVED_OPERATOR"],
+          tools: {
+            deny: [
+              "git.push",
+              "git.merge",
+              "gh.pr.merge",
+              "deploy",
+              "db.migrate",
+              "secrets",
+              "env.write",
+            ],
+          },
+        },
+      },
+    },
+  },
+
+  agents: {
+    defaults: {
+      workspace: "C:\\Users\\smart\\spectix",
+    },
+    list: [
+      {
+        id: "ceo",
+        name: "ceo",
+        workspace: "C:\\Users\\smart\\spectix",
+      },
+      {
+        id: "architect",
+        name: "architect",
+        workspace: "C:\\Users\\smart\\spectix",
+      },
+      {
+        id: "pm",
+        name: "pm",
+        workspace: "C:\\Users\\smart\\spectix",
+      },
+      {
+        id: "qa",
+        name: "qa",
+        workspace: "C:\\Users\\smart\\spectix",
+      },
+      {
+        id: "codex",
+        name: "codex",
+        workspace: "C:\\Users\\smart\\spectix",
+        policy: {
+          dryRunOnly: true,
+          forbidden: [
+            "auto-merge",
+            "auto-deploy",
+            "production-data",
+            "secrets",
+            "env",
+            "db-schema",
+          ],
+        },
+      },
+    ],
+    bindings: [
+      {
+        agent: "ceo",
+        bind: "slack:default",
+      },
+      {
+        agent: "architect",
+        bind: "slack:default",
+      },
+      {
+        agent: "pm",
+        bind: "slack:default",
+      },
+      {
+        agent: "qa",
+        bind: "slack:default",
+      },
+      {
+        agent: "codex",
+        bind: "slack:default",
+      },
+    ],
+  },
+}
