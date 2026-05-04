@@ -78,12 +78,37 @@ Second repair attempt:
 - Existing Chrome windows were not closed or restarted.
 - No Slack dashboard settings were changed.
 
-Current durable blocker chain:
+Durable blocker chain after the second repair attempt:
 
 1. Slack Event Subscriptions still appear not to deliver Events API payloads to Socket Mode.
 2. The available Slack tokens cannot repair manifest/event subscriptions through Slack Web API.
 3. Codex in-app browser external navigation is blocked by Codex app-server startup failure after Node was fixed.
 4. Existing Chrome cannot be automated through remote debugging without restarting or relaunching the browser profile with debugging enabled.
+
+Third repair attempt:
+
+- CEO approved closing and restarting Chrome with remote debugging enabled.
+- Chrome was restarted with `--remote-debugging-port=9222` against the existing Chrome user data directory.
+- The remote debugging endpoint at `http://127.0.0.1:9222/json/version` was reachable.
+- Chrome reported version `147.0.7727.138`.
+- Browser automation successfully attached to the remote-debugged Chrome instance.
+- All local Chrome profile directories were checked without reading cookies or printing secrets:
+  - `Default`
+  - `Profile 1`
+  - `Profile 2`
+  - `Profile 3`
+  - `Profile 4`
+  - `Profile 5`
+  - `Profile 6`
+  - `Profile 7`
+- Every profile reached `https://api.slack.com/apps` but showed Slack API dashboard signed-out state.
+- No existing Chrome profile exposed a signed-in Slack API app dashboard session for the `spectix` workspace.
+- Because the Slack API dashboard was not authenticated in any available profile, no Slack App dashboard settings were changed.
+- Gateway validation was not rerun because the required Slack App dashboard repair could not be performed.
+
+Updated durable blocker:
+
+The local browser/runtime chain is now working enough to attach to remote-debugged Chrome, but no available Chrome profile is signed in to the Slack API app dashboard. The remaining blocker is authenticated Slack App dashboard access, or a Slack configuration token with manifest-management permissions.
 
 ## Required Slack App Configuration
 
@@ -151,6 +176,6 @@ Provide a Slack app configuration token that can read/update the existing app ma
 
 Alternative if browser automation is required:
 
-Approve closing/restarting Chrome with `--remote-debugging-port=9222`, or open the Slack App dashboard manually and apply the required settings while Codex continues validation through raw Socket Mode and OpenClaw.
+Sign in to the Slack API app dashboard in one Chrome profile for the existing `spectix` workspace, then approve rerunning the same remote-debugging dashboard repair and loopback validation.
 
 OP dummy routing should not be marked passed until Slack input from the allowed human user reaches OpenClaw, OpenClaw responds in Slack, and at least one safe dispatcher command works.
