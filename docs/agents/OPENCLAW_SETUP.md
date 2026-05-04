@@ -50,6 +50,69 @@ Copy-Item C:\Users\smart\spectix\docs\agents\openclaw.config.template.json5 ~/.o
 5. Verify OpenClaw refuses merge/deploy without CEO final approval.
 6. Only then enable one non-production chat channel at a time.
 
+## Local Gateway Routing Skeleton
+
+TASK-013 configured the local OpenClaw skeleton on this workstation only. The
+active config path is:
+
+```text
+C:\Users\smart\.openclaw\openclaw.json
+```
+
+The local config has explicit gateway settings:
+
+- `gateway.mode`: `local`
+- `gateway.bind`: `loopback`
+- `gateway.port`: `18789`
+- `cron.enabled`: `false`
+- `channels`: `{}`
+
+The local multi-agent skeleton is loaded with these agents, all pointed at
+`C:\Users\smart\spectix`:
+
+- `main`
+- `ceo`
+- `pm`
+- `architect`
+- `codex`
+- `qa`
+
+Gateway smoke test command:
+
+```powershell
+openclaw gateway run --bind loopback --auth none --ws-log compact
+```
+
+The command started a loopback listener on `127.0.0.1:18789` during the
+foreground smoke test. It was stopped after validation and was not installed as
+a service. Post-test `openclaw gateway status` reported the gateway stopped and
+the service unit missing, which is expected because persistent service mode is
+not enabled.
+
+Route bindings are not configured yet. `openclaw agents bind` requires a known
+channel binding, and a placeholder `local-skeleton` channel was rejected with
+`Unknown channel "local-skeleton"`. External channels remain disabled, so the
+dummy routing flow still cannot run end-to-end.
+
+Post-test checks:
+
+```powershell
+openclaw config validate
+openclaw gateway status
+openclaw channels list --json
+openclaw tasks flow list --json
+openclaw tasks audit --json
+```
+
+Current dummy-routing blocker: there are no channel-backed bindings and no
+registered durable TaskFlow for `DUMMY-OPENCLAW-001`.
+
+Next exact activation step: choose a safe local or non-production channel
+identifier supported by OpenClaw, configure it without secrets in the repo, add
+route bindings for `ceo`, `pm`, `architect`, `codex`, and `qa`, then register
+the dummy TaskFlow for `DUMMY-OPENCLAW-001` with cron, auto-merge, and
+auto-deploy still disabled.
+
 ## Dummy Routing Test
 
 Use `/docs/agents/DUMMY_ROUTING_TEST.md`. It is docs-only and writes only `/docs/agents/dummy-output.md`. No app code, DB, auth, billing, secrets, or deployment settings are touched.
