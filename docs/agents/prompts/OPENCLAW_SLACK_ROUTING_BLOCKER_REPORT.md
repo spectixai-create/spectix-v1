@@ -66,6 +66,25 @@ Follow-up repair attempt:
 
 This means the remaining repair path is manual Slack App dashboard configuration or a Slack configuration token with manifest-management permissions. No such configuration token was available locally.
 
+Second repair attempt:
+
+- CEO approved unblocking the local browser/runtime chain.
+- Node.js was upgraded with `winget` from `v22.18.0` to `v22.22.2`.
+- After the upgrade, `node_repl` started successfully.
+- The Codex in-app browser runtime initialized and created an `about:blank` tab.
+- External navigation through the in-app browser still failed with `failed to start codex app-server: The system cannot find the path specified. (os error 3)`.
+- Localhost navigation still worked, which indicates the remaining browser blocker is Codex external-navigation/app-server handling, not the Node version.
+- A non-invasive attempt to open existing Chrome with `--remote-debugging-port=9222` did not expose a remote debugging endpoint.
+- Existing Chrome windows were not closed or restarted.
+- No Slack dashboard settings were changed.
+
+Current durable blocker chain:
+
+1. Slack Event Subscriptions still appear not to deliver Events API payloads to Socket Mode.
+2. The available Slack tokens cannot repair manifest/event subscriptions through Slack Web API.
+3. Codex in-app browser external navigation is blocked by Codex app-server startup failure after Node was fixed.
+4. Existing Chrome cannot be automated through remote debugging without restarting or relaunching the browser profile with debugging enabled.
+
 ## Required Slack App Configuration
 
 The OpenClaw Slack manifest in the installed package expects Socket Mode plus these relevant bot scopes and events.
@@ -129,5 +148,9 @@ Approve manual Slack App dashboard repair for the existing Spectix Slack app:
 Alternative if dashboard access is not available:
 
 Provide a Slack app configuration token that can read/update the existing app manifest, or update the Slack App manually from the dashboard and then rerun the loopback validation.
+
+Alternative if browser automation is required:
+
+Approve closing/restarting Chrome with `--remote-debugging-port=9222`, or open the Slack App dashboard manually and apply the required settings while Codex continues validation through raw Socket Mode and OpenClaw.
 
 OP dummy routing should not be marked passed until Slack input from the allowed human user reaches OpenClaw, OpenClaw responds in Slack, and at least one safe dispatcher command works.
