@@ -170,6 +170,11 @@ edit files in its first turn.
 
 See [HANDOFF_PROTOCOL.md](HANDOFF_PROTOCOL.md).
 
+For the final CEO chat transition package, use
+[CHAT_SETUP_CHECKLIST.md](CHAT_SETUP_CHECKLIST.md) and the role handoff files
+under `docs/agents/prompts/FINAL_*_HANDOFF.md`. Local runtime handoffs generated
+by the dispatcher remain ignored under `.openclaw-local/outbox/`.
+
 ## Full Dummy Flow
 
 ```powershell
