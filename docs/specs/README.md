@@ -23,6 +23,8 @@ Specs in this directory are the implementation source for future spikes. Older s
 | #03g            | Claude document classification         | DONE   | backend-document-classifier         | this PR         |
 | #03ד-1a         | Document subtype classification        | DONE   | backend-document-subtype-foundation | this PR         |
 | #03ד-1b         | Broad extraction prompts (02-05)       | DONE   | backend-broad-extraction-prompts    | #18             |
+| SPRINT-001      | Pass lifecycle completion              | DONE   | sprint/pass-lifecycle-completion    | #38             |
+| SPRINT-002A     | Extraction schema contracts            | ACTIVE | sprint/extraction-schema-contracts  | this PR         |
 
 Use [spike-template.md](spike-template.md) for new specs.
 
@@ -33,3 +35,7 @@ TASK-SPECTIX-001 verified #03ד-1b in non-production. The final smoke report is 
 ## Pass Lifecycle
 
 Sprint #001 chose Option A for pass lifecycle: pass 1 is the claim-level document-processing pass. After every document for a claim is terminal, pass 1 becomes `completed` when none has a blocking failure or `failed` when at least one document has a blocking failure. The lifecycle helper is documented in [sprint-001-pass-lifecycle.md](sprint-001-pass-lifecycle.md).
+
+## Subtype Extraction
+
+SPRINT-002A defines versioned normalized extraction contracts only. Dedicated subtype prompts/routes remain SPRINT-002B scope. See [sprint-002-subtype-extraction.md](sprint-002-subtype-extraction.md).

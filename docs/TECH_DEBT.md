@@ -32,7 +32,7 @@
 - [x] 11e. Inngest concurrency limits for Claude API: #03g adds `concurrency: { limit: 5, key: 'event.data.claimId' }`.
 - [x] 11f. UI feedback regression after upload: #03g adds polling status UI after upload.
 - [ ] 11g. Claude classifier pricing is hardcoded in `lib/llm/client.ts`. Move pricing to env/config when model pricing changes or multiple models are active.
-- [ ] 11h. Subtype-specific extraction prompts are still pending. #03ד-1b added broad extraction prompts (02-05) and `documents.extracted_data` wiring; later #03 spikes still need dedicated subtype-specific extraction coverage.
+- [ ] 11h. Subtype-specific extraction prompts are still pending. #03ד-1b added broad extraction prompts (02-05) and `documents.extracted_data` wiring; SPRINT-002A adds normalized contracts only, and SPRINT-002B still needs dedicated subtype-specific extraction prompt/route coverage.
 - [ ] 11i. Status polling is client-side every 2 seconds for 30 seconds. Replace with realtime/subscription or server push if processing latency grows.
 - [ ] 11j. `upsert_pass_increment` lacks an idempotency key. If the gap between summed classifier audit costs and `claims.total_llm_cost_usd` exceeds 5% or 10 entries, add an idempotency-keyed accounting table/RPC.
 - [ ] 11k. Subtype classifier downloads the same storage object as broad classifier. Future optimization: pass bytes between Inngest steps instead of downloading twice. **Owner:** CEO (monthly review of Supabase egress in dashboard). **Trigger:** first Supabase invoice line item showing storage egress > 0.
