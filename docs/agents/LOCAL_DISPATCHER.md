@@ -71,6 +71,14 @@ Generate local agent prompts:
 node scripts/openclaw-local-dispatcher.mjs generate-agent-prompts TASK-SPECTIX-001
 ```
 
+Generate a role-specific handoff packet:
+
+```powershell
+node scripts/openclaw-local-dispatcher.mjs handoff TASK-SPECTIX-001 --role codex
+node scripts/openclaw-local-dispatcher.mjs handoff TASK-SPECTIX-001 --role pm
+node scripts/openclaw-local-dispatcher.mjs handoff TASK-SPECTIX-001 --role ceo
+```
+
 List tasks:
 
 ```powershell
@@ -145,6 +153,22 @@ these planning task types:
 Only `dummy_docs_only` may write a repository file, and only the dummy output
 file. Every other task type must keep `allowedFiles` empty and use local outbox
 prompts until a later approved implementation task exists.
+
+## Handoff Flow
+
+Use handoff files when a CEO, PM, Codex, QA, or Architect chat becomes too long,
+compacted, inconsistent, or unsafe to continue. The dispatcher writes:
+
+```text
+.openclaw-local/outbox/TASK_ID/handoff-ROLE.md
+```
+
+Handoff generation is read-only with respect to task status. It does not approve
+scope, execute smoke, merge, deploy, mutate production data, or enable OpenClaw
+automation. The new chat must verify state before doing any work and must not
+edit files in its first turn.
+
+See [HANDOFF_PROTOCOL.md](HANDOFF_PROTOCOL.md).
 
 ## Full Dummy Flow
 

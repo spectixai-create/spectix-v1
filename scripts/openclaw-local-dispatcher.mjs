@@ -33,6 +33,13 @@ const ALLOWED_TASK_TYPES = new Set([
   'codex_implementation_prompt',
   'qa_review_plan',
 ]);
+const SUPPORTED_HANDOFF_ROLES = new Set([
+  'ceo',
+  'pm',
+  'architect',
+  'codex',
+  'qa',
+]);
 const FORMAL_STATUSES = new Set([
   'idea',
   'ceo_intent_ready',
@@ -130,6 +137,17 @@ const SOURCE_DOCS = [
   'docs/agents/LOCAL_DISPATCHER.md',
   'docs/agents/local-task-queue-spec.md',
   'docs/agents/OPENCLAW_SETUP.md',
+];
+
+const SOURCE_OF_TRUTH_ORDER = [
+  'GitHub repo',
+  'AGENTS.md',
+  'docs/agents/*',
+  'docs/CURRENT_STATE.md',
+  'docs/CONVENTIONS.md',
+  'docs/TECH_DEBT.md',
+  'docs/specs/*',
+  'Current task files',
 ];
 
 function now() {
@@ -702,6 +720,198 @@ function nextActionFor(task) {
   }
 }
 
+function validateHandoffRole(role) {
+  if (!SUPPORTED_HANDOFF_ROLES.has(role)) {
+    fail(
+      `Unsupported handoff role: ${role}. Supported roles: ${[
+        ...SUPPORTED_HANDOFF_ROLES,
+      ].join(', ')}`,
+    );
+  }
+}
+
+function summarizePayload(payload) {
+  return [
+    `- CEO intent: ${payload.ceoIntent ?? 'not set'}`,
+    `- PM spec: ${payload.pmSpec ? JSON.stringify(payload.pmSpec) : 'not set'}`,
+    `- Codex prompt: ${payload.codexPrompt ? 'set' : 'not set'}`,
+    `- Codex result: ${payload.codexResult ? JSON.stringify(payload.codexResult) : 'not set'}`,
+    `- QA report: ${payload.qaReport ? JSON.stringify(payload.qaReport) : 'not set'}`,
+    `- CEO final decision: ${payload.ceoFinalDecision ? JSON.stringify(payload.ceoFinalDecision) : 'not set'}`,
+    `- Dispatcher writes: ${(payload.dispatcherWrites ?? []).join(', ') || 'none'}`,
+  ];
+}
+
+function summarizeHistory(history = []) {
+  if (!Array.isArray(history) || history.length === 0) {
+    return ['- No history recorded.'];
+  }
+
+  return history.map((event) => {
+    const transition =
+      event.from && event.to ? ` (${event.from} -> ${event.to})` : '';
+    const note = event.note ? ` - ${event.note}` : '';
+    return `- ${event.at ?? 'unknown time'} ${event.actor ?? 'unknown actor'}: ${event.event ?? 'event'}${transition}${note}`;
+  });
+}
+
+function roleFirstTurnVerification(role, taskId) {
+  switch (role) {
+    case 'codex':
+      return [
+        'Run these commands before editing files:',
+        '',
+        '```powershell',
+        'git status --short',
+        'git branch --show-current',
+        'git log --oneline -8',
+        '# If a relevant PR is named in the new task, run gh pr view <number> --json state,isDraft,mergeable,headRefName,headRefOid,baseRefName,url',
+        'node scripts/openclaw-local-dispatcher.mjs status',
+        `node scripts/openclaw-local-dispatcher.mjs show ${taskId}`,
+        '```',
+        '',
+        'Report current state before editing files.',
+      ];
+    case 'pm':
+      return [
+        '- Read the task payload.',
+        '- Read relevant prompt/spec files.',
+        '- Confirm review scope.',
+        '- Output verdict only in the required format.',
+        '- Do not write code.',
+      ];
+    case 'ceo':
+      return [
+        '- Summarize current gates.',
+        '- Identify the pending approval only.',
+        '- Do not implement.',
+        '- Do not merge without a verified approved PR/head SHA.',
+      ];
+    case 'qa':
+      return [
+        '- Verify against acceptance criteria.',
+        '- Distinguish blockers, non-blockers, and cosmetic issues.',
+        '- Do not approve merge.',
+        '- Do not change scope.',
+      ];
+    case 'architect':
+      return [
+        '- Review impact, risk, and affected modules.',
+        '- Do not write code.',
+        '- Do not change product scope.',
+      ];
+    default:
+      return ['- Verify current state before work.'];
+  }
+}
+
+function roleOutputFormat(role) {
+  switch (role) {
+    case 'codex':
+      return [
+        '1. Current repo state',
+        '2. Active branch',
+        '3. Active task status',
+        '4. What is safe to do next',
+        '5. What is blocked',
+        '6. No files edited in first turn',
+      ];
+    case 'pm':
+      return [
+        '1. Verdict',
+        '2. Blocking issues',
+        '3. Important non-blocking issues',
+        '4. E2E/smoke decision if relevant',
+        '5. Final recommendation',
+      ];
+    case 'ceo':
+      return [
+        '1. Current decision needed',
+        '2. Approved / rejected / needs more info',
+        '3. Exact next task',
+        '4. Gates that remain closed',
+      ];
+    case 'qa':
+      return [
+        '1. Pass/fail',
+        '2. Blockers',
+        '3. Evidence checked',
+        '4. Regression risks',
+        '5. Recommendation',
+      ];
+    case 'architect':
+      return [
+        '1. Impact summary',
+        '2. Affected modules',
+        '3. Risks',
+        '4. Recommended implementation path',
+        '5. Forbidden changes',
+      ];
+    default:
+      return ['1. Current state', '2. Recommendation'];
+  }
+}
+
+function buildHandoffMarkdown(task, role) {
+  return [
+    `# ${task.id} ${role.toUpperCase()} Handoff`,
+    '',
+    '## Common Header',
+    '',
+    '- Project: Spectix Claim Investigator POC',
+    `- Role being handed off: ${role}`,
+    `- Task ID: ${task.id}`,
+    `- Task title: ${task.title}`,
+    `- Current task status: ${task.status}`,
+    `- Current risk level: ${task.risk}`,
+    `- Current date/time: ${now()}`,
+    '- Source of truth order:',
+    ...SOURCE_OF_TRUTH_ORDER.map(
+      (source, index) => `  ${index + 1}. ${source}`,
+    ),
+    '',
+    'First instruction: "Before doing any work, verify current state. Do not edit files in the first turn."',
+    '',
+    '## Current Task',
+    '',
+    `- id: ${task.id}`,
+    `- title: ${task.title}`,
+    `- type: ${task.type}`,
+    `- risk: ${task.risk}`,
+    `- status: ${task.status}`,
+    `- allowedFiles: ${task.allowedFiles.length > 0 ? task.allowedFiles.join(', ') : 'none'}`,
+    `- forbiddenAreas: ${task.forbiddenAreas.join(', ')}`,
+    `- workflow: ${task.workflow.join(' -> ')}`,
+    '',
+    '### Payload Summary',
+    '',
+    ...summarizePayload(task.payload ?? {}),
+    '',
+    '### History Summary',
+    '',
+    ...summarizeHistory(task.history),
+    '',
+    '## Safety',
+    '',
+    '- Do not touch secrets/env/deploy.',
+    '- Do not mutate production data unless explicitly approved.',
+    '- Do not merge without approved PR/head SHA.',
+    '- Do not execute smoke unless explicitly approved.',
+    '- Do not enable cron/24-7.',
+    '- Do not skip gates.',
+    '- Stop if the inherited context conflicts with repo state.',
+    '',
+    '## First-Turn Verification',
+    '',
+    ...roleFirstTurnVerification(role, task.id),
+    '',
+    '## Role-Specific Output Format',
+    '',
+    ...roleOutputFormat(role),
+    '',
+  ].join('\n');
+}
+
 async function commandInit() {
   await ensureRuntime();
   await loadState();
@@ -829,6 +1039,28 @@ async function commandGenerateAgentPrompts(id) {
   await moveTask(found, found.queue, task);
   await touchLastRun();
   printJson({ ok: true, task: summarizeTask(task), files });
+}
+
+async function commandHandoff(id, args) {
+  const options = parseOptions(args);
+  const role = requiredOption(options, 'role').toLowerCase();
+  validateHandoffRole(role);
+
+  const found = await requireTask(id);
+  const { task } = found;
+  const taskOutboxDir = path.join(queueDir('outbox'), task.id);
+  await mkdir(taskOutboxDir, { recursive: true });
+
+  const filePath = path.join(taskOutboxDir, `handoff-${role}.md`);
+  await writeFile(filePath, buildHandoffMarkdown(task, role), 'utf8');
+  await touchLastRun();
+
+  printJson({
+    ok: true,
+    task: summarizeTask(task),
+    role,
+    file: normalizeRepoPath(path.relative(REPO_ROOT, filePath)),
+  });
 }
 
 async function commandAdvance(id, args) {
@@ -1234,6 +1466,7 @@ Commands:
   create-dummy
   create-task --id <id> --title <title> --type <type> --risk <risk>
   generate-agent-prompts <task-id>
+  handoff <task-id> --role <ceo|pm|architect|codex|qa>
   advance <task-id> --to <status>
   list
   next
@@ -1265,6 +1498,9 @@ async function main() {
       break;
     case 'generate-agent-prompts':
       await commandGenerateAgentPrompts(id);
+      break;
+    case 'handoff':
+      await commandHandoff(id, rest);
       break;
     case 'advance':
       await commandAdvance(id, rest);
