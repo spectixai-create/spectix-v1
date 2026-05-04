@@ -113,6 +113,72 @@ route bindings for `ceo`, `pm`, `architect`, `codex`, and `qa`, then register
 the dummy TaskFlow for `DUMMY-OPENCLAW-001` with cron, auto-merge, and
 auto-deploy still disabled.
 
+## Command Channel Investigation
+
+TASK-016 investigated GitHub issue/PR comments as the preferred command channel
+because they are auditable and safer than browser-chat automation. The installed
+OpenClaw CLI version is `2026.5.2`.
+
+Result: GitHub issue/PR comments are not currently supported as an OpenClaw
+channel in this local install.
+
+Evidence:
+
+```powershell
+openclaw channels capabilities --help
+```
+
+The supported channel list includes chat providers such as Telegram, Discord,
+Slack, Matrix, and related systems, but not `github`.
+
+```powershell
+openclaw channels capabilities --channel github --json
+```
+
+Result:
+
+```text
+Unknown channel "github".
+```
+
+```powershell
+openclaw agents bind --agent ceo --bind github-spectix-control:ceo --json
+```
+
+Result:
+
+```text
+Unknown channel "github-spectix-control".
+```
+
+```powershell
+openclaw config get github
+```
+
+Result:
+
+```text
+Config path not found: github
+```
+
+The repo template still contains a disabled placeholder `github` section, but
+the live OpenClaw config/schema used by this workstation does not expose GitHub
+issue or pull-request comments as a channel or binding target. The schema hits
+for GitHub refer to GitHub Copilot model-provider configuration, not issue/PR
+comment routing.
+
+Chosen fallback: local manual task files plus OpenClaw CLI inspection. Keep
+`channels` empty, keep `cron.enabled=false`, do not configure a public webhook,
+and do not bind Codex to automatic app-code execution. Operators may prepare
+dummy task records locally under ignored OpenClaw state and inspect them with
+OpenClaw CLI commands until a supported local channel or TaskFlow registration
+path is available.
+
+Next exact activation step: define a local filesystem task queue format for
+`DUMMY-OPENCLAW-001`, document the expected status transitions, and identify the
+OpenClaw command that registers or imports that local task as a durable TaskFlow.
+Only after that succeeds should route bindings be revisited.
+
 ## Dummy Routing Test
 
 Use `/docs/agents/DUMMY_ROUTING_TEST.md`. It is docs-only and writes only `/docs/agents/dummy-output.md`. No app code, DB, auth, billing, secrets, or deployment settings are touched.
