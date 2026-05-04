@@ -185,6 +185,12 @@ TASK-018 adds a local filesystem dispatcher as the immediate activation path for
 Spectix agent workflow testing. Use it before any external channel, cron loop,
 24/7 service, merge automation, or deployment automation.
 
+TASK-024 moves this from setup mode into operational mode for planning-only
+Spectix work. The dispatcher can create real local planning tasks, generate
+ignored CEO/PM/Architect/Codex/QA prompt files, list active tasks, show next
+actions, and enforce status gates. It still does not execute product
+implementation for non-dummy tasks.
+
 Read:
 
 - [LOCAL_DISPATCHER.md](LOCAL_DISPATCHER.md)
@@ -193,7 +199,8 @@ Read:
 GitHub issue and PR comments remain unsupported as an OpenClaw channel in this
 install. The local dispatcher keeps runtime files under ignored
 `.openclaw-local/`, enforces the CEO/PM/Codex/QA gates locally, and supports
-only the docs-only dummy route for Codex simulation.
+only the docs-only dummy route for Codex simulation. For real project work, it
+is currently a planning and prompt-generation bridge only.
 
 ## Dummy Routing Test
 

@@ -32,7 +32,7 @@
 - [x] 11e. Inngest concurrency limits for Claude API: #03g adds `concurrency: { limit: 5, key: 'event.data.claimId' }`.
 - [x] 11f. UI feedback regression after upload: #03g adds polling status UI after upload.
 - [ ] 11g. Claude classifier pricing is hardcoded in `lib/llm/client.ts`. Move pricing to env/config when model pricing changes or multiple models are active.
-- [ ] 11h. Real OCR/extraction prompts are still pending. #03g classifies document type only; downstream extraction remains for later #03 spikes.
+- [ ] 11h. Subtype-specific extraction prompts are still pending. #03ד-1b added broad extraction prompts (02-05) and `documents.extracted_data` wiring; later #03 spikes still need dedicated subtype-specific extraction coverage.
 - [ ] 11i. Status polling is client-side every 2 seconds for 30 seconds. Replace with realtime/subscription or server push if processing latency grows.
 - [ ] 11j. `upsert_pass_increment` lacks an idempotency key. If the gap between summed classifier audit costs and `claims.total_llm_cost_usd` exceeds 5% or 10 entries, add an idempotency-keyed accounting table/RPC.
 - [ ] 11k. Subtype classifier downloads the same storage object as broad classifier. Future optimization: pass bytes between Inngest steps instead of downloading twice. **Owner:** CEO (monthly review of Supabase egress in dashboard). **Trigger:** first Supabase invoice line item showing storage egress > 0.
@@ -44,6 +44,7 @@
 - [ ] 11q. If an extractor returns successfully but `extracted_data.kind = 'extraction'` has a route/payload mismatch, the row is inconsistent. #03ד-1b adds a runtime guard before persistence; add a weekly PM query for any bypassed/manual rows. **Owner:** PM weekly Section 7 query. **Trigger:** first occurrence from `select id from documents where extracted_data->>'kind' = 'extraction' and ((extracted_data->>'route' = 'receipt' and extracted_data->'data' ? 'items' = false) or (extracted_data->>'route' = 'police' and extracted_data->'data' ? 'formatAnalysis' = false) or (extracted_data->>'route' = 'hotel_generic' and extracted_data->'data' ? 'redFlags' = false) or (extracted_data->>'route' = 'medical' and extracted_data->'data' ? 'anomalies' = false));`.
 - [ ] Historical archive for older spikes #00, #00b, #00c, #00d, #00e, #02, #02a, #02b. Deferred to Spike #00z-B.
 - [ ] Replace sample dashboard/claim/questions data with real Supabase data once API contracts land.
+- [ ] OpenClaw real command channel integration remains blocked in the local install because GitHub issue/PR comments are not a supported channel target. Use the local dispatcher as the operational bridge until a safe supported channel or TaskFlow import path exists.
 
 ## Migration #0002 Scope
 
