@@ -1,0 +1,166 @@
+// Template only. Do not commit real Slack tokens or channel/user IDs.
+// Target local config after CEO approval:
+// C:\Users\smart\.openclaw\openclaw.json
+{
+  gateway: {
+    mode: "local",
+    bind: "loopback",
+    port: 18789,
+  },
+
+  cron: {
+    enabled: false,
+  },
+
+  automation: {
+    autoMerge: false,
+    autoDeploy: false,
+  },
+
+  channels: {
+    "slack-spectix-control": {
+      provider: "slack",
+      enabled: true,
+      mode: "socket",
+      accountId: "default",
+
+      // Use env or OpenClaw secret references only.
+      // Never paste token values into this repo.
+      botToken: {
+        source: "env",
+        provider: "slack",
+        id: "SLACK_BOT_TOKEN",
+      },
+      appToken: {
+        source: "env",
+        provider: "slack",
+        id: "SLACK_APP_TOKEN",
+      },
+      signingSecret: {
+        source: "env",
+        provider: "slack",
+        id: "SLACK_SIGNING_SECRET",
+      },
+
+      controlPlane: {
+        channelId: "C_SLACK_CONTROL_CHANNEL_ID",
+        allowedUserIds: ["U_ALLOWED_OPERATOR_1"],
+        allowedCommands: [
+          "/oc status",
+          "/oc handoff TASK-SPECTIX-001 --role pm",
+          "/oc handoff TASK-SPECTIX-001 --role qa",
+          "/oc next",
+          "/oc audit",
+        ],
+        forbiddenCommands: [
+          "merge",
+          "deploy",
+          "production",
+          "db migration",
+          "secrets",
+          "env changes",
+          "create claim",
+          "upload docs",
+          "smoke execution",
+          "cron",
+          "24/7",
+        ],
+      },
+
+      commands: {
+        native: false,
+        nativeSkills: false,
+      },
+      configWrites: false,
+      execApprovals: {
+        enabled: false,
+      },
+      thread: {
+        historyScope: "thread",
+        inheritParent: false,
+      },
+      channels: {
+        C_SLACK_CONTROL_CHANNEL_ID: {
+          enabled: true,
+          requireMention: true,
+          allowBots: false,
+          users: ["U_ALLOWED_OPERATOR_1"],
+          tools: {
+            deny: [
+              "git.push",
+              "git.merge",
+              "gh.pr.merge",
+              "deploy",
+              "db.migrate",
+              "secrets",
+              "env.write",
+              "supabase.write",
+              "vercel.deploy",
+            ],
+          },
+        },
+      },
+    },
+  },
+
+  agents: {
+    defaults: {
+      workspace: "C:\\Users\\smart\\spectix",
+    },
+    list: [
+      {
+        id: "ceo",
+        name: "ceo",
+        workspace: "C:\\Users\\smart\\spectix",
+      },
+      {
+        id: "architect",
+        name: "architect",
+        workspace: "C:\\Users\\smart\\spectix",
+      },
+      {
+        id: "pm",
+        name: "pm",
+        workspace: "C:\\Users\\smart\\spectix",
+      },
+      {
+        id: "qa",
+        name: "qa",
+        workspace: "C:\\Users\\smart\\spectix",
+      },
+      {
+        id: "codex_ops",
+        name: "codex_ops",
+        workspace: "C:\\Users\\smart\\spectix",
+        policy: {
+          docsOnlyUntilApproved: true,
+          noAutoMerge: true,
+          noAutoDeploy: true,
+          noProductionData: true,
+        },
+      },
+    ],
+    bindings: [
+      {
+        agent: "ceo",
+        bind: "slack:default",
+      },
+      {
+        agent: "architect",
+        bind: "slack:default",
+      },
+      {
+        agent: "pm",
+        bind: "slack:default",
+      },
+      {
+        agent: "qa",
+        bind: "slack:default",
+      },
+      {
+        agent: "codex_ops",
+        bind: "slack:default",
+      },
+    ],
+  },
+}

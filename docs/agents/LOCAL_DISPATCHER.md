@@ -239,3 +239,8 @@ the real channel. The replacement must preserve these safety defaults:
 - No cron or 24/7 loop without explicit approval.
 - Codex only receives approved tasks.
 - Dummy docs-only routing must pass before any product task is routed.
+
+The first supported real-channel path is prepared in
+[OPENCLAW_SLACK_CONTROL_PLANE_SETUP.md](prompts/OPENCLAW_SLACK_CONTROL_PLANE_SETUP.md).
+Until Slack dummy routing passes, the local dispatcher remains the operational
+bridge and all `.openclaw-local/` runtime artifacts remain uncommitted.

@@ -202,6 +202,20 @@ install. The local dispatcher keeps runtime files under ignored
 only the docs-only dummy route for Codex simulation. For real project work, it
 is currently a planning and prompt-generation bridge only.
 
+## Slack Control Plane Preparation
+
+TASK-062 prepares the first supported real OpenClaw routing path: a private
+Slack control channel using Socket Mode. The setup is documented in:
+
+- [OPENCLAW_SLACK_CONTROL_PLANE_SETUP.md](prompts/OPENCLAW_SLACK_CONTROL_PLANE_SETUP.md)
+- [OPENCLAW_SLACK_CREDENTIAL_CHECKLIST.md](prompts/OPENCLAW_SLACK_CREDENTIAL_CHECKLIST.md)
+- [OPENCLAW_SLACK_LOCAL_CONFIG_TEMPLATE.json5](prompts/OPENCLAW_SLACK_LOCAL_CONFIG_TEMPLATE.json5)
+
+Do not add real Slack tokens to the repo. Slack activation still requires a
+separate CEO-approved task to enter local-only credentials and run a foreground
+loopback dummy validation. Cron, 24/7, auto-merge, auto-deploy, and public
+webhooks remain disabled.
+
 ## Dummy Routing Test
 
 Use `/docs/agents/DUMMY_ROUTING_TEST.md`. It is docs-only and writes only `/docs/agents/dummy-output.md`. No app code, DB, auth, billing, secrets, or deployment settings are touched.
