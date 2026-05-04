@@ -19,6 +19,17 @@ The local dispatcher stores runtime state in ignored files:
 the workflow. `outbox/` contains prompt and review artifacts for local agent
 handoff. `archive/` contains completed task JSON files.
 
+Role handoff artifacts are written under:
+
+```text
+.openclaw-local/outbox/TASK_ID/handoff-ROLE.md
+```
+
+Handoff generation is read-only with respect to task status. It creates a local
+markdown snapshot for a fresh CEO, PM, Architect, Codex, or QA chat and does not
+advance gates, approve scope, run smoke, merge, deploy, or mutate production
+data.
+
 ## State Files
 
 `state.json`:
@@ -169,6 +180,7 @@ node scripts/openclaw-local-dispatcher.mjs status
 node scripts/openclaw-local-dispatcher.mjs create-dummy
 node scripts/openclaw-local-dispatcher.mjs create-task --id TASK-SPECTIX-001 --title "Post-merge production smoke plan for broad extraction" --type ops_planning --risk medium
 node scripts/openclaw-local-dispatcher.mjs generate-agent-prompts TASK-SPECTIX-001
+node scripts/openclaw-local-dispatcher.mjs handoff TASK-SPECTIX-001 --role codex
 node scripts/openclaw-local-dispatcher.mjs list
 node scripts/openclaw-local-dispatcher.mjs next
 node scripts/openclaw-local-dispatcher.mjs advance TASK-SPECTIX-001 --to pm_spec_ready

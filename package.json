@@ -18,6 +18,7 @@
     "oc:create-dummy": "node scripts/openclaw-local-dispatcher.mjs create-dummy",
     "oc:create-task": "node scripts/openclaw-local-dispatcher.mjs create-task",
     "oc:generate-agent-prompts": "node scripts/openclaw-local-dispatcher.mjs generate-agent-prompts",
+    "oc:handoff": "node scripts/openclaw-local-dispatcher.mjs handoff",
     "oc:list": "node scripts/openclaw-local-dispatcher.mjs list",
     "oc:next": "node scripts/openclaw-local-dispatcher.mjs next",
     "oc:advance": "node scripts/openclaw-local-dispatcher.mjs advance",
