@@ -10,7 +10,8 @@ temporary filesystem dispatcher.
 This dispatcher is local operations tooling. It does not change Spectix product
 runtime behavior and does not replace the OpenClaw Gateway. It is intended to
 bridge the gap until a supported OpenClaw channel or TaskFlow import path is
-available.
+available. After PR #23, it is the operational baseline for local Spectix
+CEO/PM/Codex/QA handoffs.
 
 ## Safety Model
 
@@ -33,6 +34,11 @@ For the dummy flow, the only repository file the Codex simulation may write is:
 docs/agents/dummy-output.md
 ```
 
+For real Spectix project work, non-dummy task types are planning-only. They may
+create ignored local prompt files under `.openclaw-local/outbox/`, but they may
+not approve or write repository files. Product implementation still requires a
+separate explicit CEO-approved Codex task.
+
 ## Commands
 
 Initialize local runtime state:
@@ -51,6 +57,36 @@ Create the dummy task:
 
 ```powershell
 node scripts/openclaw-local-dispatcher.mjs create-dummy
+```
+
+Create a real planning task:
+
+```powershell
+node scripts/openclaw-local-dispatcher.mjs create-task --id TASK-SPECTIX-001 --title "Post-merge production smoke plan for broad extraction" --type ops_planning --risk medium
+```
+
+Generate local agent prompts:
+
+```powershell
+node scripts/openclaw-local-dispatcher.mjs generate-agent-prompts TASK-SPECTIX-001
+```
+
+List tasks:
+
+```powershell
+node scripts/openclaw-local-dispatcher.mjs list
+```
+
+Show next required actions:
+
+```powershell
+node scripts/openclaw-local-dispatcher.mjs next
+```
+
+Advance a task through a valid gate:
+
+```powershell
+node scripts/openclaw-local-dispatcher.mjs advance TASK-SPECTIX-001 --to pm_spec_ready
 ```
 
 Show the dummy task:
@@ -94,6 +130,21 @@ Audit safety:
 ```powershell
 node scripts/openclaw-local-dispatcher.mjs audit
 ```
+
+## Operational Planning Flow
+
+Use planning tasks for work that should be routed through CEO, PM, Architect,
+Codex, and QA without executing implementation yet. The dispatcher supports
+these planning task types:
+
+- `ops_planning`
+- `pm_review`
+- `codex_implementation_prompt`
+- `qa_review_plan`
+
+Only `dummy_docs_only` may write a repository file, and only the dummy output
+file. Every other task type must keep `allowedFiles` empty and use local outbox
+prompts until a later approved implementation task exists.
 
 ## Full Dummy Flow
 

@@ -23,6 +23,16 @@ const STATE_FILE = path.join(RUNTIME_DIR, 'state.json');
 const TASKS_INDEX_FILE = path.join(RUNTIME_DIR, 'tasks.json');
 const DUMMY_ID = 'DUMMY-OPENCLAW-001';
 const DUMMY_ALLOWED_FILE = 'docs/agents/dummy-output.md';
+const SPECTIX_001_ID = 'TASK-SPECTIX-001';
+const SPECTIX_001_CEO_INTENT =
+  'Now that PR #18 is merged, prepare a safe post-merge production smoke plan for broad extraction. The plan must verify the new extraction flow without modifying DB schema, secrets, production settings, or user data beyond controlled smoke test records. This task is planning-only. Do not execute the smoke test yet.';
+const ALLOWED_TASK_TYPES = new Set([
+  'dummy_docs_only',
+  'ops_planning',
+  'pm_review',
+  'codex_implementation_prompt',
+  'qa_review_plan',
+]);
 const FORMAL_STATUSES = new Set([
   'idea',
   'ceo_intent_ready',
@@ -91,6 +101,35 @@ const DEFAULT_FORBIDDEN_AREAS = [
   'secrets',
   'env',
   'deployment',
+];
+
+const SPECTIX_001_FORBIDDEN_AREAS = [
+  'app code changes',
+  'DB migration',
+  'secrets/env changes',
+  'deployment changes',
+  'production data mutation',
+  'real smoke execution',
+  'merge/deploy',
+  'OpenClaw cron/24-7',
+];
+
+const DEFAULT_WORKFLOW = [
+  'ceo',
+  'pm',
+  'ceo_approval',
+  'codex',
+  'qa',
+  'ceo_final',
+];
+
+const SOURCE_DOCS = [
+  'docs/CURRENT_STATE.md',
+  'docs/TECH_DEBT.md',
+  'docs/specs/README.md',
+  'docs/agents/LOCAL_DISPATCHER.md',
+  'docs/agents/local-task-queue-spec.md',
+  'docs/agents/OPENCLAW_SETUP.md',
 ];
 
 function now() {
@@ -291,18 +330,24 @@ function validateStatus(status) {
   }
 }
 
+function validateTaskType(type) {
+  if (!ALLOWED_TASK_TYPES.has(type)) {
+    fail(`Unsupported task type: ${type}`);
+  }
+}
+
 function validateTransition(task, nextStatus) {
   validateStatus(task.status);
   validateStatus(nextStatus);
   const allowed = ALLOWED_TRANSITIONS.get(task.status);
   if (!allowed?.has(nextStatus)) {
-    fail(`Forbidden status jump: ${task.status} -> ${nextStatus}`);
+    fail(transitionBlockReason(task.status, nextStatus));
   }
 }
 
 function validateAllowedFiles(task) {
-  if (!Array.isArray(task.allowedFiles) || task.allowedFiles.length === 0) {
-    fail(`Task ${task.id} has no allowedFiles`);
+  if (!Array.isArray(task.allowedFiles)) {
+    fail(`Task ${task.id} allowedFiles must be an array`);
   }
 
   for (const file of task.allowedFiles) {
@@ -321,6 +366,12 @@ function validateAllowedFiles(task) {
       fail(`Task ${task.id} allows a forbidden file area: ${file}`);
     }
   }
+
+  if (task.type !== 'dummy_docs_only' && task.allowedFiles.length > 0) {
+    fail(
+      `Task ${task.id} is planning-only; only dummy_docs_only may allow repo file writes right now`,
+    );
+  }
 }
 
 function validateDummyTask(task) {
@@ -336,6 +387,25 @@ function validateDummyTask(task) {
   }
 }
 
+function transitionBlockReason(from, to) {
+  if (['pm_spec_ready', 'architect_review'].includes(to) && from === 'idea') {
+    return `Forbidden status jump: ${from} -> ${to}. CEO intent must be ready before PM or Architect routing.`;
+  }
+  if (['in_dev', 'dev_done'].includes(to) && from !== 'ceo_dev_approved') {
+    return `Forbidden status jump: ${from} -> ${to}. Codex cannot start before ceo_dev_approved.`;
+  }
+  if (['qa_review', 'qa_approved'].includes(to) && from !== 'dev_done') {
+    return `Forbidden status jump: ${from} -> ${to}. QA cannot run before dev_done.`;
+  }
+  if (
+    to === 'done' &&
+    !['qa_approved', 'ceo_final_review', 'ready_to_merge'].includes(from)
+  ) {
+    return `Forbidden status jump: ${from} -> ${to}. Done requires QA approval or CEO final approval first.`;
+  }
+  return `Forbidden status jump: ${from} -> ${to}`;
+}
+
 function addHistory(task, event) {
   task.history.push({
     at: now(),
@@ -347,6 +417,7 @@ function addHistory(task, event) {
 
 async function writeTask(queue, task) {
   validateStatus(task.status);
+  validateTaskType(task.type);
   validateAllowedFiles(task);
   await writeJson(taskPath(queue, task.id), task);
   await syncTasksIndex();
@@ -383,7 +454,7 @@ function createDummyTask() {
     source: 'local',
     allowedFiles: [DUMMY_ALLOWED_FILE],
     forbiddenAreas: DEFAULT_FORBIDDEN_AREAS,
-    workflow: ['ceo', 'pm', 'ceo_approval', 'codex', 'qa', 'ceo_final'],
+    workflow: DEFAULT_WORKFLOW,
     history: [
       {
         at: timestamp,
@@ -404,6 +475,231 @@ function createDummyTask() {
       dispatcherWrites: [],
     },
   };
+}
+
+function parseOptions(args) {
+  const options = { _: [] };
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (!arg.startsWith('--')) {
+      options._.push(arg);
+      continue;
+    }
+
+    const key = arg.slice(2);
+    const nextArg = args[index + 1];
+    if (!nextArg || nextArg.startsWith('--')) {
+      options[key] = true;
+      continue;
+    }
+
+    options[key] = nextArg;
+    index += 1;
+  }
+
+  return options;
+}
+
+function requiredOption(options, key) {
+  const value = options[key];
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    fail(`Missing required option: --${key}`);
+  }
+  return value.trim();
+}
+
+function parseCsvOption(value) {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    return [];
+  }
+
+  return value
+    .split(',')
+    .map((entry) => normalizeRepoPath(entry.trim()))
+    .filter(Boolean);
+}
+
+function defaultForbiddenAreasForTask(id) {
+  if (id === SPECTIX_001_ID) {
+    return SPECTIX_001_FORBIDDEN_AREAS;
+  }
+  return DEFAULT_FORBIDDEN_AREAS;
+}
+
+function defaultCeoIntentForTask(id, title) {
+  if (id === SPECTIX_001_ID) {
+    return SPECTIX_001_CEO_INTENT;
+  }
+  return `CEO intent for ${id}: ${title}`;
+}
+
+function createPlanningTask(options) {
+  const timestamp = now();
+  const id = requiredOption(options, 'id');
+  const title = requiredOption(options, 'title');
+  const type = requiredOption(options, 'type');
+  const risk = requiredOption(options, 'risk');
+  const status =
+    typeof options.status === 'string' ? options.status : 'ceo_intent_ready';
+  const allowedFiles = parseCsvOption(options['allowed-files']);
+  const forbiddenAreas =
+    parseCsvOption(options['forbidden-areas']).length > 0
+      ? parseCsvOption(options['forbidden-areas'])
+      : defaultForbiddenAreasForTask(id);
+  const workflow =
+    parseCsvOption(options.workflow).length > 0
+      ? parseCsvOption(options.workflow)
+      : DEFAULT_WORKFLOW;
+  const ceoIntent =
+    typeof options['ceo-intent'] === 'string'
+      ? options['ceo-intent']
+      : defaultCeoIntentForTask(id, title);
+
+  const task = {
+    id,
+    title,
+    type,
+    risk,
+    status,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    source: 'local',
+    allowedFiles,
+    forbiddenAreas,
+    workflow,
+    history: [
+      {
+        at: timestamp,
+        actor: 'local-dispatcher',
+        event: 'created',
+        to: status,
+        note: 'Local planning task created. Repo file execution is disabled for non-dummy task types.',
+      },
+    ],
+    payload: {
+      ceoIntent,
+      pmSpec: null,
+      codexPrompt: null,
+      codexResult: null,
+      qaReport: null,
+      ceoFinalDecision: null,
+      dispatcherWrites: [],
+    },
+  };
+
+  validateStatus(task.status);
+  validateTaskType(task.type);
+  validateAllowedFiles(task);
+
+  return task;
+}
+
+function rolePrompt(task, role) {
+  const roleActions = {
+    ceo: [
+      'Review whether the task intent is still approved.',
+      'Record decisions outside the local runtime if a real approval is needed.',
+    ],
+    pm: [
+      'Turn CEO intent into a precise implementation or operations spec.',
+      'Define pass/fail criteria and handoff requirements.',
+    ],
+    architect: [
+      'Check architecture, data, and integration risks.',
+      'Identify blockers before Codex receives implementation approval.',
+    ],
+    codex: [
+      'Do not execute product implementation from this planning task.',
+      'Prepare only an execution prompt unless the task reaches ceo_dev_approved in a later approved task.',
+    ],
+    qa: [
+      'Prepare verification criteria and regression checks.',
+      'Confirm forbidden areas remain untouched.',
+    ],
+  };
+
+  const requiredOutput = {
+    ceo: 'Decision: approved_for_pm / blocked, with reason.',
+    pm: 'PM spec with objective, scope, safety constraints, pass/fail criteria, and Codex handoff prompt.',
+    architect: 'Architecture review with risks, blockers, and safe boundaries.',
+    codex: 'Codex implementation prompt only. No code execution.',
+    qa: 'QA review plan with checks, expected evidence, and failure handling.',
+  };
+
+  return [
+    `# ${task.id} ${role.toUpperCase()} Prompt`,
+    '',
+    `Task ID: ${task.id}`,
+    `Title: ${task.title}`,
+    `Type: ${task.type}`,
+    `Risk: ${task.risk}`,
+    `Current status: ${task.status}`,
+    `Role: ${role}`,
+    '',
+    '## CEO Intent',
+    '',
+    task.payload.ceoIntent,
+    '',
+    '## Source Docs To Read',
+    '',
+    ...SOURCE_DOCS.map((doc) => `- ${doc}`),
+    '',
+    '## Allowed Actions',
+    '',
+    ...roleActions[role].map((action) => `- ${action}`),
+    '- Use local dispatcher state and prompt files only.',
+    '',
+    '## Forbidden Actions',
+    '',
+    ...task.forbiddenAreas.map((area) => `- ${area}`),
+    '- No app runtime code changes.',
+    '- No DB schema changes.',
+    '- No secrets, env, deployment, cron, 24/7, auto-merge, or auto-deploy changes.',
+    '- No production smoke execution from this planning task.',
+    '',
+    '## Required Output Format',
+    '',
+    requiredOutput[role],
+    '',
+  ].join('\n');
+}
+
+function nextActionFor(task) {
+  switch (task.status) {
+    case 'idea':
+      return 'CEO must turn the idea into approved intent.';
+    case 'ceo_intent_ready':
+      return 'PM should create the planning/spec output from CEO intent.';
+    case 'architect_review':
+      return 'Architect should review risks and unblock PM spec.';
+    case 'pm_spec_ready':
+      return 'CEO must decide whether Codex may receive development approval.';
+    case 'ceo_dev_approved':
+      return 'Codex may prepare or run the approved task within allowed files only.';
+    case 'in_dev':
+      return 'Codex should finish the approved work and report files touched.';
+    case 'dev_done':
+      return 'QA should verify actual changed files and acceptance criteria.';
+    case 'qa_review':
+      return 'QA should finish review and mark approved or failed.';
+    case 'qa_failed':
+      return 'Codex or PM must address QA findings before another review.';
+    case 'qa_approved':
+      return 'CEO final review is required before done or merge readiness.';
+    case 'code_review':
+      return 'Resolve code review before QA or implementation continues.';
+    case 'ceo_final_review':
+      return 'CEO must make the final decision.';
+    case 'ready_to_merge':
+      return 'Wait for explicit CEO merge task with approved head SHA.';
+    case 'done':
+      return 'No action required.';
+    case 'blocked':
+      return 'Human owner must clear the blocker and choose a valid next status.';
+    default:
+      return 'Unknown status; audit should investigate.';
+  }
 }
 
 async function commandInit() {
@@ -476,6 +772,113 @@ async function commandCreateDummy() {
   });
 }
 
+async function commandCreateTask(args) {
+  await loadState();
+  const options = parseOptions(args);
+  const task = createPlanningTask(options);
+
+  if (task.type === 'dummy_docs_only') {
+    validateDummyTask(task);
+  }
+
+  const existing = await findTask(task.id);
+  if (existing) {
+    printJson({
+      ok: true,
+      created: false,
+      reason: 'task already exists',
+      queue: existing.queue,
+      task: summarizeTask(existing.task),
+    });
+    return;
+  }
+
+  await writeTask('inbox', task);
+  await touchLastRun();
+  printJson({
+    ok: true,
+    created: true,
+    queue: 'inbox',
+    task: summarizeTask(task),
+  });
+}
+
+async function commandGenerateAgentPrompts(id) {
+  const found = await requireTask(id);
+  const { task } = found;
+  const roles = ['ceo', 'pm', 'architect', 'codex', 'qa'];
+  const taskOutboxDir = path.join(queueDir('outbox'), task.id);
+  await mkdir(taskOutboxDir, { recursive: true });
+
+  const files = [];
+  for (const role of roles) {
+    const filePath = path.join(taskOutboxDir, `${role}.md`);
+    await writeFile(filePath, rolePrompt(task, role), 'utf8');
+    files.push(normalizeRepoPath(path.relative(REPO_ROOT, filePath)));
+  }
+
+  task.payload.dispatcherWrites = [
+    ...(task.payload.dispatcherWrites ?? []),
+    ...files,
+  ];
+  addHistory(task, {
+    event: 'generated_agent_prompts',
+    note: 'Generated local-only role prompts in ignored dispatcher outbox.',
+    files,
+  });
+  await moveTask(found, found.queue, task);
+  await touchLastRun();
+  printJson({ ok: true, task: summarizeTask(task), files });
+}
+
+async function commandAdvance(id, args) {
+  const options = parseOptions(args);
+  const nextStatus = requiredOption(options, 'to');
+  const found = await requireTask(id);
+  const targetQueue = nextStatus === 'done' ? 'archive' : 'active';
+  const task = await setStatus(
+    found,
+    nextStatus,
+    {
+      event: 'manual_advance',
+      note: 'Manual local dispatcher status advance.',
+    },
+    targetQueue,
+  );
+  await touchLastRun();
+  printJson({ ok: true, queue: targetQueue, task: summarizeTask(task) });
+}
+
+async function commandList() {
+  await loadState();
+  const tasks = await listTasks();
+  printJson({
+    ok: true,
+    tasks: tasks.map(({ queue, task }) => ({
+      queue,
+      ...summarizeTask(task),
+      risk: task.risk,
+      nextAction: nextActionFor(task),
+    })),
+  });
+}
+
+async function commandNext() {
+  await loadState();
+  const tasks = (await listTasks()).filter(({ queue }) => queue !== 'archive');
+  printJson({
+    ok: true,
+    actions: tasks.map(({ queue, task }) => ({
+      queue,
+      id: task.id,
+      title: task.title,
+      status: task.status,
+      type: task.type,
+      nextAction: nextActionFor(task),
+    })),
+  });
+}
+
 async function commandDispatch() {
   await loadState();
   const tasks = (await listTasks()).filter(({ queue }) => queue !== 'archive');
@@ -484,7 +887,16 @@ async function commandDispatch() {
     return;
   }
 
-  const found = tasks.find(({ task }) => task.id === DUMMY_ID) ?? tasks[0];
+  const found = tasks.find(({ task }) => task.id === DUMMY_ID);
+  if (!found) {
+    printJson({
+      ok: true,
+      processed: false,
+      reason: 'dispatch currently supports the dummy docs-only route only',
+    });
+    return;
+  }
+
   const { task } = found;
   validateDummyTask(task);
 
@@ -715,6 +1127,7 @@ async function commandAudit() {
   for (const { task } of tasks) {
     try {
       validateStatus(task.status);
+      validateTaskType(task.type);
       validateAllowedFiles(task);
       if (task.id === DUMMY_ID) validateDummyTask(task);
       validateHistory(task);
@@ -813,12 +1226,17 @@ function printJson(value) {
 
 function usage() {
   process.stdout
-    .write(`Usage: node scripts/openclaw-local-dispatcher.mjs <command> [task-id]
+    .write(`Usage: node scripts/openclaw-local-dispatcher.mjs <command> [task-id] [options]
 
 Commands:
   init
   status
   create-dummy
+  create-task --id <id> --title <title> --type <type> --risk <risk>
+  generate-agent-prompts <task-id>
+  advance <task-id> --to <status>
+  list
+  next
   dispatch
   approve-dev <task-id>
   run-codex-dummy <task-id>
@@ -830,7 +1248,7 @@ Commands:
 }
 
 async function main() {
-  const [command, id] = process.argv.slice(2);
+  const [command, id, ...rest] = process.argv.slice(2);
 
   switch (command) {
     case 'init':
@@ -841,6 +1259,21 @@ async function main() {
       break;
     case 'create-dummy':
       await commandCreateDummy();
+      break;
+    case 'create-task':
+      await commandCreateTask(process.argv.slice(3));
+      break;
+    case 'generate-agent-prompts':
+      await commandGenerateAgentPrompts(id);
+      break;
+    case 'advance':
+      await commandAdvance(id, rest);
+      break;
+    case 'list':
+      await commandList();
+      break;
+    case 'next':
+      await commandNext();
       break;
     case 'dispatch':
       await commandDispatch();

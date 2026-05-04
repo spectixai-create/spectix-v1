@@ -8,7 +8,7 @@ Spectix Spike #19 • 2026-05-03
 
 ## Current Phase
 
-Claim intake writes real claim rows, uploads supporting documents to Supabase Storage, classifies documents through the Inngest + Claude broad + subtype classifier pipeline, and is adding broad extraction prompts into `documents.extracted_data`.
+Claim intake writes real claim rows, uploads supporting documents to Supabase Storage, classifies documents through the Inngest + Claude broad + subtype classifier pipeline, and persists broad extraction prompt results into `documents.extracted_data`.
 
 ## Completed Spikes
 
@@ -30,14 +30,19 @@ Claim intake writes real claim rows, uploads supporting documents to Supabase St
 - #03b - Inngest document processing state machine.
 - #03g - Claude document classifier (Prompt 01), pass accounting, and status polling.
 - #03ד-1a - Document subtype classification foundation (Prompt 01b).
+- #03ד-1b - Broad extraction prompts (02-05) and `extracted_data` wiring.
 
 ## Active Spike
 
-#03ד-1b - Broad extraction prompts (02-05) and `extracted_data` wiring.
+No product spike is active in this file until CEO assigns the next approved scope.
 
 ## Next Spike
 
 Next document-processing spike: dedicated extraction prompts for subtype-specific documents.
+
+## Agent Operations
+
+OpenClaw external channel routing remains blocked in the installed local OpenClaw runtime because GitHub issue and PR comments are not supported as a channel target. The local filesystem dispatcher is the current operational bridge for CEO/PM/Codex/QA handoffs. It passed the docs-only dummy flow and keeps runtime state under ignored `.openclaw-local/`.
 
 ## Current Routes
 

@@ -83,6 +83,17 @@ Tasks use this shape:
 }
 ```
 
+Planning tasks may use the same shape with an empty `allowedFiles` array. Empty
+`allowedFiles` means no repository files may be modified for that task.
+
+Supported task types:
+
+- `dummy_docs_only`
+- `ops_planning`
+- `pm_review`
+- `codex_implementation_prompt`
+- `qa_review_plan`
+
 ## Supported Statuses
 
 - `idea`
@@ -115,6 +126,9 @@ ceo_intent_ready
 ```
 
 The dispatcher rejects unsupported status jumps recorded in task history.
+It also blocks PM/Architect routing before CEO intent, Codex work before
+`ceo_dev_approved`, QA before `dev_done`, and `done` before QA approval or CEO
+final approval.
 
 ## Safety Rules
 
@@ -140,6 +154,10 @@ For `DUMMY-OPENCLAW-001`, the only allowed file is:
 docs/agents/dummy-output.md
 ```
 
+For all non-dummy task types, `allowedFiles` must be empty. Those tasks may
+create ignored local prompt files under `.openclaw-local/outbox/`, but they may
+not write repository files.
+
 The dispatcher does not implement merge, deploy, branch deletion, push, commit,
 or external API commands.
 
@@ -149,6 +167,11 @@ or external API commands.
 node scripts/openclaw-local-dispatcher.mjs init
 node scripts/openclaw-local-dispatcher.mjs status
 node scripts/openclaw-local-dispatcher.mjs create-dummy
+node scripts/openclaw-local-dispatcher.mjs create-task --id TASK-SPECTIX-001 --title "Post-merge production smoke plan for broad extraction" --type ops_planning --risk medium
+node scripts/openclaw-local-dispatcher.mjs generate-agent-prompts TASK-SPECTIX-001
+node scripts/openclaw-local-dispatcher.mjs list
+node scripts/openclaw-local-dispatcher.mjs next
+node scripts/openclaw-local-dispatcher.mjs advance TASK-SPECTIX-001 --to pm_spec_ready
 node scripts/openclaw-local-dispatcher.mjs dispatch
 node scripts/openclaw-local-dispatcher.mjs approve-dev DUMMY-OPENCLAW-001
 node scripts/openclaw-local-dispatcher.mjs run-codex-dummy DUMMY-OPENCLAW-001
