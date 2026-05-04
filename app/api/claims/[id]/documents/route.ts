@@ -204,6 +204,26 @@ export async function POST(
     console.error('[audit-failure]', { documentId, error: auditError.message });
   }
 
+  const { error: reopenError } = await supabaseAdmin.rpc(
+    'reopen_pass_for_document_processing',
+    {
+      p_claim_id: claimId,
+      p_pass_number: 1,
+      p_reason: 'document_uploaded',
+      p_document_id: documentId,
+    },
+  );
+
+  if (reopenError) {
+    console.error('[pass-reopen-failure]', {
+      claimId,
+      documentId,
+      error: reopenError.message,
+    });
+
+    return jsonError('pass_reopen_failed', 'Upload partially failed', 500);
+  }
+
   const { count: newCount } = await supabaseAdmin
     .from('documents')
     .select('id', { count: 'exact', head: true })

@@ -110,9 +110,20 @@ CHECK constraints:
 
 JSONB: `extracted_data` maps to `ExtractedData` in [lib/types.ts](../lib/types.ts).
 
+Processing lifecycle semantics:
+
+- `pending` and `processing` are non-terminal document-processing states.
+- `processed` is written only after classification, extraction/defer handling, audit persistence, and cost persistence for that document are complete.
+- `failed` is a terminal document-processing failure.
+- If `extracted_data.extraction_error` exists on a `processed` document, it is blocking unless `extracted_data.extraction_error.blocking` is explicitly `false`.
+- `extracted_data.document_processing.terminal = false` is treated as non-terminal by the pass lifecycle helper even if a row was prematurely marked `processed`.
+
 ## RPC helpers
 
 - `public.upsert_pass_increment(p_claim_id uuid, p_pass_number int, p_calls_increment int, p_cost_increment numeric)`: claim-level cumulative pass accounting. Inserts or updates the `(claim_id, pass_number)` row and increments `llm_calls_made` and `cost_usd`. The migration #0002 `passes_update_claim_state` trigger fires on `UPDATE OF cost_usd` and keeps `claims.total_llm_cost_usd` synchronized.
+- `public.reopen_pass_for_document_processing(p_claim_id uuid, p_pass_number int default 1, p_reason text default 'document_uploaded', p_document_id uuid default null)`: reopens pass 1 to `in_progress` when a new document or retry makes document processing non-terminal again. Preserves pass cost counters and clears `completed_at`.
+- `public.retry_document_processing(p_document_id uuid, p_reason text default 'manual_retry', p_actor_type text default 'system', p_actor_id text default null)`: resets the same document row to `pending` for MVP retry, writes the previous failure state to `audit_log`, and reopens pass 1.
+- `public.finalize_pass_after_document_processing(p_claim_id uuid, p_pass_number int default 1)`: serializes finalizers per claim/pass, keeps pass 1 `in_progress` while any document is non-terminal, moves it to `completed` when all documents are terminal without blocking failures, or `failed` when all documents are terminal and at least one has a blocking failure. It returns `emit_completed_event = true` only for a real transition into `completed`.
 
 ## Storage
 

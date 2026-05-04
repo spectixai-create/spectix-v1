@@ -42,6 +42,7 @@ import type {
   DocumentProcessedEvent,
   DocumentSubtypeClassifiedEvent,
   DocumentUploadedEvent,
+  PassCompletedEvent,
   DocumentType,
   RoutedExtractionData,
 } from '@/lib/types';
@@ -67,7 +68,8 @@ type StepEvent =
   | DocumentSubtypeClassifiedEvent
   | DocumentExtractedEvent
   | DocumentExtractionFailedEvent
-  | DocumentExtractionDeferredEvent;
+  | DocumentExtractionDeferredEvent
+  | PassCompletedEvent;
 
 type StepLike = {
   run: (name: string, fn: () => Promise<unknown>) => Promise<unknown>;
@@ -99,6 +101,15 @@ type ProcessDocumentArgs = {
 type FailureAuditActor = {
   actorType: 'system' | 'llm';
   actorId: string;
+};
+
+type PassLifecycleResult = {
+  status: 'no_documents' | 'in_progress' | 'completed' | 'failed' | 'skipped';
+  terminal_documents: number;
+  failed_documents: number;
+  non_terminal_documents: number;
+  transitioned: boolean;
+  emit_completed_event: boolean;
 };
 
 export async function runProcessDocument({
@@ -250,6 +261,11 @@ export async function runProcessDocument({
             processing_time_ms: processingTimeMs,
             failure_category: failureCategory,
             failure_phase: failurePhase,
+            document_processing: {
+              phase: 'processing_failed',
+              terminal: true,
+              blocking_failure: true,
+            },
           },
         })
         .eq('id', documentId)
@@ -300,6 +316,12 @@ export async function runProcessDocument({
         data: { claimId, documentId, error: failureReason },
       };
       await step.sendEvent('emit-process-failed', failedEvent);
+      await finalizePassAfterDocumentTerminalState({
+        claimId,
+        step,
+        logger,
+        supabaseAdmin,
+      });
     }
 
     return {
@@ -337,11 +359,15 @@ export async function runProcessDocument({
         skipped: subtypeResult.skipped,
       },
       processing_time_ms: processingTimeMs,
+      document_processing: {
+        phase: 'classification_complete',
+        terminal: false,
+        blocking_failure: false,
+      },
     };
     const { data, error } = await supabaseAdmin
       .from('documents')
       .update({
-        processing_status: 'processed',
         document_type: classifierResult.documentType,
         document_subtype: subtypeResult.documentSubtype,
         extracted_data: classificationExtractedData,
@@ -427,16 +453,6 @@ export async function runProcessDocument({
   };
 
   if (finalizeOutcome.transitioned) {
-    const processedEvent: DocumentProcessedEvent = {
-      name: 'claim/document.processed',
-      data: {
-        claimId,
-        documentId,
-        documentType: classifierResult.documentType,
-      },
-    };
-    await step.sendEvent('emit-processed', processedEvent);
-
     if (subtypeResult.documentSubtype !== null) {
       const subtypeEvent: DocumentSubtypeClassifiedEvent = {
         name: 'claim/document.subtype_classified',
@@ -465,31 +481,93 @@ export async function runProcessDocument({
   );
 
   if (route === 'skip_dedicated' || route === 'skip_other') {
-    await step.run('audit-extraction-deferred', async () => {
-      const { error } = await supabaseAdmin.from('audit_log').insert({
-        claim_id: claimId,
-        actor_type: 'system',
-        actor_id: SYSTEM_ACTOR_ID,
-        action: 'document_extraction_deferred',
-        target_table: 'documents',
-        target_id: documentId,
-        details: {
-          route,
-          document_type: classifierResult.documentType,
-          document_subtype: subtypeResult.documentSubtype,
-        },
-      });
+    const deferredPersistOutcome = (await step.run(
+      'finalize-extraction-deferred',
+      async () => {
+        const terminalData = markDocumentProcessingTerminal(
+          finalizeOutcome.extractedData,
+          {
+            phase: 'extraction_deferred',
+            blockingFailure: false,
+          },
+        );
 
-      if (error) {
-        logger.error('[audit-failure]', { documentId, error });
-      }
-    });
+        const { data, error: updateError } = await supabaseAdmin
+          .from('documents')
+          .update({
+            processing_status: 'processed',
+            extracted_data: terminalData,
+          })
+          .eq('id', documentId)
+          .eq('processing_status', 'processing')
+          .select('id')
+          .maybeSingle();
 
+        if (updateError) throw updateError;
+        if (!data) {
+          logger.warn(
+            '[skip-extraction-finalize] state changed before deferred persistence',
+            {
+              documentId,
+              expected: 'processing',
+            },
+          );
+
+          return { persisted: false };
+        }
+
+        const { error } = await supabaseAdmin.from('audit_log').insert({
+          claim_id: claimId,
+          actor_type: 'system',
+          actor_id: SYSTEM_ACTOR_ID,
+          action: 'document_extraction_deferred',
+          target_table: 'documents',
+          target_id: documentId,
+          details: {
+            route,
+            document_type: classifierResult.documentType,
+            document_subtype: subtypeResult.documentSubtype,
+          },
+        });
+
+        if (error) {
+          logger.error('[audit-failure]', { documentId, error });
+        }
+
+        return { persisted: true };
+      },
+    )) as { persisted: boolean };
+
+    if (!deferredPersistOutcome.persisted) {
+      return {
+        status: 'processed',
+        documentId,
+        transitioned: true,
+        extraction: 'deferred_unpersisted',
+        reason: route,
+      };
+    }
+
+    const processedEvent: DocumentProcessedEvent = {
+      name: 'claim/document.processed',
+      data: {
+        claimId,
+        documentId,
+        documentType: classifierResult.documentType,
+      },
+    };
     const deferredEvent: DocumentExtractionDeferredEvent = {
       name: 'claim/document.extraction_deferred',
       data: { claimId, documentId, reason: route },
     };
+    await step.sendEvent('emit-processed', processedEvent);
     await step.sendEvent('emit-extraction-deferred', deferredEvent);
+    await finalizePassAfterDocumentTerminalState({
+      claimId,
+      step,
+      logger,
+      supabaseAdmin,
+    });
 
     return {
       status: 'processed',
@@ -532,7 +610,7 @@ export async function runProcessDocument({
 
     if (!failedPersistOutcome.persisted) {
       return {
-        status: 'processed',
+        status: 'failed',
         documentId,
         transitioned: true,
         extraction: 'failed_unpersisted',
@@ -543,10 +621,21 @@ export async function runProcessDocument({
       name: 'claim/document.extraction_failed',
       data: { claimId, documentId, error: extractionFailureReason },
     };
+    const processFailedEvent: DocumentProcessFailedEvent = {
+      name: 'claim/document.process_failed',
+      data: { claimId, documentId, error: extractionFailureReason },
+    };
     await step.sendEvent('emit-extraction-failed', failedEvent);
+    await step.sendEvent('emit-process-failed', processFailedEvent);
+    await finalizePassAfterDocumentTerminalState({
+      claimId,
+      step,
+      logger,
+      supabaseAdmin,
+    });
 
     return {
-      status: 'processed',
+      status: 'failed',
       documentId,
       transitioned: true,
       extraction: 'failed',
@@ -586,11 +675,25 @@ export async function runProcessDocument({
         name: 'claim/document.extraction_failed',
         data: { claimId, documentId, error: inconsistentReason },
       };
+      const processFailedEvent: DocumentProcessFailedEvent = {
+        name: 'claim/document.process_failed',
+        data: { claimId, documentId, error: inconsistentReason },
+      };
       await step.sendEvent('emit-extraction-failed', failedEvent);
+      await step.sendEvent('emit-process-failed', processFailedEvent);
+    }
+
+    if (failedPersistOutcome.persisted) {
+      await finalizePassAfterDocumentTerminalState({
+        claimId,
+        step,
+        logger,
+        supabaseAdmin,
+      });
     }
 
     return {
-      status: 'processed',
+      status: failedPersistOutcome.persisted ? 'failed' : 'processed',
       documentId,
       transitioned: true,
       extraction: failedPersistOutcome.persisted
@@ -617,9 +720,15 @@ export async function runProcessDocument({
     async () => {
       const { data, error } = await supabaseAdmin
         .from('documents')
-        .update({ extracted_data: extractedData })
+        .update({
+          processing_status: 'processed',
+          extracted_data: markDocumentProcessingTerminal(extractedData, {
+            phase: 'extraction_completed',
+            blockingFailure: false,
+          }),
+        })
         .eq('id', documentId)
-        .eq('processing_status', 'processed')
+        .eq('processing_status', 'processing')
         .select('id')
         .maybeSingle();
 
@@ -629,7 +738,7 @@ export async function runProcessDocument({
           '[skip-extraction-finalize] state changed before success persistence',
           {
             documentId,
-            expected: 'processed',
+            expected: 'processing',
           },
         );
 
@@ -663,6 +772,13 @@ export async function runProcessDocument({
   )) as { persisted: boolean };
 
   if (!successPersistOutcome.persisted) {
+    await finalizePassAfterDocumentTerminalState({
+      claimId,
+      step,
+      logger,
+      supabaseAdmin,
+    });
+
     return {
       status: 'processed',
       documentId,
@@ -671,6 +787,14 @@ export async function runProcessDocument({
     };
   }
 
+  const processedEvent: DocumentProcessedEvent = {
+    name: 'claim/document.processed',
+    data: {
+      claimId,
+      documentId,
+      documentType: classifierResult.documentType,
+    },
+  };
   const extractedEvent: DocumentExtractedEvent = {
     name: 'claim/document.extracted',
     data: {
@@ -680,7 +804,14 @@ export async function runProcessDocument({
       documentSubtype: subtypeResult.documentSubtype,
     },
   };
+  await step.sendEvent('emit-processed', processedEvent);
   await step.sendEvent('emit-extracted', extractedEvent);
+  await finalizePassAfterDocumentTerminalState({
+    claimId,
+    step,
+    logger,
+    supabaseAdmin,
+  });
 
   return {
     status: 'processed',
@@ -688,6 +819,52 @@ export async function runProcessDocument({
     transitioned: finalizeOutcome.transitioned,
     extraction: 'completed',
   };
+}
+
+async function finalizePassAfterDocumentTerminalState({
+  claimId,
+  step,
+  logger,
+  supabaseAdmin,
+}: {
+  claimId: string;
+  step: StepLike;
+  logger: LoggerLike;
+  supabaseAdmin: SupabaseLike;
+}) {
+  const result = (await step.run('finalize-pass-after-documents', async () => {
+    const { data, error } = await supabaseAdmin.rpc(
+      'finalize_pass_after_document_processing',
+      {
+        p_claim_id: claimId,
+        p_pass_number: 1,
+      },
+    );
+
+    if (error) {
+      throw new Error(
+        `finalize_pass_after_document_processing failed: ${error.message}`,
+      );
+    }
+
+    return Array.isArray(data) ? data[0] : data;
+  })) as PassLifecycleResult | null;
+
+  if (!result) return;
+
+  if (result.status === 'completed' && result.emit_completed_event) {
+    const completedEvent: PassCompletedEvent = {
+      name: 'claim/pass.completed',
+      data: { claimId, passNumber: 1 },
+    };
+    await step.sendEvent('emit-pass-completed', completedEvent);
+  } else if (result.status === 'failed' && result.transitioned) {
+    logger.warn('[pass-failed] document processing pass failed', {
+      claimId,
+      passNumber: 1,
+      failedDocuments: result.failed_documents,
+    });
+  }
 }
 
 type ExtractionResult =
@@ -769,19 +946,32 @@ async function persistExtractionFailure(input: {
   route: Exclude<ExtractionRoute, 'skip_dedicated' | 'skip_other'>;
   base: Record<string, unknown>;
   errorMessage: string;
+  blocking?: boolean;
 }): Promise<{ persisted: boolean }> {
+  const blocking = input.blocking ?? true;
   const extractionData = {
     ...input.base,
     extraction_error: {
       route: input.route,
       error: input.errorMessage,
+      blocking,
+    },
+    document_processing: {
+      phase: blocking
+        ? 'extraction_failed_blocking'
+        : 'extraction_failed_non_blocking',
+      terminal: true,
+      blocking_failure: blocking,
     },
   };
   const { data, error } = await input.supabaseAdmin
     .from('documents')
-    .update({ extracted_data: extractionData })
+    .update({
+      processing_status: blocking ? 'failed' : 'processed',
+      extracted_data: extractionData,
+    })
     .eq('id', input.documentId)
-    .eq('processing_status', 'processed')
+    .eq('processing_status', 'processing')
     .select('id')
     .maybeSingle();
 
@@ -791,7 +981,7 @@ async function persistExtractionFailure(input: {
       '[skip-extraction-finalize] state changed before failure persistence',
       {
         documentId: input.documentId,
-        expected: 'processed',
+        expected: 'processing',
       },
     );
 
@@ -807,7 +997,11 @@ async function persistExtractionFailure(input: {
       action: 'document_extraction_failed',
       target_table: 'documents',
       target_id: input.documentId,
-      details: { route: input.route, error: input.errorMessage },
+      details: {
+        route: input.route,
+        error: input.errorMessage,
+        blocking,
+      },
     });
 
   if (auditError) {
@@ -818,6 +1012,26 @@ async function persistExtractionFailure(input: {
   }
 
   return { persisted: true };
+}
+
+function markDocumentProcessingTerminal(
+  data: object,
+  {
+    phase,
+    blockingFailure,
+  }: {
+    phase: string;
+    blockingFailure: boolean;
+  },
+): Record<string, unknown> {
+  return {
+    ...data,
+    document_processing: {
+      phase,
+      terminal: true,
+      blocking_failure: blockingFailure,
+    },
+  };
 }
 
 function asRecord(value: unknown): Record<string, unknown> {

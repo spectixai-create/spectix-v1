@@ -486,7 +486,7 @@ describe('processDocument Claude integration branches', () => {
     });
   });
 
-  it('extractor failure keeps document processed and emits failed extraction event', async () => {
+  it('extractor failure marks document failed and emits failed extraction events', async () => {
     const supabase = new FakeSupabase();
     const step = createStep();
 
@@ -503,12 +503,21 @@ describe('processDocument Claude integration branches', () => {
     });
 
     expect(result).toMatchObject({
-      status: 'processed',
+      status: 'failed',
       extraction: 'failed',
     });
-    expect(supabase.document.processing_status).toBe('processed');
+    expect(supabase.document.processing_status).toBe('failed');
     expect(supabase.document.extracted_data).toMatchObject({
-      extraction_error: { route: 'receipt', error: 'extractor down' },
+      extraction_error: {
+        route: 'receipt',
+        error: 'extractor down',
+        blocking: true,
+      },
+      document_processing: {
+        phase: 'extraction_failed_blocking',
+        terminal: true,
+        blocking_failure: true,
+      },
     });
     expect(supabase.lastAudit('document_extraction_failed')).toMatchObject({
       action: 'document_extraction_failed',
@@ -516,6 +525,10 @@ describe('processDocument Claude integration branches', () => {
     expect(step.sendEvent).toHaveBeenCalledWith(
       'emit-extraction-failed',
       expect.objectContaining({ name: 'claim/document.extraction_failed' }),
+    );
+    expect(step.sendEvent).toHaveBeenCalledWith(
+      'emit-process-failed',
+      expect.objectContaining({ name: 'claim/document.process_failed' }),
     );
   });
 
@@ -597,13 +610,14 @@ describe('processDocument Claude integration branches', () => {
     });
 
     expect(result).toMatchObject({
-      status: 'processed',
+      status: 'failed',
       extraction: 'failed',
     });
     expect(supabase.document.extracted_data).toMatchObject({
       extraction_error: {
         route: 'receipt',
         error: 'Inconsistent extraction payload for route: receipt',
+        blocking: true,
       },
     });
     expect(step.sendEvent).toHaveBeenCalledWith(
@@ -654,7 +668,7 @@ describe('processDocument Claude integration branches', () => {
     });
 
     expect(result).toMatchObject({
-      status: 'processed',
+      status: 'failed',
       extraction: 'failed_unpersisted',
     });
     expect(supabase.lastAudit('document_extraction_failed')).toBeUndefined();
@@ -812,6 +826,22 @@ class FakeSupabase {
   }
 
   rpc(name: string, payload: Record<string, unknown>) {
+    if (name === 'finalize_pass_after_document_processing') {
+      return Promise.resolve({
+        data: [
+          {
+            status: 'completed',
+            terminal_documents: 1,
+            failed_documents: 0,
+            non_terminal_documents: 0,
+            transitioned: false,
+            emit_completed_event: false,
+          },
+        ],
+        error: null,
+      });
+    }
+
     this.rpcCalls.push({ name, payload });
     return Promise.resolve({ error: null });
   }
@@ -836,7 +866,8 @@ class FakeSupabase {
     }
     if (
       this.options.extractionUpdateNoRow &&
-      filters.processing_status === 'processed'
+      'processing_status' in payload &&
+      filters.processing_status === 'processing'
     ) {
       return null;
     }
