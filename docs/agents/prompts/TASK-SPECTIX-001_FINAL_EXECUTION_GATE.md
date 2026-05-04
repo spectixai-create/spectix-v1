@@ -7,19 +7,20 @@ pricing, or OpenClaw automation.
 
 ## 1. Current Readiness Status
 
-| Item                        | Status                                                                     |
-| --------------------------- | -------------------------------------------------------------------------- |
-| Smoke task                  | `TASK-SPECTIX-001`                                                         |
-| Dispatcher task status      | `pm_spec_ready`                                                            |
-| Smoke plan                  | Approved and merged                                                        |
-| Smoke readiness packet      | Merged                                                                     |
-| Execution approval template | Merged                                                                     |
-| Synthetic PDFs              | Ready locally under `.openclaw-local/smoke-inputs/TASK-SPECTIX-001/files/` |
-| Claim                       | Not created                                                                |
-| `SMOKE_CLAIM_ID`            | Missing                                                                    |
-| Documents                   | Not uploaded                                                               |
-| Smoke execution             | Not run                                                                    |
-| Production data             | Not mutated                                                                |
+| Item                           | Status                                                                     |
+| ------------------------------ | -------------------------------------------------------------------------- |
+| Smoke task                     | `TASK-SPECTIX-001`                                                         |
+| Dispatcher task status         | `pm_spec_ready`                                                            |
+| Smoke plan                     | Approved and merged                                                        |
+| Smoke readiness packet         | Merged                                                                     |
+| Execution approval template    | Merged                                                                     |
+| Synthetic PDFs                 | Ready locally under `.openclaw-local/smoke-inputs/TASK-SPECTIX-001/files/` |
+| Claim                          | Not created                                                                |
+| `SMOKE_CLAIM_ID`               | Missing                                                                    |
+| Documents                      | Not uploaded                                                               |
+| Smoke execution                | Not run                                                                    |
+| Production data                | Not mutated                                                                |
+| Proposed nonproduction project | `aozbgunwhafabfmuwjol`                                                     |
 
 Safe, non-secret route inspection confirmed:
 
@@ -48,6 +49,22 @@ No candidate currently qualifies as `safe_for_smoke_candidate` because the
 Supabase target is not confirmed non-production without exposing secrets, and
 CEO has not filled the execution approval fields.
 
+Proposed nonproduction path after TASK-043:
+
+| Field                          | Proposed value          |
+| ------------------------------ | ----------------------- |
+| `APPROVED_HOST`                | `http://localhost:3000` |
+| `ENVIRONMENT_TYPE`             | `local`                 |
+| `SUPABASE_PROJECT_ID`          | `aozbgunwhafabfmuwjol`  |
+| `SUPABASE_PROJECT_CONFIRMED`   | `pending`               |
+| `DATA_MUTATION_APPROVED`       | `pending`               |
+| `PRODUCTION_MUTATION_APPROVED` | `no`                    |
+
+Execution remains blocked until the schema is applied to
+`aozbgunwhafabfmuwjol` and local env is confirmed to use
+`aozbgunwhafabfmuwjol`. Production/active project
+`fcqporzsihuqtfohqtxs` remains forbidden.
+
 ## 3. CEO-Required Fields
 
 CEO must fill every field before any execution task can start:
@@ -58,6 +75,7 @@ ENVIRONMENT_TYPE: production / preview / staging / local
 SUPABASE_PROJECT_CONFIRMED: yes/no
 DATA_MUTATION_APPROVED: yes/no
 PRODUCTION_MUTATION_APPROVED: yes/no
+SUPABASE_PROJECT_ID:
 CREATE_CLAIM_APPROVED: yes/no
 UPLOAD_DOCUMENTS_APPROVED: yes/no
 RUN_SMOKE_APPROVED: yes/no
@@ -166,6 +184,9 @@ Stop before execution if any condition is true:
 - `CREATE_CLAIM_APPROVED` is not explicitly `yes`.
 - `UPLOAD_DOCUMENTS_APPROVED` is not explicitly `yes`.
 - `RUN_SMOKE_APPROVED` is not explicitly `yes`.
+- `SUPABASE_PROJECT_ID` is missing or not `aozbgunwhafabfmuwjol` for the
+  proposed nonproduction path.
+- Any env/config value points at production project `fcqporzsihuqtfohqtxs`.
 - Any real customer data is involved.
 - Any schema, secret, env, deploy, auth, billing, or pricing change is required.
 - Any endpoint requires unsupported auth changes.
