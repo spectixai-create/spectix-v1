@@ -71,6 +71,12 @@ with `gh pr view`.
 
 ## Examples
 
+Final CEO chat transition:
+
+```text
+docs/agents/prompts/FINAL_CEO_CHAT_HANDOFF.md
+```
+
 Codex handoff:
 
 ```powershell
@@ -126,3 +132,10 @@ The handoff includes:
 - Safety reminders.
 - Role-specific first-turn verification.
 - Role-specific output format.
+
+## Final Transition Package
+
+The current final transition package for opening new role chats is indexed in
+[CHAT_SETUP_CHECKLIST.md](CHAT_SETUP_CHECKLIST.md). It includes copy-paste-ready
+CEO, Codex, PM, QA, and Architect handoffs plus OpenClaw next actions and the
+SPRINT-001 package.
