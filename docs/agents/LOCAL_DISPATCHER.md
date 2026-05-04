@@ -111,6 +111,37 @@ node scripts/openclaw-local-dispatcher.mjs audit
 node scripts/openclaw-local-dispatcher.mjs status
 ```
 
+## Manual Regression: QA Rejects Unauthorized Diffs
+
+Run this from a clean checkout when testing QA enforcement:
+
+```powershell
+node scripts/openclaw-local-dispatcher.mjs init
+node scripts/openclaw-local-dispatcher.mjs create-dummy
+node scripts/openclaw-local-dispatcher.mjs dispatch
+node scripts/openclaw-local-dispatcher.mjs approve-dev DUMMY-OPENCLAW-001
+node scripts/openclaw-local-dispatcher.mjs run-codex-dummy DUMMY-OPENCLAW-001
+```
+
+Temporarily modify `package.json` in a harmless reversible way, then run:
+
+```powershell
+node scripts/openclaw-local-dispatcher.mjs qa DUMMY-OPENCLAW-001
+```
+
+Expected result: QA fails and reports `package.json` as an unauthorized changed
+file. Revert `package.json` completely, then run:
+
+```powershell
+node scripts/openclaw-local-dispatcher.mjs qa DUMMY-OPENCLAW-001
+```
+
+Expected result: QA passes when the actual git changed files are limited to:
+
+```text
+docs/agents/dummy-output.md
+```
+
 ## Runtime Files
 
 The dispatcher creates and updates ignored runtime files under:

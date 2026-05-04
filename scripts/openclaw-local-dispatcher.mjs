@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 
+import { spawnSync } from 'child_process';
 import { createHash } from 'crypto';
 import {
   access,
   mkdir,
   readFile,
   readdir,
-  rename,
-  stat,
   unlink,
   writeFile,
 } from 'fs/promises';
@@ -116,6 +115,44 @@ function promptPath(name) {
 
 function repoPath(relativePath) {
   return path.join(REPO_ROOT, relativePath);
+}
+
+function runGitNameOnly(args) {
+  const result = spawnSync('git', args, {
+    cwd: REPO_ROOT,
+    encoding: 'utf8',
+    shell: false,
+    windowsHide: true,
+  });
+
+  if (result.error) {
+    fail(`Git inspection failed: ${result.error.message}`);
+  }
+  if (result.status !== 0) {
+    fail(`Git inspection failed: git ${args.join(' ')}`, {
+      stderr: result.stderr.trim(),
+    });
+  }
+
+  return result.stdout
+    .split(/\r?\n/)
+    .map((entry) => normalizeRepoPath(entry.trim()))
+    .filter(Boolean);
+}
+
+function getGitChangedFiles() {
+  const files = [
+    ...runGitNameOnly(['diff', '--name-only']),
+    ...runGitNameOnly(['diff', '--cached', '--name-only']),
+    ...runGitNameOnly(['ls-files', '--others', '--exclude-standard']),
+  ];
+
+  return [...new Set(files)].sort();
+}
+
+function unauthorizedChangedFiles(changedFiles, allowedFiles) {
+  const allowed = new Set(allowedFiles.map(normalizeRepoPath));
+  return changedFiles.filter((file) => !allowed.has(file));
 }
 
 function fail(message, details = undefined) {
@@ -592,6 +629,18 @@ async function commandQa(id) {
   if (touched.length !== 1 || touched[0] !== DUMMY_ALLOWED_FILE) {
     fail(`QA expected only ${DUMMY_ALLOWED_FILE}; got ${touched.join(', ')}`);
   }
+  const changedFiles = getGitChangedFiles();
+  const unauthorized = unauthorizedChangedFiles(
+    changedFiles,
+    task.allowedFiles,
+  );
+  if (unauthorized.length > 0) {
+    fail('QA found unauthorized changed files', {
+      allowedFiles: task.allowedFiles,
+      changedFiles,
+      unauthorized,
+    });
+  }
 
   const qaReport = [
     `# QA Report: ${task.id}`,
@@ -656,6 +705,7 @@ async function commandAudit() {
   const state = await loadState();
   const tasks = await listTasks();
   const findings = [];
+  const changedFiles = getGitChangedFiles();
 
   if (state.cronEnabled) findings.push('cronEnabled must remain false');
   if (state.autoMerge) findings.push('autoMerge must remain false');
@@ -676,6 +726,11 @@ async function commandAudit() {
   const activeDummy = tasks.find(
     ({ task, queue }) => task.id === DUMMY_ID && queue !== 'archive',
   )?.task;
+  const archivedDummy = tasks.find(
+    ({ task, queue }) => task.id === DUMMY_ID && queue === 'archive',
+  )?.task;
+  const diffContextTask = activeDummy ?? archivedDummy;
+
   if (activeDummy?.payload?.codexResult) {
     const files = activeDummy.payload.codexResult.filesTouched ?? [];
     if (files.length !== 1 || files[0] !== DUMMY_ALLOWED_FILE) {
@@ -685,9 +740,26 @@ async function commandAudit() {
     }
   }
 
+  if (changedFiles.length > 0 && diffContextTask) {
+    const unauthorized = unauthorizedChangedFiles(
+      changedFiles,
+      diffContextTask.allowedFiles,
+    );
+    if (unauthorized.length > 0) {
+      findings.push(
+        `git changed files outside ${diffContextTask.id} allowedFiles: ${unauthorized.join(', ')}`,
+      );
+    }
+  } else if (changedFiles.length > 0) {
+    findings.push(
+      `git changed files exist without an active or archived task context: ${changedFiles.join(', ')}`,
+    );
+  }
+
   printJson({
     ok: findings.length === 0,
     findings,
+    changedFiles,
     checked: {
       tasks: tasks.length,
       cronEnabled: state.cronEnabled,
