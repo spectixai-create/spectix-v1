@@ -110,6 +110,27 @@ Updated durable blocker:
 
 The local browser/runtime chain is now working enough to attach to remote-debugged Chrome, but no available Chrome profile is signed in to the Slack API app dashboard. The remaining blocker is authenticated Slack App dashboard access, or a Slack configuration token with manifest-management permissions.
 
+Fourth repair attempt:
+
+- CEO reported that the human owner had manually signed in to `https://api.slack.com/apps` in an already-open Chrome profile for workspace `spectix`.
+- The already-open Chrome window was visible on `Slack API: Applications | Slack`.
+- The existing Chrome session did not expose a remote debugging endpoint at `http://127.0.0.1:9222/json/version`.
+- The visible Chrome process used the normal Chrome executable and default user data directory, with no alternate `--profile-directory` command-line flag.
+- Because remote debugging was required to attach automation, Chrome was relaunched with `--remote-debugging-port=9222` against the same default Chrome user data directory and `--profile-directory=Default`.
+- The remote debugging endpoint became reachable and reported Chrome `147.0.7727.138`.
+- Browser automation attached successfully to the relaunched default Chrome profile.
+- `https://api.slack.com/apps` still showed Slack API dashboard signed-out state:
+  - `Your Apps`
+  - `You'll need to sign in to your Slack account to create an application.`
+  - `Don't see an app you're looking for? Sign in to another workspace.`
+- No existing Slack App dashboard was accessible.
+- No Slack App dashboard settings were changed.
+- Gateway validation was not rerun because the dashboard repair could not be performed.
+
+Updated durable blocker after fourth attempt:
+
+The attachable Chrome profile is still not authenticated to the Slack API app dashboard. To continue, the human owner must sign in to `https://api.slack.com/apps` in the Chrome profile that is running with remote debugging enabled, or provide a Slack configuration token with manifest-management permissions.
+
 ## Required Slack App Configuration
 
 The OpenClaw Slack manifest in the installed package expects Socket Mode plus these relevant bot scopes and events.
@@ -157,18 +178,19 @@ OpenClaw's generated manifest also defines the native slash command `/openclaw`.
 
 ## Next CEO Decision
 
-Approve manual Slack App dashboard repair for the existing Spectix Slack app:
+Approve manual Slack App dashboard repair for the existing Spectix Slack app after first signing in to the Slack API dashboard in the active remote-debugged Chrome profile:
 
-1. Open the Slack App dashboard for the existing OpenClaw Spectix Control app.
-2. Confirm Socket Mode is enabled.
-3. Confirm the app-level token remains valid.
-4. Add or confirm the required bot scopes listed above.
-5. Enable Event Subscriptions.
-6. Add the required bot events listed above.
-7. Confirm native slash command `/openclaw` exists if slash command routing is desired.
-8. Reinstall the app to workspace `spectix`.
-9. Re-invite the bot to channel `C0B19UJLUJF` if Slack requests it.
-10. Rerun loopback-only dummy routing.
+1. Sign in to `https://api.slack.com/apps` in the Chrome profile currently running with remote debugging enabled.
+2. Open the Slack App dashboard for the existing OpenClaw Spectix Control app.
+3. Confirm Socket Mode is enabled.
+4. Confirm the app-level token remains valid.
+5. Add or confirm the required bot scopes listed above.
+6. Enable Event Subscriptions.
+7. Add the required bot events listed above.
+8. Confirm native slash command `/openclaw` exists if slash command routing is desired.
+9. Reinstall the app to workspace `spectix`.
+10. Re-invite the bot to channel `C0B19UJLUJF` if Slack requests it.
+11. Rerun loopback-only dummy routing.
 
 Alternative if dashboard access is not available:
 
