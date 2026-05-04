@@ -110,6 +110,18 @@ CHECK constraints:
 
 JSONB: `extracted_data` maps to `ExtractedData` in [lib/types.ts](../lib/types.ts).
 
+SPRINT-002A normalized extraction envelope:
+
+- Normalized subtype extraction remains in this JSONB column for MVP; no relational extraction tables exist yet.
+- Versioned normalized payloads use `kind = normalized_extraction` and `schema_version = sprint-002a.v1`.
+- `status = completed` means schema-valid normalized extraction exists.
+- `status = failed` means a blocking extraction failure and includes blocking failure details.
+- `status = deferred` means extraction did not run or was intentionally unsupported/deferred with a reason.
+- Unsupported subtype extraction must be deferred, not completed.
+- Malformed model output must fail validation.
+- Low-confidence structurally valid extraction is represented as a warning and is non-blocking.
+- SPRINT-002A defines contracts/guards only; SPRINT-002B will implement dedicated subtype prompts/routes.
+
 Processing lifecycle semantics:
 
 - `pending` and `processing` are non-terminal document-processing states.

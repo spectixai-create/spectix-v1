@@ -1,3 +1,5 @@
+import type { NormalizedExtractionEnvelope } from './extraction-contracts';
+
 /**
  * Spectix — source-of-truth types
  *
@@ -359,6 +361,7 @@ export type ClaimMetadata = {
  */
 export type ExtractedData =
   | DocumentClassificationMetadata
+  | NormalizedExtractionEnvelope
   | RoutedExtractionData
   | { kind: 'police_report'; data: PoliceReportExtraction }
   | { kind: 'hotel_letter'; data: HotelLetterExtraction }
