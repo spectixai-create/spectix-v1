@@ -23,6 +23,12 @@ test-results
 output
 .auth
 .openclaw-local/
+.openclaw/
+HEARTBEAT.md
+IDENTITY.md
+SOUL.md
+TOOLS.md
+USER.md
 
 # local env files
 .env*.local
