@@ -55,6 +55,17 @@ Raw Socket Mode probe:
 
 This isolates the failure before OpenClaw command parsing. The event is not being delivered to Socket Mode.
 
+Follow-up repair attempt:
+
+- The in-app browser automation path was unavailable because the local `node_repl` runtime resolved `C:\Program Files\nodejs\node.exe` at version `22.18.0`, while `node_repl` requires `>=22.22.0`.
+- Persistent system environment changes were not made because the activation task only allowed current shell/session environment variables.
+- Slack API verification confirmed the bot token is valid for workspace `spectix`, bot user `U0B1M29MNSG`, and channel `C0B19UJLUJF`.
+- Slack API verification confirmed the bot is a member of `new-channel`.
+- Slack API response headers showed the bot token has relevant scopes including `app_mentions:read`, `chat:write`, `commands`, `channels:history`, `channels:read`, `groups:history`, `groups:read`, `im:history`, `im:read`, `mpim:history`, `mpim:read`, and `users:read`.
+- The available bot token and app token cannot repair Slack App Event Subscriptions through Slack Web API. Manifest export/update calls returned `not_allowed_token_type`; event authorization inspection with the app token returned `missing_scope`.
+
+This means the remaining repair path is manual Slack App dashboard configuration or a Slack configuration token with manifest-management permissions. No such configuration token was available locally.
+
 ## Required Slack App Configuration
 
 The OpenClaw Slack manifest in the installed package expects Socket Mode plus these relevant bot scopes and events.
@@ -114,5 +125,9 @@ Approve manual Slack App dashboard repair for the existing Spectix Slack app:
 8. Reinstall the app to workspace `spectix`.
 9. Re-invite the bot to channel `C0B19UJLUJF` if Slack requests it.
 10. Rerun loopback-only dummy routing.
+
+Alternative if dashboard access is not available:
+
+Provide a Slack app configuration token that can read/update the existing app manifest, or update the Slack App manually from the dashboard and then rerun the loopback validation.
 
 OP dummy routing should not be marked passed until Slack input from the allowed human user reaches OpenClaw, OpenClaw responds in Slack, and at least one safe dispatcher command works.
