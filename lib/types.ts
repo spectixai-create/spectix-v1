@@ -376,9 +376,11 @@ export interface DocumentClassificationMetadata {
   subtype_classifier: Record<string, unknown>;
   subtype: Record<string, unknown>;
   processing_time_ms: number;
+  document_processing?: DocumentProcessingLifecycleMetadata;
   extraction_error?: {
     route?: string;
     error: string;
+    blocking?: boolean;
   };
 }
 
@@ -423,6 +425,7 @@ export interface DocumentExtractionTopLevelMetadata {
   subtype_classifier: Record<string, unknown>;
   subtype: Record<string, unknown>;
   processing_time_ms: number;
+  document_processing?: DocumentProcessingLifecycleMetadata;
 }
 
 export interface DocumentExtractionMetadata {
@@ -437,6 +440,18 @@ export interface DocumentExtractionMetadata {
     outputTokens: number;
     costUsd: number;
   };
+}
+
+export interface DocumentProcessingLifecycleMetadata {
+  phase:
+    | 'classification_complete'
+    | 'extraction_deferred'
+    | 'extraction_completed'
+    | 'extraction_failed_blocking'
+    | 'extraction_failed_non_blocking'
+    | 'processing_failed';
+  terminal: boolean;
+  blocking_failure: boolean;
 }
 
 /**

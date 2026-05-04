@@ -1,6 +1,6 @@
 # Sprint #001 - Pass Lifecycle Completion
 
-Status: IMPLEMENTED
+Status: LOCALLY VALIDATED - pending QA review
 
 ## Investigation Summary
 
@@ -25,10 +25,12 @@ Reason:
 
 Consequences:
 
-- When every document for a claim is terminal and none failed, pass 1 becomes `completed` and `completed_at` is set.
-- When every document for a claim is terminal and at least one failed, pass 1 becomes `failed` and `completed_at` is set.
-- While any document is `pending` or `processing`, pass 1 remains `in_progress`.
+- When every document for a claim is terminal and none has a blocking failure, pass 1 becomes `completed` and `completed_at` is set.
+- When every document for a claim is terminal and at least one has a blocking failure, pass 1 becomes `failed` and `completed_at` is set.
+- While any document is `pending`, `processing`, extracting, deferred-finalizing, retrying, null/unknown, or otherwise non-terminal, pass 1 remains `in_progress`.
 - Documents from other claims do not affect the lifecycle decision.
+- Late uploads reopen pass 1 to `in_progress`.
+- Retry resets the same document row to `pending` and preserves the previous failure state in `audit_log`.
 - Retried documents can move a previously failed pass to `completed` if the approved retry leaves all claim documents processed.
 
 Out of scope:
@@ -40,18 +42,24 @@ Out of scope:
 
 ## Implementation
 
-Migration `20260504111946_pass_lifecycle_completion.sql` adds `public.finalize_pass_after_document_processing(p_claim_id, p_pass_number)`.
+Migration `20260504111946_pass_lifecycle_completion.sql` adds:
 
-The helper:
+- `public.reopen_pass_for_document_processing(p_claim_id, p_pass_number, p_reason, p_document_id)`
+- `public.retry_document_processing(p_document_id, p_reason, p_actor_type, p_actor_id)`
+- `public.finalize_pass_after_document_processing(p_claim_id, p_pass_number)`
+
+The finalizer:
 
 - Counts only documents for the target claim.
-- Returns `in_progress` while any document is `pending` or `processing`.
-- Upserts pass 1 to `completed` when all claim documents are terminal and none failed.
-- Upserts pass 1 to `failed` when all claim documents are terminal and at least one failed.
-- Preserves `completed_at` on repeated same-status finalization.
+- Returns `in_progress` while any document is non-terminal.
+- Treats `extraction_error` as blocking unless `blocking` is explicitly `false`.
+- Upserts pass 1 to `completed` when all claim documents are terminal and none has a blocking failure.
+- Upserts pass 1 to `failed` when all claim documents are terminal and at least one has a blocking failure.
+- Emits `claim/pass.completed` only through `emit_completed_event = true` on a true transition to `completed`.
+- Uses a transaction-level advisory lock to prevent duplicate completed events under repeated or concurrent finalizers.
 - Preserves `skipped` pass rows.
 
-`runProcessDocument` calls the helper only after the current document reaches a terminal state and any route-specific extraction/deferred audit work has been recorded.
+`runProcessDocument` now keeps `documents.processing_status = processing` through classification, extraction/defer handling, audit writes, and extraction cost persistence. It writes `processed` only at the real successful end of document processing, or `failed` for blocking processing/extraction failures.
 
 ## Rollback
 
@@ -59,6 +67,8 @@ Rollback drops only:
 
 ```sql
 drop function if exists public.finalize_pass_after_document_processing(uuid, int);
+drop function if exists public.retry_document_processing(uuid, text, text, text);
+drop function if exists public.reopen_pass_for_document_processing(uuid, int, text, uuid);
 ```
 
 No table or column rollback is required.

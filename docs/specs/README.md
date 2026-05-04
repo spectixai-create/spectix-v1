@@ -32,4 +32,4 @@ TASK-SPECTIX-001 verified #03ד-1b in non-production. The final smoke report is 
 
 ## Pass Lifecycle
 
-Sprint #001 chose Option A for pass lifecycle: pass 1 is the claim-level document-processing pass. After every document for a claim is terminal, pass 1 becomes `completed` when none failed or `failed` when at least one document failed. The lifecycle helper is documented in [sprint-001-pass-lifecycle.md](sprint-001-pass-lifecycle.md).
+Sprint #001 chose Option A for pass lifecycle: pass 1 is the claim-level document-processing pass. After every document for a claim is terminal, pass 1 becomes `completed` when none has a blocking failure or `failed` when at least one document has a blocking failure. The lifecycle helper is documented in [sprint-001-pass-lifecycle.md](sprint-001-pass-lifecycle.md).

@@ -473,14 +473,16 @@ class FakeSupabase {
         status: 'in_progress',
         terminal_documents: claimDocuments.length - pendingDocuments,
         failed_documents: failedDocuments,
-        pending_documents: pendingDocuments,
+        non_terminal_documents: pendingDocuments,
         transitioned: false,
+        emit_completed_event: false,
       };
     }
 
     const nextStatus = failedDocuments > 0 ? 'failed' : 'completed';
     const transitioned =
       this.pass.status !== nextStatus || this.pass.completed_at === null;
+    const emitCompletedEvent = nextStatus === 'completed' && transitioned;
     this.pass.status = nextStatus;
     this.pass.completed_at ??= '2026-05-04T00:00:00.000Z';
 
@@ -488,8 +490,9 @@ class FakeSupabase {
       status: nextStatus,
       terminal_documents: claimDocuments.length,
       failed_documents: failedDocuments,
-      pending_documents: 0,
+      non_terminal_documents: 0,
       transitioned,
+      emit_completed_event: emitCompletedEvent,
     };
   }
 }
