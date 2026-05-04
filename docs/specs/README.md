@@ -25,3 +25,7 @@ Specs in this directory are the implementation source for future spikes. Older s
 | #03ד-1b         | Broad extraction prompts (02-05)       | DONE   | backend-broad-extraction-prompts    | #18             |
 
 Use [spike-template.md](spike-template.md) for new specs.
+
+## Smoke Verification
+
+TASK-SPECTIX-001 verified #03ד-1b in non-production. The final smoke report is tracked in [TASK-SPECTIX-001_SMOKE_FINAL_REPORT.md](../agents/prompts/TASK-SPECTIX-001_SMOKE_FINAL_REPORT.md).

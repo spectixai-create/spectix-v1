@@ -44,6 +44,12 @@ Next document-processing spike: dedicated extraction prompts for subtype-specifi
 
 OpenClaw external channel routing remains blocked in the installed local OpenClaw runtime because GitHub issue and PR comments are not supported as a channel target. The local filesystem dispatcher is the current operational bridge for CEO/PM/Codex/QA handoffs. It passed the docs-only dummy flow and keeps runtime state under ignored `.openclaw-local/`.
 
+## Smoke Verification
+
+TASK-SPECTIX-001 passed the non-production broad extraction smoke test against Supabase project `aozbgunwhafabfmuwjol` using smoke claim `2026-001` (`443bdef7-1377-4628-9105-c0bed8a55614`). Production project `fcqporzsihuqtfohqtxs` was not touched. The final report is tracked in [TASK-SPECTIX-001_SMOKE_FINAL_REPORT.md](agents/prompts/TASK-SPECTIX-001_SMOKE_FINAL_REPORT.md).
+
+The smoke verified eight synthetic documents: six extraction routes reached `extracted_data.kind = 'extraction'` with expected routes, and two deferred routes reached `kind = 'classification'` with expected deferrals.
+
 ## Current Routes
 
 See [ROUTING.md](ROUTING.md).
