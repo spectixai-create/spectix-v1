@@ -8,7 +8,7 @@ Spectix Spike #19 • 2026-05-03
 
 ## Current Phase
 
-Claim intake writes real claim rows, uploads supporting documents to Supabase Storage, classifies documents through the Inngest + Claude broad + subtype classifier pipeline, and persists broad extraction prompt results into `documents.extracted_data`.
+Claim intake writes real claim rows, uploads supporting documents to Supabase Storage, classifies documents through the Inngest + Claude broad + subtype classifier pipeline, persists broad extraction prompt results into `documents.extracted_data`, and closes pass 1 after all claim documents reach terminal document-level processing status.
 
 ## Completed Spikes
 
@@ -31,6 +31,7 @@ Claim intake writes real claim rows, uploads supporting documents to Supabase St
 - #03g - Claude document classifier (Prompt 01), pass accounting, and status polling.
 - #03ד-1a - Document subtype classification foundation (Prompt 01b).
 - #03ד-1b - Broad extraction prompts (02-05) and `extracted_data` wiring.
+- Sprint #001 - Pass lifecycle completion after document-level processing.
 
 ## Active Spike
 

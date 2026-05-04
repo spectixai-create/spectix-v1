@@ -42,6 +42,7 @@ import type {
   DocumentProcessedEvent,
   DocumentSubtypeClassifiedEvent,
   DocumentUploadedEvent,
+  PassCompletedEvent,
   DocumentType,
   RoutedExtractionData,
 } from '@/lib/types';
@@ -67,7 +68,8 @@ type StepEvent =
   | DocumentSubtypeClassifiedEvent
   | DocumentExtractedEvent
   | DocumentExtractionFailedEvent
-  | DocumentExtractionDeferredEvent;
+  | DocumentExtractionDeferredEvent
+  | PassCompletedEvent;
 
 type StepLike = {
   run: (name: string, fn: () => Promise<unknown>) => Promise<unknown>;
@@ -99,6 +101,14 @@ type ProcessDocumentArgs = {
 type FailureAuditActor = {
   actorType: 'system' | 'llm';
   actorId: string;
+};
+
+type PassLifecycleResult = {
+  status: 'no_documents' | 'in_progress' | 'completed' | 'failed' | 'skipped';
+  terminal_documents: number;
+  failed_documents: number;
+  pending_documents: number;
+  transitioned: boolean;
 };
 
 export async function runProcessDocument({
@@ -300,6 +310,12 @@ export async function runProcessDocument({
         data: { claimId, documentId, error: failureReason },
       };
       await step.sendEvent('emit-process-failed', failedEvent);
+      await finalizePassAfterDocumentTerminalState({
+        claimId,
+        step,
+        logger,
+        supabaseAdmin,
+      });
     }
 
     return {
@@ -490,6 +506,12 @@ export async function runProcessDocument({
       data: { claimId, documentId, reason: route },
     };
     await step.sendEvent('emit-extraction-deferred', deferredEvent);
+    await finalizePassAfterDocumentTerminalState({
+      claimId,
+      step,
+      logger,
+      supabaseAdmin,
+    });
 
     return {
       status: 'processed',
@@ -531,6 +553,13 @@ export async function runProcessDocument({
     )) as { persisted: boolean };
 
     if (!failedPersistOutcome.persisted) {
+      await finalizePassAfterDocumentTerminalState({
+        claimId,
+        step,
+        logger,
+        supabaseAdmin,
+      });
+
       return {
         status: 'processed',
         documentId,
@@ -544,6 +573,12 @@ export async function runProcessDocument({
       data: { claimId, documentId, error: extractionFailureReason },
     };
     await step.sendEvent('emit-extraction-failed', failedEvent);
+    await finalizePassAfterDocumentTerminalState({
+      claimId,
+      step,
+      logger,
+      supabaseAdmin,
+    });
 
     return {
       status: 'processed',
@@ -588,6 +623,13 @@ export async function runProcessDocument({
       };
       await step.sendEvent('emit-extraction-failed', failedEvent);
     }
+
+    await finalizePassAfterDocumentTerminalState({
+      claimId,
+      step,
+      logger,
+      supabaseAdmin,
+    });
 
     return {
       status: 'processed',
@@ -663,6 +705,13 @@ export async function runProcessDocument({
   )) as { persisted: boolean };
 
   if (!successPersistOutcome.persisted) {
+    await finalizePassAfterDocumentTerminalState({
+      claimId,
+      step,
+      logger,
+      supabaseAdmin,
+    });
+
     return {
       status: 'processed',
       documentId,
@@ -681,6 +730,12 @@ export async function runProcessDocument({
     },
   };
   await step.sendEvent('emit-extracted', extractedEvent);
+  await finalizePassAfterDocumentTerminalState({
+    claimId,
+    step,
+    logger,
+    supabaseAdmin,
+  });
 
   return {
     status: 'processed',
@@ -688,6 +743,52 @@ export async function runProcessDocument({
     transitioned: finalizeOutcome.transitioned,
     extraction: 'completed',
   };
+}
+
+async function finalizePassAfterDocumentTerminalState({
+  claimId,
+  step,
+  logger,
+  supabaseAdmin,
+}: {
+  claimId: string;
+  step: StepLike;
+  logger: LoggerLike;
+  supabaseAdmin: SupabaseLike;
+}) {
+  const result = (await step.run('finalize-pass-after-documents', async () => {
+    const { data, error } = await supabaseAdmin.rpc(
+      'finalize_pass_after_document_processing',
+      {
+        p_claim_id: claimId,
+        p_pass_number: 1,
+      },
+    );
+
+    if (error) {
+      throw new Error(
+        `finalize_pass_after_document_processing failed: ${error.message}`,
+      );
+    }
+
+    return Array.isArray(data) ? data[0] : data;
+  })) as PassLifecycleResult | null;
+
+  if (!result) return;
+
+  if (result.status === 'completed' && result.transitioned) {
+    const completedEvent: PassCompletedEvent = {
+      name: 'claim/pass.completed',
+      data: { claimId, passNumber: 1 },
+    };
+    await step.sendEvent('emit-pass-completed', completedEvent);
+  } else if (result.status === 'failed' && result.transitioned) {
+    logger.warn('[pass-failed] document processing pass failed', {
+      claimId,
+      passNumber: 1,
+      failedDocuments: result.failed_documents,
+    });
+  }
 }
 
 type ExtractionResult =

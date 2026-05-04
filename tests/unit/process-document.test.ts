@@ -169,6 +169,129 @@ describe('processDocument state machine', () => {
     );
   });
 
+  it('U9 completes pass 1 when every claim document is processed', async () => {
+    const supabase = new FakeSupabase({
+      processingStatus: 'pending',
+      otherDocuments: [{ id: 'other-doc', processing_status: 'processed' }],
+    });
+    const step = createStep();
+
+    await runProcessDocument({
+      event: uploadedEvent(),
+      step,
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: fakeClassifier,
+      subtypeClassifier: fakeSubtypeClassifier,
+    });
+
+    expect(supabase.pass).toMatchObject({
+      status: 'completed',
+      completed_at: expect.any(String),
+    });
+    expect(step.sendEvent).toHaveBeenCalledWith(
+      'emit-pass-completed',
+      expect.objectContaining({ name: 'claim/pass.completed' }),
+    );
+  });
+
+  it('U10 marks pass 1 failed when terminal claim documents include a failure', async () => {
+    process.env.SPECTIX_FORCE_DOCUMENT_FAILURE = 'true';
+    const supabase = new FakeSupabase({
+      processingStatus: 'pending',
+      otherDocuments: [{ id: 'other-doc', processing_status: 'processed' }],
+    });
+    const logger = createLogger();
+
+    await runProcessDocument({
+      event: uploadedEvent(),
+      step: createStep(),
+      logger,
+      supabaseAdmin: supabase as never,
+    });
+
+    expect(supabase.pass).toMatchObject({
+      status: 'failed',
+      completed_at: expect.any(String),
+    });
+    expect(logger.warn).toHaveBeenCalledWith(
+      '[pass-failed] document processing pass failed',
+      { claimId, passNumber: 1, failedDocuments: 1 },
+    );
+  });
+
+  it('U11 keeps pass 1 in progress while another claim document is pending', async () => {
+    const supabase = new FakeSupabase({
+      processingStatus: 'pending',
+      otherDocuments: [{ id: 'other-doc', processing_status: 'pending' }],
+    });
+    const step = createStep();
+
+    await runProcessDocument({
+      event: uploadedEvent(),
+      step,
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: fakeClassifier,
+      subtypeClassifier: fakeSubtypeClassifier,
+    });
+
+    expect(supabase.pass.status).toBe('in_progress');
+    expect(supabase.pass.completed_at).toBeNull();
+    expect(step.sendEvent).not.toHaveBeenCalledWith(
+      'emit-pass-completed',
+      expect.anything(),
+    );
+  });
+
+  it('U12 ignores unrelated documents from other claims when completing pass 1', async () => {
+    const supabase = new FakeSupabase({
+      processingStatus: 'pending',
+      otherClaimDocuments: [
+        { id: 'other-claim-doc', processing_status: 'processing' },
+      ],
+    });
+
+    await runProcessDocument({
+      event: uploadedEvent(),
+      step: createStep(),
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: fakeClassifier,
+      subtypeClassifier: fakeSubtypeClassifier,
+    });
+
+    expect(supabase.pass.status).toBe('completed');
+  });
+
+  it('U13 does not emit pass completion again for a duplicate retry event', async () => {
+    const supabase = new FakeSupabase({ processingStatus: 'pending' });
+    const step = createStep();
+
+    await runProcessDocument({
+      event: uploadedEvent(),
+      step,
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: fakeClassifier,
+      subtypeClassifier: fakeSubtypeClassifier,
+    });
+    await runProcessDocument({
+      event: uploadedEvent(),
+      step,
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: fakeClassifier,
+      subtypeClassifier: fakeSubtypeClassifier,
+    });
+
+    expect(step.sendEvent).toHaveBeenCalledTimes(4);
+    const passCompletedEvents = step.sendEvent.mock.calls.filter(
+      (call) => call[0] === 'emit-pass-completed',
+    );
+    expect(passCompletedEvents).toHaveLength(1);
+  });
+
   it('U8 emits failed event after finalize-failed with typed payload', async () => {
     process.env.SPECTIX_FORCE_DOCUMENT_FAILURE = 'true';
     const supabase = new FakeSupabase({ processingStatus: 'pending' });
@@ -222,7 +345,7 @@ function createStep(options?: { onRun?: (name: string) => void }) {
       return fn();
     }),
     sleep: vi.fn(async () => undefined),
-    sendEvent: vi.fn(async () => undefined),
+    sendEvent: vi.fn(async (_name: string, _payload: unknown) => undefined),
   };
 }
 
@@ -231,6 +354,14 @@ type FakeSupabaseOptions = {
   fileName?: string;
   documentType?: DocumentType;
   changeStateBeforeFinalize?: boolean;
+  otherDocuments?: Array<{
+    id: string;
+    processing_status: 'pending' | 'processing' | 'processed' | 'failed';
+  }>;
+  otherClaimDocuments?: Array<{
+    id: string;
+    processing_status: 'pending' | 'processing' | 'processed' | 'failed';
+  }>;
 };
 
 class FakeSupabase {
@@ -245,6 +376,22 @@ class FakeSupabase {
     processing_status: 'pending' | 'processing' | 'processed' | 'failed';
     extracted_data: Record<string, unknown> | null;
   };
+  readonly otherDocuments: Array<{
+    id: string;
+    claim_id: string;
+    processing_status: 'pending' | 'processing' | 'processed' | 'failed';
+  }>;
+  readonly otherClaimDocuments: Array<{
+    id: string;
+    claim_id: string;
+    processing_status: 'pending' | 'processing' | 'processed' | 'failed';
+  }>;
+  readonly pass = {
+    claim_id: claimId,
+    pass_number: 1,
+    status: 'in_progress',
+    completed_at: null as string | null,
+  };
   private changeStateBeforeFinalize: boolean;
 
   constructor(options: FakeSupabaseOptions) {
@@ -257,6 +404,16 @@ class FakeSupabase {
       processing_status: options.processingStatus,
       extracted_data: null,
     };
+    this.otherDocuments = (options.otherDocuments ?? []).map((document) => ({
+      ...document,
+      claim_id: claimId,
+    }));
+    this.otherClaimDocuments = (options.otherClaimDocuments ?? []).map(
+      (document) => ({
+        ...document,
+        claim_id: '33333333-3333-4333-8333-333333333333',
+      }),
+    );
     this.changeStateBeforeFinalize = options.changeStateBeforeFinalize ?? false;
   }
 
@@ -266,6 +423,13 @@ class FakeSupabase {
 
   rpc(name: string, payload: Record<string, unknown>) {
     this.rpcCalls.push({ name, payload });
+
+    if (name === 'finalize_pass_after_document_processing') {
+      const result = this.finalizePassAfterDocumentProcessing();
+
+      return Promise.resolve({ data: [result], error: null });
+    }
+
     return Promise.resolve({ error: null });
   }
 
@@ -289,6 +453,44 @@ class FakeSupabase {
 
     Object.assign(this.document, payload);
     return { ...this.document };
+  }
+
+  finalizePassAfterDocumentProcessing() {
+    const claimDocuments = [
+      this.document,
+      ...this.otherDocuments,
+      ...this.otherClaimDocuments,
+    ].filter((document) => document.claim_id === claimId);
+    const pendingDocuments = claimDocuments.filter((document) =>
+      ['pending', 'processing'].includes(document.processing_status),
+    ).length;
+    const failedDocuments = claimDocuments.filter(
+      (document) => document.processing_status === 'failed',
+    ).length;
+
+    if (pendingDocuments > 0) {
+      return {
+        status: 'in_progress',
+        terminal_documents: claimDocuments.length - pendingDocuments,
+        failed_documents: failedDocuments,
+        pending_documents: pendingDocuments,
+        transitioned: false,
+      };
+    }
+
+    const nextStatus = failedDocuments > 0 ? 'failed' : 'completed';
+    const transitioned =
+      this.pass.status !== nextStatus || this.pass.completed_at === null;
+    this.pass.status = nextStatus;
+    this.pass.completed_at ??= '2026-05-04T00:00:00.000Z';
+
+    return {
+      status: nextStatus,
+      terminal_documents: claimDocuments.length,
+      failed_documents: failedDocuments,
+      pending_documents: 0,
+      transitioned,
+    };
   }
 }
 

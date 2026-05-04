@@ -812,6 +812,21 @@ class FakeSupabase {
   }
 
   rpc(name: string, payload: Record<string, unknown>) {
+    if (name === 'finalize_pass_after_document_processing') {
+      return Promise.resolve({
+        data: [
+          {
+            status: 'completed',
+            terminal_documents: 1,
+            failed_documents: 0,
+            pending_documents: 0,
+            transitioned: false,
+          },
+        ],
+        error: null,
+      });
+    }
+
     this.rpcCalls.push({ name, payload });
     return Promise.resolve({ error: null });
   }
