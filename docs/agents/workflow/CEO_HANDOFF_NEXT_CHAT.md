@@ -1,5 +1,19 @@
 # CEO Handoff - Next Chat
 
+## Bootstrap Reading Order
+
+For new CEO chats, read in this order:
+
+1. `docs/project/INDEX.md` (master index)
+2. `docs/project/project_status_03_05_v3_0.md`
+3. `docs/project/POST_V30_HISTORY.md`
+4. `docs/project/ANTI_PATTERNS.md`
+5. `docs/agents/workflow/SPRINT-002B_STATUS.md`
+6. `docs/agents/workflow/ACTIVE_GATES.md`
+7. `docs/agents/workflow/CHAT_TRANSITION_LOG.md` (this directory, most recent transition)
+
+External Project Knowledge upload is no longer required.
+
 ## Current Date And Repo State
 
 - Date: 2026-05-05 18:49:43 +03:00
