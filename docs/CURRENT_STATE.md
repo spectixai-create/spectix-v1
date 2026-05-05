@@ -8,7 +8,7 @@ Spectix Spike #19 • 2026-05-03
 
 ## Current Phase
 
-Claim intake writes real claim rows, uploads supporting documents to Supabase Storage, classifies documents through the Inngest + Claude broad + subtype classifier pipeline, persists broad extraction prompt results into `documents.extracted_data`, closes pass 1 only after true terminal document-level processing, and is adding SPRINT-002A normalized extraction contracts for future subtype-specific routes.
+Claim intake writes real claim rows, uploads supporting documents to Supabase Storage, classifies documents through the Inngest + Claude broad + subtype classifier pipeline, persists broad extraction prompt results into `documents.extracted_data`, closes pass 1 only after true terminal document-level processing, and now has SPRINT-002A normalized extraction contracts merged for future subtype-specific routes.
 
 ## Completed Spikes
 
@@ -32,14 +32,15 @@ Claim intake writes real claim rows, uploads supporting documents to Supabase St
 - #03ד-1a - Document subtype classification foundation (Prompt 01b).
 - #03ד-1b - Broad extraction prompts (02-05) and `extracted_data` wiring.
 - SPRINT-001 - Pass lifecycle completion after claim-level document processing.
+- SPRINT-002A - Extraction schema contracts in PR #50.
 
 ## Active Spike
 
-SPRINT-002A - Extraction schema contracts is locally validated on `sprint/extraction-schema-contracts` and pending CEO review. Scope is contracts, runtime validation, TypeScript surface, docs, and tests only.
+SPRINT-002B - Dedicated extraction prompts/routes for the supported MVP subtypes is active on branch `sprint/subtype-extraction-routes`; PR pending.
 
 ## Next Spike
 
-SPRINT-002B - dedicated extraction prompts/routes for the supported MVP subtypes.
+SPRINT-003A - Synthesis Data Model.
 
 ## Agent Operations
 
