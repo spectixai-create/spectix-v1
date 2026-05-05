@@ -18,6 +18,6 @@
 4. Diagnose local Inngest registration failure.
 5. After environment fix and explicit CEO approval, rerun PR #52 non-production smoke on head `86bec004`.
 
-## Migration Note (added by PR #TBD)
+## Migration Note (added by PR #55)
 
 Project Knowledge has been migrated to `docs/project/` as of this PR. New chats should read from there. External upload is not required.

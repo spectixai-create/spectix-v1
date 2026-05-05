@@ -67,4 +67,4 @@ This is the entry point for new CEO chats and contributors. Read this first.
 
 ## Note For New Chats
 
-As of PR #TBD, all project knowledge is in repo. Do not upload external Project Knowledge to a new chat. Read from `docs/project/` and linked locations.
+As of PR #55, all project knowledge is in repo. Do not upload external Project Knowledge to a new chat. Read from `docs/project/` and linked locations.
