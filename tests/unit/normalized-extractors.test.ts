@@ -99,6 +99,76 @@ describe('normalized MVP extractors', () => {
     },
   );
 
+  it('police_report normalizes visible incident date evidence into report_or_filing_date', async () => {
+    const payload = modelPayload('police_report');
+    const fields = payload.normalized_data.fields as Record<string, unknown>;
+    delete fields.report_or_filing_date;
+    fields.incident_date = present('2026-05-03');
+
+    const result = (await extractPoliceReportNormalizedFromStorage(
+      baseInput(),
+      {
+        supabaseAdmin: fakeSupabase() as never,
+        callClaude: fakeClaude(payload) as never,
+      },
+    )) as { data: NormalizedExtractionEnvelope };
+
+    expect(normalizedFields(result).report_or_filing_date).toMatchObject({
+      presence: 'present',
+      value: '2026-05-03',
+    });
+  });
+
+  it('police_report prompt documents date synonym mapping without loosening the contract', () => {
+    const prompt = buildExtractionSystemPrompt('police_report');
+
+    expect(prompt).toContain('report_or_filing_date');
+    expect(prompt).toContain('incident date');
+    expect(prompt).toContain('Do not invent report_or_filing_date');
+  });
+
+  it('boarding_pass normalizes departure datetime into flight_date', async () => {
+    const payload = modelPayload('boarding_pass');
+    const fields = payload.normalized_data.fields as Record<string, unknown>;
+    delete fields.flight_date;
+    fields.departure_datetime = present('2026-05-03T10:00:00+03:00');
+
+    const result = (await extractBoardingPassNormalizedFromStorage(
+      baseInput(),
+      {
+        supabaseAdmin: fakeSupabase() as never,
+        callClaude: fakeClaude(payload) as never,
+      },
+    )) as { data: NormalizedExtractionEnvelope };
+
+    expect(normalizedFields(result).flight_date).toMatchObject({
+      presence: 'present',
+      value: '2026-05-03',
+    });
+  });
+
+  it('boarding_pass prompt documents date synonym mapping without loosening the contract', () => {
+    const prompt = buildExtractionSystemPrompt('boarding_pass');
+
+    expect(prompt).toContain('flight_date');
+    expect(prompt).toContain('departure/boarding datetime');
+    expect(prompt).toContain('Do not invent flight_date');
+  });
+
+  it('boarding_pass does not fabricate flight_date from time-only evidence', async () => {
+    const payload = modelPayload('boarding_pass');
+    const fields = payload.normalized_data.fields as Record<string, unknown>;
+    delete fields.flight_date;
+    fields.departure_datetime = present('10:00');
+
+    await expect(
+      extractBoardingPassNormalizedFromStorage(baseInput(), {
+        supabaseAdmin: fakeSupabase() as never,
+        callClaude: fakeClaude(payload) as never,
+      }),
+    ).rejects.toBeInstanceOf(NormalizedExtractorLLMError);
+  });
+
   it.each(routeCases)(
     '$subtype tolerates fenced/prose dirty JSON',
     async ({ subtype, extract }) => {
@@ -213,6 +283,14 @@ describe('normalized MVP extractors', () => {
 
 function baseInput() {
   return { documentId: 'doc-id', fileName: 'evidence.pdf' };
+}
+
+function normalizedFields(result: { data: NormalizedExtractionEnvelope }) {
+  return (
+    result.data.normalized_data as unknown as {
+      fields: Record<string, unknown>;
+    }
+  ).fields;
 }
 
 function modelPayload(subtype: SupportedMvpExtractionSubtype) {

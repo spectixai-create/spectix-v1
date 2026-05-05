@@ -13,6 +13,7 @@ export function buildExtractionSystemPrompt(
   );
   const optionalLines =
     optional.length > 0 ? optional.map((field) => `- ${field}`) : ['- none'];
+  const subtypeGuidance = getSubtypeGuidance(subtype);
 
   return [
     'You are Spectix document extraction. Return JSON only.',
@@ -41,5 +42,27 @@ export function buildExtractionSystemPrompt(
     '',
     'Optional fields:',
     ...optionalLines,
+    '',
+    'Subtype-specific guidance:',
+    ...subtypeGuidance,
   ].join('\n');
+}
+
+function getSubtypeGuidance(subtype: SupportedMvpExtractionSubtype): string[] {
+  switch (subtype) {
+    case 'police_report':
+      return [
+        '- Put any visible report date, filing date, police report date, document date, or incident report date in report_or_filing_date.',
+        '- If the document has no separate report/filing date and is clearly a report about one incident, use the incident date as report_or_filing_date and keep incident_date separately if present.',
+        '- Do not invent report_or_filing_date when no date evidence is visible.',
+      ];
+    case 'boarding_pass':
+      return [
+        '- Put the visible flight date, departure date, boarding date, travel date, or date part of departure/boarding datetime in flight_date.',
+        '- If only a time is visible without a date, flight_date is not present.',
+        '- Support Hebrew/English labels, OCR-style layouts, and airline terminology variations. Do not invent flight_date when no date evidence is visible.',
+      ];
+    default:
+      return ['- No additional subtype-specific rules.'];
+  }
 }

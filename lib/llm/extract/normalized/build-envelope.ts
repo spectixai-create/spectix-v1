@@ -164,6 +164,10 @@ function buildCompletedEnvelope(input: {
   if (input.parsed.kind === 'normalized_extraction') {
     return {
       ...input.parsed,
+      normalized_data: normalizeNormalizedDataAliases(
+        input.parsed.normalized_data,
+        input.subtype,
+      ),
       source_document_id:
         typeof input.parsed.source_document_id === 'string'
           ? input.parsed.source_document_id
@@ -188,7 +192,10 @@ function buildCompletedEnvelope(input: {
     status: 'completed',
     confidence: normalizeConfidence(input.parsed.confidence),
     warnings: normalizeWarnings(input.parsed.warnings),
-    normalized_data: input.parsed.normalized_data,
+    normalized_data: normalizeNormalizedDataAliases(
+      input.parsed.normalized_data,
+      input.subtype,
+    ),
     extraction_completed_at: new Date().toISOString(),
     model_metadata: {
       model_id: input.usage.modelId,
@@ -198,6 +205,117 @@ function buildCompletedEnvelope(input: {
       prompt_id: input.promptId,
     },
   } as NormalizedExtractionEnvelope;
+}
+
+function normalizeNormalizedDataAliases(
+  normalizedData: unknown,
+  subtype: SupportedMvpExtractionSubtype,
+): unknown {
+  if (!isRecord(normalizedData) || !isRecord(normalizedData.fields)) {
+    return normalizedData;
+  }
+
+  const fields = { ...normalizedData.fields };
+
+  if (subtype === 'police_report') {
+    copyDateAlias(fields, 'report_or_filing_date', [
+      'report_date',
+      'filing_date',
+      'police_report_date',
+      'document_date',
+      'incident_report_date',
+      'incident_date',
+    ]);
+  }
+
+  if (subtype === 'boarding_pass') {
+    copyDateAlias(fields, 'flight_date', [
+      'departure_date',
+      'boarding_date',
+      'travel_date',
+      'departure_datetime',
+      'boarding_datetime',
+      'flight_datetime',
+      'boarding_or_departure_datetime',
+      'boarding_or_departure_time',
+    ]);
+  }
+
+  return {
+    ...normalizedData,
+    fields,
+  };
+}
+
+function copyDateAlias(
+  fields: Record<string, unknown>,
+  canonicalField: string,
+  aliases: string[],
+) {
+  if (hasPresentValue(fields[canonicalField])) return;
+
+  for (const alias of aliases) {
+    const aliasField = fields[alias];
+    const aliasValue = getPresentValue(aliasField);
+    const normalizedDate = normalizeDateLikeValue(aliasValue);
+
+    if (normalizedDate === null) continue;
+
+    fields[canonicalField] = {
+      ...asRecord(aliasField),
+      presence: 'present',
+      value: normalizedDate,
+    };
+    return;
+  }
+}
+
+function hasPresentValue(field: unknown): boolean {
+  return getPresentValue(field) !== null;
+}
+
+function getPresentValue(field: unknown): unknown | null {
+  if (!isRecord(field) || field.presence !== 'present') return null;
+
+  return field.value === null || typeof field.value === 'undefined'
+    ? null
+    : field.value;
+}
+
+function normalizeDateLikeValue(value: unknown): string | null {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  if (typeof value !== 'string' && typeof value !== 'number') return null;
+
+  const text = String(value).trim();
+  if (!text) return null;
+
+  const isoMatch = text.match(
+    /(?:^|\D)(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?!\d)/,
+  );
+  if (isoMatch) {
+    return formatDateParts(isoMatch[1], isoMatch[2], isoMatch[3]);
+  }
+
+  const dayFirstMatch = text.match(/\b(\d{1,2})[./-](\d{1,2})[./-](\d{4})\b/);
+  if (dayFirstMatch) {
+    return formatDateParts(
+      dayFirstMatch[3],
+      dayFirstMatch[2],
+      dayFirstMatch[1],
+    );
+  }
+
+  return null;
+}
+
+function formatDateParts(year: string, month: string, day: string): string {
+  return `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(
+    2,
+    '0',
+  )}`;
 }
 
 function normalizeConfidence(value: unknown): number {

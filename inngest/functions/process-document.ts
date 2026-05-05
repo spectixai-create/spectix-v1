@@ -826,6 +826,13 @@ export async function runProcessDocument({
     )) as { persisted: boolean };
 
     if (!deferredPersistOutcome.persisted) {
+      await finalizePassAfterDocumentTerminalState({
+        claimId,
+        step,
+        logger,
+        supabaseAdmin,
+      });
+
       return {
         status: 'processed',
         documentId,
@@ -896,6 +903,13 @@ export async function runProcessDocument({
     )) as { persisted: boolean };
 
     if (!failedPersistOutcome.persisted) {
+      await finalizePassAfterDocumentTerminalState({
+        claimId,
+        step,
+        logger,
+        supabaseAdmin,
+      });
+
       return {
         status: 'failed',
         documentId,
@@ -970,14 +984,12 @@ export async function runProcessDocument({
       await step.sendEvent('emit-process-failed', processFailedEvent);
     }
 
-    if (failedPersistOutcome.persisted) {
-      await finalizePassAfterDocumentTerminalState({
-        claimId,
-        step,
-        logger,
-        supabaseAdmin,
-      });
-    }
+    await finalizePassAfterDocumentTerminalState({
+      claimId,
+      step,
+      logger,
+      supabaseAdmin,
+    });
 
     return {
       status: failedPersistOutcome.persisted ? 'failed' : 'processed',

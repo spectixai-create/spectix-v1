@@ -428,6 +428,41 @@ describe('processDocument state machine', () => {
     );
   });
 
+  it('SPRINT-002B treats MVP fallback as degraded runtime behavior, not normalized smoke success', async () => {
+    const supabase = new FakeSupabase({ processingStatus: 'pending' });
+    const normalizedExtractor = vi.fn(async () => {
+      throw new NormalizedExtractorLLMError('missing required flight_date');
+    });
+    const extractor = vi.fn(async () => legacyReceiptResult(0.0008));
+
+    await runProcessDocument({
+      event: uploadedEvent(),
+      step: createStep(),
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: fakeClassifierFor('receipt'),
+      subtypeClassifier: fakeSubtypeClassifierFor('general_receipt'),
+      normalizedExtractor,
+      extractor,
+    });
+
+    expect(supabase.document.extracted_data).toMatchObject({
+      kind: 'extraction',
+    });
+    expect(supabase.auditLog).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          action: 'document_normalized_extraction_failed',
+          details: expect.objectContaining({ fallback_used: true }),
+        }),
+        expect.objectContaining({
+          action: 'document_normalized_extraction_fallback_completed',
+          details: expect.objectContaining({ fallback_used: true }),
+        }),
+      ]),
+    );
+  });
+
   it('SPRINT-002B keeps fallback_broad output in the legacy extraction shape', async () => {
     const supabase = new FakeSupabase({ processingStatus: 'pending' });
     const normalizedExtractor = vi.fn();
@@ -516,6 +551,48 @@ describe('processDocument state machine', () => {
       },
     });
   });
+
+  it('SPRINT-002B finalizes pass when terminal failure persistence loses a race', async () => {
+    const supabase = new FakeSupabase({
+      processingStatus: 'pending',
+      otherDocuments: [{ id: 'other-doc', processing_status: 'processed' }],
+      changeStateBeforeFailurePersistence: true,
+    });
+    const normalizedExtractor = vi.fn(async () => {
+      throw new Error('normalized failed');
+    });
+    const extractor = vi.fn(async () => {
+      throw new Error('fallback failed');
+    });
+
+    const result = await runProcessDocument({
+      event: uploadedEvent(),
+      step: createStep(),
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: fakeClassifierFor('receipt'),
+      subtypeClassifier: fakeSubtypeClassifierFor('general_receipt'),
+      normalizedExtractor,
+      extractor,
+    });
+
+    expect(result).toMatchObject({
+      status: 'failed',
+      extraction: 'failed_unpersisted',
+    });
+    expect(supabase.document.processing_status).toBe('failed');
+    expect(supabase.rpcCalls).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'finalize_pass_after_document_processing',
+        }),
+      ]),
+    );
+    expect(supabase.pass).toMatchObject({
+      status: 'failed',
+      completed_at: expect.any(String),
+    });
+  });
 });
 
 function uploadedEvent(): DocumentUploadedEvent {
@@ -549,6 +626,7 @@ type FakeSupabaseOptions = {
   fileName?: string;
   documentType?: DocumentType;
   changeStateBeforeFinalize?: boolean;
+  changeStateBeforeFailurePersistence?: boolean;
   otherDocuments?: Array<{
     id: string;
     processing_status: 'pending' | 'processing' | 'processed' | 'failed';
@@ -588,6 +666,7 @@ class FakeSupabase {
     completed_at: null as string | null,
   };
   private changeStateBeforeFinalize: boolean;
+  private changeStateBeforeFailurePersistence: boolean;
 
   constructor(options: FakeSupabaseOptions) {
     this.document = {
@@ -610,6 +689,8 @@ class FakeSupabase {
       }),
     );
     this.changeStateBeforeFinalize = options.changeStateBeforeFinalize ?? false;
+    this.changeStateBeforeFailurePersistence =
+      options.changeStateBeforeFailurePersistence ?? false;
   }
 
   from(table: string) {
@@ -643,6 +724,22 @@ class FakeSupabase {
       filters.processing_status === 'processing'
     ) {
       this.document.processing_status = 'processed';
+      return null;
+    }
+
+    if (
+      this.changeStateBeforeFailurePersistence &&
+      filters.processing_status === 'processing' &&
+      payload.processing_status === 'failed'
+    ) {
+      this.document.processing_status = 'failed';
+      this.document.extracted_data = {
+        document_processing: {
+          phase: 'external_failure_terminal',
+          terminal: true,
+          blocking_failure: true,
+        },
+      };
       return null;
     }
 
