@@ -1,12 +1,17 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { runProcessDocument } from '@/inngest/functions/process-document';
+import {
+  NormalizedExtractorLLMError,
+  type NormalizedExtractionResult,
+} from '@/lib/llm/extract/normalized';
 import type {
   DocumentProcessFailedEvent,
   DocumentProcessedEvent,
   DocumentSubtype,
   DocumentType,
   DocumentUploadedEvent,
+  ReceiptExtraction,
 } from '@/lib/types';
 
 /**
@@ -321,6 +326,196 @@ describe('processDocument state machine', () => {
       step.sendEvent.mock.invocationCallOrder[0] ?? Number.MAX_SAFE_INTEGER,
     );
   });
+
+  it('SPRINT-002B persists specialized normalized extraction success', async () => {
+    const supabase = new FakeSupabase({ processingStatus: 'pending' });
+    const normalizedExtractor = vi.fn(async () =>
+      normalizedReceiptResult(0.0012),
+    );
+
+    const result = await runProcessDocument({
+      event: uploadedEvent(),
+      step: createStep(),
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: fakeClassifierFor('receipt'),
+      subtypeClassifier: fakeSubtypeClassifierFor('general_receipt'),
+      normalizedExtractor,
+    });
+
+    expect(result).toMatchObject({
+      status: 'processed',
+      extraction: 'normalized_completed',
+    });
+    expect(normalizedExtractor).toHaveBeenCalledWith('receipt_general', {
+      documentId,
+      fileName: 'evidence.pdf',
+    });
+    expect(supabase.document.extracted_data).toMatchObject({
+      kind: 'normalized_extraction',
+      route: 'receipt_general',
+      subtype: 'receipt_general',
+      document_processing: {
+        phase: 'extraction_completed',
+        terminal: true,
+        blocking_failure: false,
+      },
+    });
+    expect(supabase.auditLog).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          action: 'document_normalized_extraction_completed',
+        }),
+      ]),
+    );
+  });
+
+  it('SPRINT-002B falls back to legacy broad extraction when specialized extraction fails', async () => {
+    const supabase = new FakeSupabase({ processingStatus: 'pending' });
+    const normalizedExtractor = vi.fn(async () => {
+      throw new NormalizedExtractorLLMError('schema invalid', undefined, {
+        modelId: 'test-model',
+        inputTokens: 10,
+        outputTokens: 2,
+        costUsd: 0.00006,
+      });
+    });
+    const extractor = vi.fn(async () => legacyReceiptResult(0.0008));
+
+    const result = await runProcessDocument({
+      event: uploadedEvent(),
+      step: createStep(),
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: fakeClassifierFor('receipt'),
+      subtypeClassifier: fakeSubtypeClassifierFor('general_receipt'),
+      normalizedExtractor,
+      extractor,
+    });
+
+    expect(result).toMatchObject({
+      status: 'processed',
+      extraction: 'completed',
+    });
+    expect(extractor).toHaveBeenCalledWith('receipt', {
+      documentId,
+      fileName: 'evidence.pdf',
+    });
+    expect(supabase.document.extracted_data).toMatchObject({
+      kind: 'extraction',
+      route: 'receipt',
+      documentSubtype: 'general_receipt',
+    });
+    expect(supabase.auditLog).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          action: 'document_normalized_extraction_failed',
+        }),
+        expect.objectContaining({
+          action: 'document_normalized_extraction_fallback_completed',
+        }),
+      ]),
+    );
+    expect(supabase.rpcCalls).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          payload: expect.objectContaining({ p_cost_increment: 0.00006 }),
+        }),
+        expect.objectContaining({
+          payload: expect.objectContaining({ p_cost_increment: 0.0008 }),
+        }),
+      ]),
+    );
+  });
+
+  it('SPRINT-002B keeps fallback_broad output in the legacy extraction shape', async () => {
+    const supabase = new FakeSupabase({ processingStatus: 'pending' });
+    const normalizedExtractor = vi.fn();
+    const extractor = vi.fn(async () => legacyReceiptResult(0.0008));
+
+    await runProcessDocument({
+      event: uploadedEvent(),
+      step: createStep(),
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: fakeClassifierFor('receipt'),
+      subtypeClassifier: fakeSubtypeClassifierFor('medical_receipt'),
+      normalizedExtractor,
+      extractor,
+    });
+
+    expect(normalizedExtractor).not.toHaveBeenCalled();
+    expect(extractor).toHaveBeenCalledWith('receipt', {
+      documentId,
+      fileName: 'evidence.pdf',
+    });
+    expect(supabase.document.extracted_data).toMatchObject({
+      kind: 'extraction',
+      route: 'receipt',
+      documentSubtype: 'medical_receipt',
+    });
+  });
+
+  it('SPRINT-002B preserves skip_dedicated fallback behavior', async () => {
+    const supabase = new FakeSupabase({ processingStatus: 'pending' });
+
+    const result = await runProcessDocument({
+      event: uploadedEvent(),
+      step: createStep(),
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: fakeClassifierFor('flight_doc'),
+      subtypeClassifier: fakeSubtypeClassifierFor('border_records'),
+    });
+
+    expect(result).toMatchObject({
+      status: 'processed',
+      extraction: 'deferred',
+      reason: 'skip_dedicated',
+    });
+    expect(supabase.document.extracted_data).toMatchObject({
+      kind: 'classification',
+      document_processing: {
+        phase: 'extraction_deferred',
+        terminal: true,
+        blocking_failure: false,
+      },
+    });
+  });
+
+  it('SPRINT-002B marks extraction failed when specialized and fallback broad both fail', async () => {
+    const supabase = new FakeSupabase({ processingStatus: 'pending' });
+    const normalizedExtractor = vi.fn(async () => {
+      throw new Error('normalized failed');
+    });
+    const extractor = vi.fn(async () => {
+      throw new Error('fallback failed');
+    });
+
+    const result = await runProcessDocument({
+      event: uploadedEvent(),
+      step: createStep(),
+      logger: createLogger(),
+      supabaseAdmin: supabase as never,
+      classifier: fakeClassifierFor('receipt'),
+      subtypeClassifier: fakeSubtypeClassifierFor('general_receipt'),
+      normalizedExtractor,
+      extractor,
+    });
+
+    expect(result).toMatchObject({
+      status: 'failed',
+      extraction: 'failed',
+    });
+    expect(supabase.document.processing_status).toBe('failed');
+    expect(supabase.document.extracted_data).toMatchObject({
+      extraction_error: {
+        route: 'receipt',
+        error: 'fallback failed',
+        blocking: true,
+      },
+    });
+  });
 });
 
 function uploadedEvent(): DocumentUploadedEvent {
@@ -521,6 +716,89 @@ async function fakeSubtypeClassifier() {
     llmReturnedRaw: 'claim_form',
     skipped: false,
   };
+}
+
+function fakeClassifierFor(documentType: DocumentType) {
+  return async () => ({
+    documentType,
+    confidence: 0.9,
+    reasoning: 'test',
+    modelId: 'test-model',
+    inputTokens: 100,
+    outputTokens: 20,
+    costUsd: 0.0006,
+  });
+}
+
+function fakeSubtypeClassifierFor(documentSubtype: DocumentSubtype) {
+  return async () => ({
+    documentSubtype,
+    confidence: 0.9,
+    reasoning: 'test subtype',
+    modelId: 'test-model',
+    inputTokens: 80,
+    outputTokens: 20,
+    costUsd: 0.00054,
+    llmReturnedRaw: documentSubtype,
+    skipped: false,
+  });
+}
+
+function normalizedReceiptResult(costUsd: number): NormalizedExtractionResult {
+  return {
+    data: {
+      kind: 'normalized_extraction',
+      route: 'receipt_general',
+      subtype: 'receipt_general',
+      schema_version: 'sprint-002a.v1',
+      source_document_id: documentId,
+      status: 'completed',
+      confidence: 0.9,
+      warnings: [],
+      extraction_completed_at: '2026-05-05T00:00:00.000Z',
+      normalized_data: {
+        subtype: 'receipt_general',
+        fields: {
+          merchant_name: present('Pharmacy'),
+          transaction_date: present('2026-04-30'),
+          total_amount: present(12),
+          currency: present('ILS'),
+          expense_summary_or_category: present('medicine'),
+          document_confidence: present(0.9),
+        },
+      },
+    },
+    modelId: 'test-normalized-model',
+    inputTokens: 10,
+    outputTokens: 5,
+    costUsd,
+  };
+}
+
+function legacyReceiptResult(costUsd: number) {
+  return {
+    data: {
+      storeName: 'Pharmacy',
+      storeAddress: null,
+      storePhone: null,
+      receiptDate: '2026-04-30',
+      receiptNumber: null,
+      items: [],
+      subtotal: null,
+      tax: null,
+      total: 12,
+      currency: 'ILS',
+      paymentMethod: null,
+    } satisfies ReceiptExtraction,
+    modelId: 'test-fallback-model',
+    inputTokens: 20,
+    outputTokens: 6,
+    costUsd,
+  };
+}
+
+function present<T>(value: T) {
+  return { presence: 'present' as const, value, confidence: 0.9 };
 }
 
 class FakeQuery {
