@@ -49,3 +49,16 @@ This file captures concise report snapshots, not full transcripts.
   - `pnpm test`
 - Smoke was not rerun.
 - Ready for CEO approval of fresh non-prod smoke retry.
+
+## 5. Attempt 4 Smoke Retry - Local Runtime Failure
+
+- HEAD: `86bec004dcb02cc830b1c32ff7dfdf7ea4dffee4` (correct).
+- CLI target: `aozbgunwhafabfmuwjol` (correct).
+- Claim created: `SMOKE-002B-RETRY-20260505200822`.
+- Claim ID: `5f4da76d-a78b-4883-8157-df9738f4ca9a`.
+- 9 documents uploaded and 9 `claim/document.uploaded` events fired.
+- Inngest function registration failed: `PUT /api/inngest 500`, `POST /fn/register 404`.
+- `process-document` never ran.
+- All 9 documents remained `pending`.
+- Pass remained `in_progress` because no terminal document state was reached.
+- Production was untouched.

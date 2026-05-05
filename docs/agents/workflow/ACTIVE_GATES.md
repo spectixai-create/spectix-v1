@@ -28,7 +28,12 @@ Not approved:
 
 ## Next Likely Gate
 
-CEO approval for fresh non-prod smoke retry on updated PR #52 head.
+Local dev environment debugging is required:
+
+- Inngest function registration is failing (`PUT /api/inngest 500`).
+- Once the environment is fixed, retry smoke on the same PR #52 head: `86bec004dcb02cc830b1c32ff7dfdf7ea4dffee4`.
+- SMOKE PASS -> CEO merge decision.
+- SMOKE FAIL -> product fix analysis.
 
 ## Smoke Target
 

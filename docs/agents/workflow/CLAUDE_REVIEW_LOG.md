@@ -43,3 +43,11 @@ This file captures concise review snapshots, not full transcripts.
 - Fix PR #52 code.
 - Do not rerun smoke until head changes.
 - After fix, fresh non-prod smoke retry requires CEO approval.
+
+## 6. Attempt 4 Smoke Failure Triage
+
+- Smoke failed at local Inngest function registration, not PR #52 code.
+- The failure was distinguished as an environment failure rather than a product regression.
+- Recommended chat transition to a fresh CEO session for environment debugging.
+- Likely causes: port conflict, missing local Inngest env var such as `INNGEST_SIGNING_KEY` or `INNGEST_EVENT_KEY`, dev server timing, or registration endpoint configuration.
+- Not a SPRINT-002B regression.

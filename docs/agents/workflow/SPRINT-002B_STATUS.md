@@ -73,9 +73,29 @@ Recorded from latest Codex report:
 - No smoke rerun.
 - New head SHA: `86bec004dcb02cc830b1c32ff7dfdf7ea4dffee4`
 
+## Smoke Retry Attempts
+
+### Attempt 4 (2026-05-05)
+
+- Pre-flight: PASS (HEAD `86bec004`, CLI `aozbgunwhafabfmuwjol`).
+- Fresh claim: `SMOKE-002B-RETRY-20260505200822` (ID: `5f4da76d-a78b-4883-8157-df9738f4ca9a`).
+- 9 documents uploaded successfully and 9 `claim/document.uploaded` events fired.
+- Result: FAIL - local Inngest function registration failed (`PUT /api/inngest 500`, `POST /fn/register 404`).
+- `process-document` never ran. All 9 documents stayed `pending`.
+- Cause: local dev environment setup issue, not PR #52 code.
+- No production touch, no merge, no deploy.
+- Pass row stayed `in_progress` because no documents reached terminal state.
+
+## Current State
+
+- PR #52 head unchanged: `86bec004dcb02cc830b1c32ff7dfdf7ea4dffee4`.
+- Four smoke retry attempts have stopped or failed before confirming the current fix in a clean runtime path.
+- Active blocker: local dev environment Inngest registration.
+- This is environment debugging, not product code.
+
 ## Current Required Next Step
 
-CEO must decide whether to approve a fresh non-prod smoke retry on the updated PR #52 head.
+CEO must decide whether to debug the local Inngest registration failure, then approve a fresh non-prod smoke retry on the same PR #52 head.
 
 ## Current Smoke Retry Requirements
 

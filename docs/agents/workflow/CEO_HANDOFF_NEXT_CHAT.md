@@ -5,7 +5,7 @@
 - Date: 2026-05-05 18:49:43 +03:00
 - Repo: `spectixai-create/spectix-v1`
 - Local path: `C:\Users\smart\spectix`
-- main HEAD: `07d055825e97c2b0f1ac4e568ba6cef4966eadf2`
+- main HEAD: `754b39af67f86295ddbc0cefd5fead218c3f7675`
 - Active PR: #52
 - Active branch: `sprint/subtype-extraction-routes`
 
@@ -36,8 +36,10 @@ SPRINT-002B - Priority Subtype Extraction Routes (7 MVP routes)
 
 ## Current Blocker / Next Gate
 
-- Need fresh non-prod smoke retry on updated PR #52 head.
-- Target project: `aozbgunwhafabfmuwjol`
+- Smoke retry attempt 4 failed at local Inngest registration, not PR #52 code.
+- Pending: local dev environment debugging for Inngest registration.
+- PR #52 code is believed correct per Claude Code QA audit and needs runtime confirmation only.
+- Target project for any future smoke retry: `aozbgunwhafabfmuwjol`
 - Forbidden production project: `fcqporzsihuqtfohqtxs`
 - Production smoke is not approved.
 - PR merge is not approved.
