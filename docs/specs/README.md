@@ -24,7 +24,9 @@ Specs in this directory are the implementation source for future spikes. Older s
 | #03ד-1a         | Document subtype classification        | DONE   | backend-document-subtype-foundation | this PR         |
 | #03ד-1b         | Broad extraction prompts (02-05)       | DONE   | backend-broad-extraction-prompts    | #18             |
 | SPRINT-001      | Pass lifecycle completion              | DONE   | sprint/pass-lifecycle-completion    | #38             |
-| SPRINT-002A     | Extraction schema contracts            | ACTIVE | sprint/extraction-schema-contracts  | this PR         |
+| SPRINT-002A     | Extraction schema contracts            | DONE   | sprint/extraction-schema-contracts  | #50             |
+| SPRINT-002B     | Subtype extraction routes              | ACTIVE | sprint/subtype-extraction-routes    | pending         |
+| SPRINT-003A     | Synthesis Data Model                   | NEXT   | pending                             | pending         |
 
 Use [spike-template.md](spike-template.md) for new specs.
 
@@ -38,4 +40,8 @@ Sprint #001 chose Option A for pass lifecycle: pass 1 is the claim-level documen
 
 ## Subtype Extraction
 
-SPRINT-002A defines versioned normalized extraction contracts only. Dedicated subtype prompts/routes remain SPRINT-002B scope. See [sprint-002-subtype-extraction.md](sprint-002-subtype-extraction.md).
+SPRINT-002A defined versioned normalized extraction contracts only and merged in PR #50. Dedicated subtype prompts/routes are SPRINT-002B scope on `sprint/subtype-extraction-routes`. See [sprint-002-subtype-extraction.md](sprint-002-subtype-extraction.md).
+
+## Next Spike
+
+SPRINT-003A is Synthesis Data Model.

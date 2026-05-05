@@ -150,3 +150,29 @@ Trade-offs accepted:
 
 Revisit when production data shows a subtype consistently misclassified or a
 customer requires a new document subtype.
+
+## D-019 - Split Extraction Work Into Contract-First And Route-Implementation Spikes
+
+Date: 2026-05-05
+Status: Active
+Decided by: CEO
+
+SPRINT-002 work is split into a contract-first methodology:
+
+- SPRINT-002A defines normalized extraction contracts, runtime guards,
+  TypeScript surface, documentation, and tests.
+- SPRINT-002B implements dedicated subtype extraction prompts/routes against
+  those contracts.
+- SPRINT-003A follows with the Synthesis Data Model after subtype route outputs
+  are normalized enough to support claim-level synthesis.
+
+This keeps schema and data-shape decisions reviewable before prompt/route
+implementation changes. It also prevents subtype prompt work from changing the
+storage model, migrations, or synthesis assumptions in the same spike.
+
+Trade-offs accepted:
+
+- Delivery is staged across more PRs.
+- Route implementation waits for a merged contract surface.
+- Any schema expansion beyond JSONB normalized extraction remains deferred until
+  SPRINT-003A or a later CEO-approved migration spike.
