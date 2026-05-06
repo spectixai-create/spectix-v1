@@ -19,7 +19,7 @@ import type {
 } from '@/lib/extraction-contracts';
 
 type Extractor = (
-  input: { documentId: string; fileName: string },
+  input: { claimId: string; documentId: string; fileName: string },
   deps?: {
     supabaseAdmin?: never;
     callClaude?: never;
@@ -282,7 +282,11 @@ describe('normalized MVP extractors', () => {
 });
 
 function baseInput() {
-  return { documentId: 'doc-id', fileName: 'evidence.pdf' };
+  return {
+    claimId: 'claim-id',
+    documentId: 'doc-id',
+    fileName: 'evidence.pdf',
+  };
 }
 
 function normalizedFields(result: { data: NormalizedExtractionEnvelope }) {
@@ -455,13 +459,27 @@ function fakeSupabase(options?: {
   downloadError?: boolean;
 }) {
   return {
-    from() {
+    from(table: string) {
       return {
         select() {
           return this;
         },
         eq() {
           return this;
+        },
+        maybeSingle() {
+          if (table === 'claims') {
+            return Promise.resolve({
+              data: {
+                id: 'claim-id',
+                status: 'processing',
+                total_llm_cost_usd: 0,
+              },
+              error: null,
+            });
+          }
+
+          return Promise.resolve({ data: null, error: null });
         },
         single() {
           return Promise.resolve({

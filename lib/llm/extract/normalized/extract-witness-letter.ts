@@ -8,7 +8,7 @@ export const WITNESS_LETTER_NORMALIZED_PROMPT_ID =
   'sprint-002b:witness_letter:v1';
 
 export function extractWitnessLetterNormalizedFromStorage(
-  input: { documentId: string; fileName: string },
+  input: { claimId: string; documentId: string; fileName: string },
   deps?: NormalizedExtractorDeps,
 ): Promise<NormalizedExtractionResult> {
   return extractNormalizedFromStorage(

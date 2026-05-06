@@ -8,7 +8,7 @@ export const FLIGHT_BOOKING_OR_TICKET_NORMALIZED_PROMPT_ID =
   'sprint-002b:flight_booking_or_ticket:v1';
 
 export function extractFlightBookingOrTicketNormalizedFromStorage(
-  input: { documentId: string; fileName: string },
+  input: { claimId: string; documentId: string; fileName: string },
   deps?: NormalizedExtractorDeps,
 ): Promise<NormalizedExtractionResult> {
   return extractNormalizedFromStorage(

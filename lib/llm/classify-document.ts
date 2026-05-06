@@ -1,5 +1,6 @@
 import type { BetaContentBlockParam } from '@anthropic-ai/sdk/resources/beta/messages/messages';
 
+import { callClaudeWithCostGuard } from '@/lib/cost-cap';
 import { callClaudeJSON } from './client';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { DocumentType } from '@/lib/types';
@@ -76,6 +77,7 @@ const ALLOWED_TYPES: ReadonlySet<DocumentType> = new Set<DocumentType>([
 
 export async function classifyDocumentFromStorage(
   input: {
+    claimId: string;
     documentId: string;
     fileName: string;
   },
@@ -89,14 +91,20 @@ export async function classifyDocumentFromStorage(
   }
 
   const contentBlocks = await preparePayload(input, deps);
+  const supabaseAdmin = deps.supabaseAdmin ?? createAdminClient();
   const callClaude = deps.callClaude ?? callClaudeJSON;
   let result: Awaited<ReturnType<typeof callClaudeJSON<ClassifierJsonOutput>>>;
 
   try {
-    result = await callClaude<ClassifierJsonOutput>({
-      system: SYSTEM_PROMPT,
-      contentBlocks,
-      maxTokens: 500,
+    result = await callClaudeWithCostGuard({
+      claimId: input.claimId,
+      supabaseAdmin,
+      call: () =>
+        callClaude<ClassifierJsonOutput>({
+          system: SYSTEM_PROMPT,
+          contentBlocks,
+          maxTokens: 500,
+        }),
     });
   } catch (error) {
     throw new ClassifierLLMError(
@@ -154,7 +162,7 @@ function fakeClassifierResult(fileName: string): ClassifyDocumentResult {
 }
 
 async function preparePayload(
-  input: { documentId: string; fileName: string },
+  input: { documentId: string; fileName: string; claimId: string },
   deps: ClassifierDeps,
 ): Promise<BetaContentBlockParam[]> {
   const supabaseAdmin = deps.supabaseAdmin ?? createAdminClient();

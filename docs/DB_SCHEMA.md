@@ -7,9 +7,10 @@ Canonical sources:
 - [supabase/migrations/0003_storage_mime_types.sql](../supabase/migrations/0003_storage_mime_types.sql)
 - [supabase/migrations/0004_classifier_prep.sql](../supabase/migrations/0004_classifier_prep.sql)
 - [supabase/migrations/0005_document_subtype.sql](../supabase/migrations/0005_document_subtype.sql)
+- [supabase/migrations/0006_errored_state_and_cost_cap.sql](../supabase/migrations/0006_errored_state_and_cost_cap.sql)
 - [supabase/migrations/20260506091500_claim_validations.sql](../supabase/migrations/20260506091500_claim_validations.sql)
 
-Migration #0005 is applied. This document mirrors the production schema for reading. On future migration changes, update this file and [lib/types.ts](../lib/types.ts) in the same PR.
+This document mirrors the repository schema through migration #0006 for reading. On future migration changes, update this file and [lib/types.ts](../lib/types.ts) in the same PR.
 
 ## claims
 
@@ -47,7 +48,7 @@ Indexes: `claims_status_idx`, `claims_risk_band_idx`, `claims_created_at_idx`, `
 
 CHECK constraints:
 
-- `claims_status_valid`: `intake`, `processing`, `pending_info`, `ready`, `reviewed`, `rejected_no_coverage`, `cost_capped`.
+- `claims_status_valid`: `intake`, `processing`, `pending_info`, `ready`, `reviewed`, `rejected_no_coverage`, `cost_capped`, `errored`.
 - `claims_brief_recommendation_valid`: nullable; `approve`, `request_info`, `deep_investigation`, `reject_no_coverage`.
 
 JSONB: `metadata` maps to `ClaimMetadata` in [lib/types.ts](../lib/types.ts).
@@ -298,6 +299,9 @@ SPRINT-002B normalized extraction audit actions:
 - `claim_validation_layer_completed`
 - `claim_validation_layer_failed`
 - `claim_validation_layer_skipped`
+- `claim_errored`
+- `claim_error_recovered`
+- `claim_cost_capped`
 
 These actions use safe metadata only and do not store raw model output or secrets.
 

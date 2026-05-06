@@ -7,7 +7,7 @@ import {
 export const HOTEL_LETTER_NORMALIZED_PROMPT_ID = 'sprint-002b:hotel_letter:v1';
 
 export function extractHotelLetterNormalizedFromStorage(
-  input: { documentId: string; fileName: string },
+  input: { claimId: string; documentId: string; fileName: string },
   deps?: NormalizedExtractorDeps,
 ): Promise<NormalizedExtractionResult> {
   return extractNormalizedFromStorage(

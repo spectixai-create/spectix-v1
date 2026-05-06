@@ -352,6 +352,7 @@ describe('processDocument state machine', () => {
       extraction: 'normalized_completed',
     });
     expect(normalizedExtractor).toHaveBeenCalledWith('receipt_general', {
+      claimId,
       documentId,
       fileName: 'evidence.pdf',
     });
@@ -402,6 +403,7 @@ describe('processDocument state machine', () => {
       extraction: 'completed',
     });
     expect(extractor).toHaveBeenCalledWith('receipt', {
+      claimId,
       documentId,
       fileName: 'evidence.pdf',
     });
@@ -485,6 +487,7 @@ describe('processDocument state machine', () => {
 
     expect(normalizedExtractor).not.toHaveBeenCalled();
     expect(extractor).toHaveBeenCalledWith('receipt', {
+      claimId,
       documentId,
       fileName: 'evidence.pdf',
     });

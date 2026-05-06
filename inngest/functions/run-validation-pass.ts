@@ -1,4 +1,5 @@
 import { inngest } from '../client';
+import { handleClaimScopedFunctionFailure } from './claim-failure';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
   collectNormalizedExtractionFields,
@@ -332,7 +333,19 @@ function toClaimContext(row: ClaimRow): ValidationClaimContext {
 }
 
 export const runValidationPassFunction = inngest.createFunction(
-  RUN_VALIDATION_PASS_CONFIG,
+  {
+    ...RUN_VALIDATION_PASS_CONFIG,
+    onFailure: async ({ event, error, step, logger }) =>
+      handleClaimScopedFunctionFailure({
+        event,
+        error,
+        step: step as unknown as {
+          run: (name: string, fn: () => Promise<unknown>) => Promise<unknown>;
+        },
+        logger,
+        functionId: RUN_VALIDATION_PASS_CONFIG.id,
+      }),
+  },
   { event: 'claim/extraction.completed' },
   async ({ event, step, logger }) =>
     runValidationPass({

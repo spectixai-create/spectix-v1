@@ -68,6 +68,28 @@
 **Estimated work:** 0.5-1 day Postgres function + Inngest wrapper integration + tests.
 **Reference:** design001.6 Section H.1.
 
+### 11w — Upload Conflict 409 Policy / Race Policies D.2-D.5 Deferred
+
+**Current state (MVP):** SPRINT-002D keeps the existing upload and mutation behavior. It does not implement the design001.6 race-condition policy set for upload conflicts, in-flight mutation locks, or `409` responses with `estimated_completion_seconds`.
+
+**Deferred scope:** upload conflict policy, race policies D.2-D.5, and any UI/API behavior that blocks or coordinates user edits while extraction/validation/synthesis is running.
+
+**Trigger to implement:** first pilot workflow where an adjuster or claimant can upload or mutate claim evidence while background processing is active and that creates duplicate work, unclear UI state, or data loss risk.
+
+**Owner:** CEO.
+**Reference:** AUDIT-001 and SPRINT-002D v1.1 deferral.
+
+### 11x — Admin RBAC for Retry Endpoint
+
+**Current state (MVP):** SPRINT-002D includes testable errored-claim recovery helpers, but the admin retry endpoint returns `403` by default because the repo has no established admin/internal auth convention and SPRINT-002D explicitly forbids inventing RBAC.
+
+**Deferred scope:** define and implement a repo-wide admin/internal caller pattern for operational endpoints, then enable `POST /api/admin/claims/[id]/retry` behind that pattern.
+
+**Trigger to implement:** first operational need to recover `errored` claims through an HTTP endpoint instead of calling recovery helpers from a trusted maintenance path.
+
+**Owner:** CEO.
+**Reference:** SPRINT-002D v1.1 admin auth precondition.
+
 - [ ] Historical archive for older spikes #00, #00b, #00c, #00d, #00e, #02, #02a, #02b. Deferred to Spike #00z-B.
 - [ ] Replace sample dashboard/claim/questions data with real Supabase data once API contracts land.
 - [ ] OpenClaw real command channel integration remains blocked in the local install because GitHub issue/PR comments are not a supported channel target. Use the local dispatcher as the operational bridge until a safe supported channel or TaskFlow import path exists.

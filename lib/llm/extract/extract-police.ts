@@ -1,4 +1,5 @@
 import { callClaudeJSON } from '@/lib/llm/client';
+import { createAdminClient } from '@/lib/supabase/admin';
 import {
   callExtractorJSON,
   nullableBoolean,
@@ -61,9 +62,10 @@ Return strictly JSON. Preserve the two-tier structure when possible:
 Use null or empty arrays when unknown.`;
 
 export async function extractPoliceFromStorage(
-  input: { documentId: string; fileName: string },
+  input: { claimId: string; documentId: string; fileName: string },
   deps: ExtractorDeps = {},
 ): Promise<ExtractPoliceResult> {
+  const supabaseAdmin = deps.supabaseAdmin ?? createAdminClient();
   const contentBlocks = await prepareExtractionPayload(
     {
       ...input,
@@ -77,6 +79,8 @@ export async function extractPoliceFromStorage(
   return callExtractorJSON<PoliceJson, PoliceReportExtraction>({
     system: POLICE_SYSTEM_PROMPT,
     contentBlocks,
+    claimId: input.claimId,
+    supabaseAdmin,
     callClaude: deps.callClaude ?? callClaudeJSON,
     LLMError: PoliceExtractorLLMError,
     mapParsed: mapPolice,
