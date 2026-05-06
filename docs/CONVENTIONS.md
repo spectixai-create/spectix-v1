@@ -132,6 +132,12 @@ Run `pnpm test:e2e` for UI, routing, auth, or interaction changes.
   `document_normalized_extraction_fallback_completed`. Payloads must include
   only safe route/status/fallback/cost metadata and must not include secrets or
   raw unsafe model output.
+- SPRINT-002C validation audits use `claim_validation_layer_started`,
+  `claim_validation_layer_completed`, `claim_validation_layer_failed`, and
+  `claim_validation_layer_skipped`. Validation audit details must include only
+  safe metadata such as `layer_id`, `pass_number`, status, counts, reason codes,
+  and `cost_usd: 0`. They must not include raw OCR text, raw model output, raw
+  file content, or secrets.
 - `SPECTIX_FAKE_CLAUDE_CLASSIFIER=true` enables the non-production fake
   classifier path for both broad and subtype classification.
 - Public document status endpoints must verify both `claim_id` and document

@@ -52,6 +52,7 @@ import type {
   DocumentExtractedEvent,
   DocumentExtractionDeferredEvent,
   DocumentExtractionFailedEvent,
+  ClaimExtractionCompletedEvent,
   DocumentProcessFailedEvent,
   DocumentProcessedEvent,
   DocumentSubtypeClassifiedEvent,
@@ -84,7 +85,8 @@ type StepEvent =
   | DocumentExtractedEvent
   | DocumentExtractionFailedEvent
   | DocumentExtractionDeferredEvent
-  | PassCompletedEvent;
+  | PassCompletedEvent
+  | ClaimExtractionCompletedEvent;
 
 type StepLike = {
   run: (name: string, fn: () => Promise<unknown>) => Promise<unknown>;
@@ -1188,7 +1190,12 @@ async function finalizePassAfterDocumentTerminalState({
       name: 'claim/pass.completed',
       data: { claimId, passNumber: 1 },
     };
+    const extractionCompletedEvent: ClaimExtractionCompletedEvent = {
+      name: 'claim/extraction.completed',
+      data: { claimId, passNumber: 1 },
+    };
     await step.sendEvent('emit-pass-completed', completedEvent);
+    await step.sendEvent('emit-extraction-completed', extractionCompletedEvent);
   } else if (result.status === 'failed' && result.transitioned) {
     logger.warn('[pass-failed] document processing pass failed', {
       claimId,

@@ -149,3 +149,9 @@ Defined in `SpectixInngestEvent`:
   processing function commits `processing_status='failed'`.
 - `claim/pass.start`
 - `claim/pass.completed`
+- `claim/extraction.completed`: `{ claimId: string; passNumber: number }`.
+  Fired after pass 1 transitions to completed. SPRINT-002C uses it to start the
+  validation pass.
+- `claim/validation.completed`: `{ claimId: string; passNumber: number }`.
+  Fired after validation layers 11.1-11.3 persist terminal rows and validation
+  pass 2 completes.

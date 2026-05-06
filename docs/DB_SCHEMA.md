@@ -7,6 +7,7 @@ Canonical sources:
 - [supabase/migrations/0003_storage_mime_types.sql](../supabase/migrations/0003_storage_mime_types.sql)
 - [supabase/migrations/0004_classifier_prep.sql](../supabase/migrations/0004_classifier_prep.sql)
 - [supabase/migrations/0005_document_subtype.sql](../supabase/migrations/0005_document_subtype.sql)
+- [supabase/migrations/20260506091500_claim_validations.sql](../supabase/migrations/20260506091500_claim_validations.sql)
 
 Migration #0005 is applied. This document mirrors the production schema for reading. On future migration changes, update this file and [lib/types.ts](../lib/types.ts) in the same PR.
 
@@ -79,6 +80,37 @@ Indexes and constraints:
 - `passes_risk_band_valid`: nullable; `green`, `yellow`, `orange`, `red`
 
 RLS: enabled with no policies. Server code uses `service_role`, matching the existing deny-by-default pattern.
+
+## claim_validations
+
+Purpose: deterministic claim-level validation layer results for SPRINT-002C
+layers 11.1 name match, 11.2 date validation, and 11.3 currency validation.
+
+Columns:
+
+- `id uuid primary key default gen_random_uuid()`
+- `claim_id uuid not null references claims(id) on delete cascade`
+- `pass_number int not null`
+- `layer_id text not null`
+- `status text not null`
+- `payload jsonb not null`
+- `created_at timestamptz not null default now()`
+
+Indexes and constraints:
+
+- `UNIQUE (claim_id, pass_number, layer_id)`
+- `idx_claim_validations_claim`
+- `idx_claim_validations_pass`
+- `claim_validations_layer_id_valid`: `11.1`, `11.2`, `11.3`
+- `claim_validations_status_valid`: `completed`, `failed`, `skipped`
+
+RLS: enabled with no policies. Server code uses `service_role`, matching the
+existing deny-by-default pattern.
+
+JSONB: `payload` maps to validation payload contracts in
+[lib/validation/types.ts](../lib/validation/types.ts). Payloads must store safe
+metadata and evidence references only. They must not store raw OCR text, raw
+model output, raw file content, or secrets.
 
 ## documents
 
@@ -262,6 +294,10 @@ SPRINT-002B normalized extraction audit actions:
 - `document_normalized_extraction_failed`
 - `document_normalized_extraction_deferred`
 - `document_normalized_extraction_fallback_completed`
+- `claim_validation_layer_started`
+- `claim_validation_layer_completed`
+- `claim_validation_layer_failed`
+- `claim_validation_layer_skipped`
 
 These actions use safe metadata only and do not store raw model output or secrets.
 

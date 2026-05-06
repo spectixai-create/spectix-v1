@@ -311,6 +311,16 @@ export interface EnrichmentCache {
   createdAt: string;
 }
 
+export interface ClaimValidation {
+  id: string;
+  claimId: string;
+  passNumber: number;
+  layerId: '11.1' | '11.2' | '11.3';
+  status: 'completed' | 'failed' | 'skipped';
+  payload: Record<string, unknown>;
+  createdAt: string;
+}
+
 export interface AuditLog {
   id: string;
   claimId: string | null;
@@ -722,6 +732,22 @@ export interface PassCompletedEvent {
   };
 }
 
+export interface ClaimExtractionCompletedEvent {
+  name: 'claim/extraction.completed';
+  data: {
+    claimId: string;
+    passNumber: number;
+  };
+}
+
+export interface ClaimValidationCompletedEvent {
+  name: 'claim/validation.completed';
+  data: {
+    claimId: string;
+    passNumber: number;
+  };
+}
+
 export type SpectixInngestEvent =
   | DocumentUploadedEvent
   | DocumentProcessedEvent
@@ -731,4 +757,6 @@ export type SpectixInngestEvent =
   | DocumentExtractionFailedEvent
   | DocumentExtractionDeferredEvent
   | PassStartEvent
-  | PassCompletedEvent;
+  | PassCompletedEvent
+  | ClaimExtractionCompletedEvent
+  | ClaimValidationCompletedEvent;
