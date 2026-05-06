@@ -14,8 +14,15 @@ import {
   planQuestionDispatches,
   validateRejectReason,
 } from '@/lib/adjuster/service';
+import {
+  buildRequestInfoBody,
+  getDefaultSelectedQuestionIds,
+  getQuestionDispatchStatusText,
+  isQuestionSelectable,
+} from '@/lib/adjuster/question-selection';
 import type {
   AuditLogView,
+  BriefQuestion,
   DocumentWithSignedUrl,
   QuestionDispatchState,
 } from '@/lib/adjuster/types';
@@ -186,6 +193,30 @@ describe('SPRINT-UI-001 action rules', () => {
       },
     ]);
     expect(plan.updateRows[0]).not.toHaveProperty('firstDispatchedAt');
+  });
+});
+
+describe('SPRINT-UI-001 question selection UI behavior', () => {
+  it('keeps undispatched questions selected by default only', () => {
+    expect(
+      getDefaultSelectedQuestionIds([
+        briefQuestion('q1'),
+        briefQuestion('q2', dispatch('q2')),
+      ]),
+    ).toEqual(['q1']);
+  });
+
+  it('renders dispatched questions as previously dispatched and selectable', () => {
+    const dispatched = briefQuestion('q1', dispatch('q1'));
+
+    expect(getQuestionDispatchStatusText(dispatched)).toContain(
+      'נשלחה לאחרונה',
+    );
+    expect(isQuestionSelectable(dispatched)).toBe(true);
+  });
+
+  it('sends selected redispatch question ids in request-info payload', () => {
+    expect(buildRequestInfoBody(['q1'])).toEqual({ question_ids: ['q1'] });
   });
 });
 
@@ -379,6 +410,20 @@ function dispatch(questionId: string): QuestionDispatchState {
     dispatchedBy: 'u1',
     lastDispatchedBy: 'u1',
     editedText: null,
+  };
+}
+
+function briefQuestion(
+  id: string,
+  state: QuestionDispatchState | null = null,
+): BriefQuestion {
+  return {
+    id,
+    text: 'נא להבהיר את תאריך האירוע',
+    relatedFindingId: 'f1',
+    expectedAnswerType: 'text',
+    context: null,
+    dispatch: state,
   };
 }
 

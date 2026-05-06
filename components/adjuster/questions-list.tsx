@@ -5,6 +5,12 @@ import { useMemo, useState, useTransition } from 'react';
 import { Send } from 'lucide-react';
 
 import type { BriefQuestion } from '@/lib/adjuster/types';
+import {
+  buildRequestInfoBody,
+  getDefaultSelectedQuestionIds,
+  getQuestionDispatchStatusText,
+  isQuestionSelectable,
+} from '@/lib/adjuster/question-selection';
 import { EMPTY_STATES } from '@/lib/ui/strings-he';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,10 +25,7 @@ export function QuestionsList({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const defaultSelected = useMemo(
-    () =>
-      questions
-        .filter((question) => !question.dispatch)
-        .map((question) => question.id),
+    () => getDefaultSelectedQuestionIds(questions),
     [questions],
   );
   const [selected, setSelected] = useState(defaultSelected);
@@ -42,7 +45,7 @@ export function QuestionsList({
       const response = await fetch(`/api/claims/${claimId}/request-info`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ question_ids: selected }),
+        body: JSON.stringify(buildRequestInfoBody(selected)),
       });
 
       if (!response.ok) {
@@ -85,16 +88,12 @@ export function QuestionsList({
                     className="mt-1 h-4 w-4"
                     checked={selected.includes(question.id)}
                     onChange={() => toggle(question.id)}
-                    disabled={Boolean(question.dispatch)}
+                    disabled={!isQuestionSelectable(question)}
                   />
                   <span>
                     <span className="block font-medium">{question.text}</span>
                     <span className="text-sm text-muted-foreground">
-                      {question.dispatch
-                        ? `נשלחה לאחרונה: ${formatDate(
-                            question.dispatch.lastDispatchedAt,
-                          )}`
-                        : 'טרם נשלחה'}
+                      {getQuestionDispatchStatusText(question)}
                     </span>
                   </span>
                 </span>
@@ -117,11 +116,4 @@ export function QuestionsList({
       </CardContent>
     </Card>
   );
-}
-
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat('he-IL', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  }).format(new Date(value));
 }
