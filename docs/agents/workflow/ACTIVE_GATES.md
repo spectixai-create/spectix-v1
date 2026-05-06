@@ -1,21 +1,23 @@
-# Active Gates
+﻿# Active Gates
 
 ## Open PRs
 
-- #52 - SPRINT-002B Priority Subtype Extraction Routes
+- #54 - Workflow files sync with smoke retry attempt 4 result (open/stale after PR #52 merge; do not close without CEO approval).
 - #47 - OpenClaw Slack routing blocker
+
+## Recently Merged
+
+- #52 - SPRINT-002B Priority Subtype Extraction Routes, merge commit `754c87fbba2d7dec11364e4ca54d2cf54bc6f86a`
 
 ## Current Approved / Not Approved
 
 Approved:
 
-- PR #52 code fix already done.
-- Preparing workflow handoff docs.
-- Future fresh non-prod smoke can be approved by CEO, but is not automatic.
+- MERGE-PR52-001 post-merge documentation and read-only non-production audit review.
 
 Not approved:
 
-- PR #52 merge.
+- SPRINT-003A implementation start.
 - Production smoke.
 - Production Supabase.
 - Deploy.
@@ -24,28 +26,27 @@ Not approved:
 - Auto-merge.
 - Auto-deploy.
 - Native OpenClaw Slack.
-- Retry smoke without explicit CEO approval.
+- Branch deletion for `sprint/subtype-extraction-routes` within 24h after PR #52 merge.
 
 ## Next Likely Gate
 
-CEO approval for fresh non-prod smoke retry on updated PR #52 head.
+Complete and merge MERGE-PR52-001 post-merge queue. Only then can CEO decide whether to authorize SPRINT-003A planning/implementation.
 
-## Smoke Target
+## Supabase Gate
 
-Allowed:
+Allowed read-only audit target for this queue:
 
 `aozbgunwhafabfmuwjol`
 
-Forbidden:
+Forbidden production project:
 
 `fcqporzsihuqtfohqtxs`
 
 ## Merge Rule
 
-PR #52 can be considered for merge only after:
+Post-merge docs PR can be merged after:
 
-1. Fresh non-prod smoke passes on current head.
-2. Smoke evidence is recorded.
-3. TECH_DEBT 11n baseline updated if smoke passes.
+1. Docs-only diff is verified.
+2. Read-only non-prod audit evidence is recorded without secrets.
+3. No runtime, migration, smoke, claim creation, upload, deploy, or production action occurred.
 4. CEO explicitly approves merge.
-5. Final pre-merge PR/head verification passes.

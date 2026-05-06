@@ -17,7 +17,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<fill from Supabase dashboard/project API settings
 SUPABASE_SERVICE_ROLE_KEY=<fill from Supabase dashboard; never commit>
 ANTHROPIC_API_KEY=<local test key or fake mode if supported>
 INNGEST_DEV=1
-INNGEST_BASE_URL=http://localhost:3000/api/inngest
+INNGEST_BASE_URL=http://localhost:8288
 INNGEST_EVENT_KEY=<local dev value if needed>
 INNGEST_SIGNING_KEY=<local dev value if needed>
 ```

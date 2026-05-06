@@ -49,3 +49,16 @@ This file captures concise report snapshots, not full transcripts.
   - `pnpm test`
 - Smoke was not rerun.
 - Ready for CEO approval of fresh non-prod smoke retry.
+
+## 5. SMOKE-002B-RETRY-005 And PR #52 Merge
+
+- Starting smoke SHA: `86bec004dcb02cc830b1c32ff7dfdf7ea4dffee4`
+- Smoke claim: `SMOKE-002B-005-20260505185743`
+- Claim ID: `9222197e-2760-4c10-8b71-501a2aeb4158`
+- Result: pass, 9/9 documents reached expected terminal outcomes.
+- Pass lifecycle: pass 1 completed; no pass remained `in_progress`.
+- Cost: `claims.total_llm_cost_usd = 0.231822`; `passes.llm_calls_made = 23`.
+- Processing baseline: p50=39877ms, p95=49224ms.
+- TECH_DEBT 11n baseline commit: `f2a7fc08f7846ffbfe13ddef9cc2e7bd9adf3085`.
+- PR #52 merge commit: `754c87fbba2d7dec11364e4ca54d2cf54bc6f86a`.
+- Production untouched; no deploy; no auto-merge/auto-deploy.

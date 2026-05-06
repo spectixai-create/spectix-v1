@@ -89,7 +89,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<fill from Supabase dashboard for aozbgunwhafabfmu
 SUPABASE_SERVICE_ROLE_KEY=<fill from Supabase dashboard for aozbgunwhafabfmuwjol>
 ANTHROPIC_API_KEY=<local test key or approved fake mode>
 INNGEST_DEV=1
-INNGEST_BASE_URL=http://localhost:3000/api/inngest
+INNGEST_BASE_URL=http://localhost:8288
 INNGEST_EVENT_KEY=<local dev value if required>
 INNGEST_SIGNING_KEY=<local dev value if required>
 ```
