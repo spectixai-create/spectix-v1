@@ -1,3 +1,11 @@
+# SUPERSEDED — see ../sprints/sprint003a.3_synthesis_implementation_06_05.md
+
+First iteration of synthesis MVP spec. Superseded by 003a.2 (Form A commitment) which was superseded by 003a.3 (Form B alignment per main schema).
+
+Kept for planning history reference.
+
+---
+
 # SPRINT-003A — Synthesis MVP (Implementation Spec)
 
 **Date:** 06/05/2026

@@ -44,27 +44,40 @@ docs/management/
 
 ### plans/
 
-- `plan.1_overview_06_05.md` — roadmap. Covers section 11 (validation) through 17 (open questions). Items 1-9 done in main; item 10 done (PR #56). To update post AUDIT-001 to reflect SPRINT-002C DONE (PR #60).
+- `plan.1_overview_06_05.md` — original roadmap baseline.
+- `plan.2_overview_06_05.md` — updated roadmap after PR #60 / SPRINT-002C and AUDIT-001.
 
 ### designs/
 
-- `design001.6_state_machine_06_05.md` — Pipeline state machine + sync contracts. Target architecture. **Status: design complete, partial alignment with main; AUDIT-001 will identify gaps.**
-- `design002.1_synthesis_decomposition_06_05.md` — Synthesis layer decomposition. **Status: skeleton (iteration 1); awaiting AUDIT-001 outputs to produce iteration 2.**
+- `design001.7_state_machine_06_05.md` — state machine iteration after AUDIT-001 / SPRINT-002D planning.
+- `design001.10_state_machine_06_05.md` — canonical state machine v1.9 with adjuster transitions, escalation flag, and audit actions.
+- `design002.1_synthesis_decomposition_06_05.md` — initial synthesis decomposition skeleton.
+- `design002.3_synthesis_decomposition_06_05.md` — SPRINT-003A synthesis decomposition reference.
+- `design002.7_synthesis_decomposition_06_05.md` — canonical synthesis decomposition v1.6 with question_dispatches separation.
+- `design003.4_ui_requirements_06_05.md` — UI requirements iteration 4 for SPRINT-UI-001.
 
 ### sprints/
 
-- `s11.1-11.3.4_validation_spec_06_05.md` — SPRINT-002C spec for validation layers 11.1-11.3. **Status: SHIPPED in PR #60.** Post-hoc canonical reference for validation pass.
+- `s11.1-11.3.4_validation_spec_06_05.md` — SPRINT-002C spec for validation layers 11.1-11.3. **Status: shipped in PR #60.**
+- `sprint002d.2_errored_costcap_06_05.md` — SPRINT-002D spec for errored recovery and soft cost cap. **Status: shipped in PR #65.**
+- `sprint003a.3_synthesis_implementation_06_05.md` — SPRINT-003A synthesis MVP implementation spec. **Status: shipped in PR #66.**
+- `sprint_ui001.2_brief_view_implementation_06_05.md` — SPRINT-UI-001 brief view implementation spec. **Status: ready for dispatch after SYNC-005.**
 
 ### audits/
 
-- `audit001.1_pr60_vs_design001_06_05.md` — Audit spec: compare PR #60 (main) to design001.6. Read-only audit. **Status: pending Codex execution.**
+- `audit001.1_pr60_vs_design001_06_05.md` — Audit spec: compare PR #60 to design001.6.
+- `audit001.2_pr60_findings_06_05.md` — AUDIT-001 findings report. **Status: merged in PR #62.**
 
 ### sync/
 
-- `sync001.1_post_pr60_06_05.md` — Documentation sync package after PR #60. Updates `docs/CURRENT_STATE.md`, appends D-020-D-026 to `docs/DECISIONS.md`, adds 11q to `docs/TECH_DEBT.md`. **Status: pending Codex implementation.**
+- `sync001.1_post_pr60_06_05.md` — Documentation sync package after PR #60. **Status: applied in PR #63.**
+- `sync003.1_artifacts_handoff_06_05.md` — SYNC-003 management artifact handoff. **Status: merged in PR #64.**
+- `sync005.2_ui_artifacts_handoff_06_05.md` — SYNC-005 UI design artifact handoff. **Status: this PR.**
 
 ### archive/
 
+- `design001.6_state_machine_06_05.md` — SUPERSEDED by later design001 iterations.
+- `sprint003a.1_synthesis_mvp_06_05.md` — SUPERSEDED by `sprints/sprint003a.3_synthesis_implementation_06_05.md`.
 - `diag001.1_inngest_package_05_05.md` — DIAG-INNGEST-001 root cause + fix. CLOSED.
 - `merge001.1_pr52_05_05.md` — Merge package for PR #52 (SPRINT-002B). MERGED.
 - `smoke005.1_002c_retry_05_05.md` — SMOKE-002B-RETRY-005. PASSED.
