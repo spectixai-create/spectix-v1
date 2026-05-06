@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+import { jsonOk, requireApiUser } from '@/lib/adjuster/api';
+import { fetchClaimsList } from '@/lib/adjuster/data';
+import type { ClaimListQuery } from '@/lib/adjuster/types';
 import { generateClaimNumber } from '@/lib/claims/claim-number';
 import {
   createClaimRequestSchema,
@@ -36,11 +39,30 @@ type DbClaimRow = {
   brief_pass_number: number | null;
   brief_recommendation: Claim['briefRecommendation'];
   brief_generated_at: string | null;
+  escalated_to_investigator?: boolean | null;
   created_at: string;
   updated_at: string;
 };
 
 let claimCreationQueue: Promise<void> = Promise.resolve();
+
+export async function GET(request: Request): Promise<NextResponse> {
+  const { user, response } = await requireApiUser();
+  if (!user) return response;
+
+  const { searchParams } = new URL(request.url);
+  const page = Number(searchParams.get('page') ?? 1);
+  const pageSize = Number(searchParams.get('pageSize') ?? 25);
+  const data = await fetchClaimsList({
+    status: (searchParams.get('status') || 'all') as ClaimListQuery['status'],
+    sort: (searchParams.get('sort') || 'newest') as ClaimListQuery['sort'],
+    search: searchParams.get('search') ?? undefined,
+    page: Number.isFinite(page) ? page : 1,
+    pageSize: Number.isFinite(pageSize) ? pageSize : 25,
+  });
+
+  return jsonOk(data);
+}
 
 export async function POST(request: Request): Promise<NextResponse> {
   let body: unknown;
@@ -197,6 +219,7 @@ function mapDbRowToClaim(row: DbClaimRow): Claim {
     briefPassNumber: row.brief_pass_number,
     briefRecommendation: row.brief_recommendation ?? null,
     briefGeneratedAt: row.brief_generated_at,
+    escalatedToInvestigator: row.escalated_to_investigator ?? false,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

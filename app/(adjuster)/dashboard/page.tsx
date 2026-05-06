@@ -1,44 +1,45 @@
-import { RefreshCw } from 'lucide-react';
-
-import { ClaimsTable } from '@/components/dashboard/claims-table';
-import { DashboardEmpty } from '@/components/dashboard/dashboard-empty';
-import { FilterBar } from '@/components/dashboard/filter-bar';
-import { KpiRow } from '@/components/dashboard/kpi-row';
-import { mockStats, sampleClaimRows } from '@/components/dashboard/sample-rows';
+import { fetchClaimsList } from '@/lib/adjuster/data';
+import type { ClaimListQuery } from '@/lib/adjuster/types';
+import { requireUser } from '@/lib/auth/server';
+import { ClaimsListTable } from '@/components/adjuster/claims-list-table';
+import { RefreshButton } from '@/components/adjuster/refresh-button';
 import { AdjusterShell } from '@/components/layout/adjuster-shell';
 import { PageHeader } from '@/components/layout/page-header';
 import { VersionFooter } from '@/components/layout/version-footer';
-import { Button } from '@/components/ui/button';
 
 export const dynamic = 'force-dynamic';
 
-export default function DashboardPage({
+export default async function DashboardPage({
   searchParams,
 }: Readonly<{
-  searchParams?: { empty?: string };
+  searchParams?: {
+    status?: string;
+    sort?: string;
+    search?: string;
+    page?: string;
+    pageSize?: string;
+  };
 }>) {
-  const emptyMode = searchParams?.empty === 'true';
+  await requireUser();
+
+  const query: ClaimListQuery = {
+    status: (searchParams?.status ?? 'all') as ClaimListQuery['status'],
+    sort: (searchParams?.sort ?? 'newest') as ClaimListQuery['sort'],
+    search: searchParams?.search,
+    page: Number(searchParams?.page ?? 1),
+    pageSize: Number(searchParams?.pageSize ?? 25),
+  };
+  const claims = await fetchClaimsList(query);
 
   return (
     <AdjusterShell>
       <div className="space-y-6">
         <PageHeader
           title="תור עבודה"
-          description="סקלטון ניהול תיקים לנציגי תביעות"
-          actions={
-            <Button type="button" variant="outline" className="gap-2">
-              <RefreshCw className="h-4 w-4" aria-hidden="true" />
-              רענון
-            </Button>
-          }
+          description="תיקים מוכנים לעיון מתאם, בקשות מידע והחלטות כיסוי"
+          actions={<RefreshButton />}
         />
-        <KpiRow stats={mockStats} />
-        <FilterBar />
-        {emptyMode ? (
-          <DashboardEmpty />
-        ) : (
-          <ClaimsTable claims={sampleClaimRows} />
-        )}
+        <ClaimsListTable data={claims} />
         <VersionFooter />
       </div>
     </AdjusterShell>

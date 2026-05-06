@@ -10,10 +10,11 @@ Canonical sources:
 - [supabase/migrations/0006_errored_state_and_cost_cap.sql](../supabase/migrations/0006_errored_state_and_cost_cap.sql)
 - [supabase/migrations/20260506091500_claim_validations.sql](../supabase/migrations/20260506091500_claim_validations.sql)
 - [supabase/migrations/20260506131500_synthesis_results.sql](../supabase/migrations/20260506131500_synthesis_results.sql)
+- [supabase/migrations/20260506160000_ui_support.sql](../supabase/migrations/20260506160000_ui_support.sql)
 
-This document mirrors the repository schema through SPRINT-003A synthesis
-storage for reading. On future migration changes, update this file and
-[lib/types.ts](../lib/types.ts) in the same PR.
+This document mirrors the repository schema through SPRINT-UI-001 adjuster
+brief view support for reading. On future migration changes, update this file
+and [lib/types.ts](../lib/types.ts) in the same PR.
 
 ## claims
 
@@ -44,6 +45,7 @@ Columns:
 - `brief_pass_number int null` (migration #0002)
 - `brief_recommendation text null` (migration #0002)
 - `brief_generated_at timestamptz null` (migration #0002)
+- `escalated_to_investigator boolean not null default false` (SPRINT-UI-001)
 - `created_at timestamptz not null default now()`
 - `updated_at timestamptz not null default now()`
 
@@ -143,6 +145,35 @@ JSONB: `payload` maps to synthesis contracts in
 [lib/synthesis/types.ts](../lib/synthesis/types.ts). Findings/questions must use
 safe validation evidence references and must not store raw OCR text, raw model
 output, raw file content, or secrets.
+
+## question_dispatches
+
+Purpose: adjuster-visible record of synthesis clarification questions selected
+for claimant follow-up. SPRINT-UI-001 records dispatch intent only; it does not
+send email/SMS.
+
+Columns:
+
+- `question_id text not null`
+- `claim_id uuid not null references claims(id) on delete cascade`
+- `first_dispatched_at timestamptz not null`
+- `last_dispatched_at timestamptz not null`
+- `dispatched_by uuid not null`
+- `last_dispatched_by uuid not null`
+- `edited_text text null`
+
+Indexes and constraints:
+
+- `PRIMARY KEY (claim_id, question_id)`
+- `idx_question_dispatches_claim`
+
+RLS: enabled with no policies. Server code uses `service_role`, matching the
+existing deny-by-default pattern.
+
+Important: `dispatched_by` and `last_dispatched_by` intentionally do not have
+DB-level FKs to `auth.users`; the current project schema has no safe public
+table FK convention for Supabase auth users. Route handlers validate the
+authenticated user before writing these fields.
 
 ## documents
 
@@ -334,8 +365,17 @@ SPRINT-002B normalized extraction audit actions:
 - `claim_errored`
 - `claim_error_recovered`
 - `claim_cost_capped`
+- `claim_synthesis_started`
+- `claim_synthesis_completed`
+- `adjuster_decision_approve`
+- `adjuster_decision_reject`
+- `adjuster_request_info`
+- `adjuster_escalate`
+- `adjuster_unescalate`
 
 These actions use safe metadata only and do not store raw model output or secrets.
+Adjuster actions do not write a top-level `cost_usd` column; this table has no
+such column. Future cost metadata, if needed, belongs inside `details`.
 
 ## Trigger Semantics
 
