@@ -8,7 +8,7 @@ Spectix Spike #19 • 2026-05-03
 
 ## Current Phase
 
-Claim intake writes real claim rows, uploads supporting documents to Supabase Storage, classifies documents through the Inngest + Claude broad + subtype classifier pipeline, persists broad extraction prompt results into `documents.extracted_data`, closes pass 1 only after true terminal document-level processing, and now has SPRINT-002B in development for seven dedicated normalized subtype extraction routes.
+Claim intake writes real claim rows, uploads supporting documents to Supabase Storage, classifies documents through the Inngest + Claude broad + subtype classifier pipeline, persists broad and normalized extraction results into `documents.extracted_data`, closes pass 1 only after true terminal document-level processing, and now has SPRINT-002C in development for validation layers 11.1-11.3.
 
 ## Completed Spikes
 
@@ -33,14 +33,15 @@ Claim intake writes real claim rows, uploads supporting documents to Supabase St
 - #03ד-1b - Broad extraction prompts (02-05) and `extracted_data` wiring.
 - SPRINT-001 - Pass lifecycle completion after claim-level document processing.
 - SPRINT-002A - Extraction schema contracts in PR #50.
+- SPRINT-002B - Priority subtype extraction routes in PR #52.
 
 ## Active Spike
 
-SPRINT-002B - Priority subtype extraction routes is active on branch `sprint/subtype-extraction-routes`; PR pending. Scope is seven MVP normalized routes, explicit DB subtype to normalized-route mapping, and broad fallback compatibility for non-MVP subtypes.
+SPRINT-002C - Validation layers 11.1-11.3 is active on branch `sprint/validation-layers-002c`; PR pending. Scope is deterministic `name_match`, date validation, and currency validation over normalized extraction envelopes. Authenticity, anomaly, synthesis, UI, broad fallback adapter, and live FX rollout are deferred.
 
 ## Next Spike
 
-SPRINT-003A - Synthesis Data Model.
+SPRINT-003A - Synthesis Data Model after SPRINT-002C review.
 
 ## Agent Operations
 

@@ -8,6 +8,11 @@
  */
 
 import { processDocument } from './process-document';
+import { runValidationPassFunction } from './run-validation-pass';
 import { watchdogStuckDocuments } from './watchdog-stuck-documents';
 
-export const functions = [processDocument, watchdogStuckDocuments] as const;
+export const functions = [
+  processDocument,
+  watchdogStuckDocuments,
+  runValidationPassFunction,
+] as const;

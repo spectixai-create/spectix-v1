@@ -290,11 +290,15 @@ describe('processDocument state machine', () => {
       subtypeClassifier: fakeSubtypeClassifier,
     });
 
-    expect(step.sendEvent).toHaveBeenCalledTimes(4);
+    expect(step.sendEvent).toHaveBeenCalledTimes(5);
     const passCompletedEvents = step.sendEvent.mock.calls.filter(
       (call) => call[0] === 'emit-pass-completed',
     );
     expect(passCompletedEvents).toHaveLength(1);
+    const extractionCompletedEvents = step.sendEvent.mock.calls.filter(
+      (call) => call[0] === 'emit-extraction-completed',
+    );
+    expect(extractionCompletedEvents).toHaveLength(1);
   });
 
   it('U8 emits failed event after finalize-failed with typed payload', async () => {

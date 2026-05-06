@@ -9,6 +9,9 @@ import type {
   ClaimMetadata,
   ClaimStatus,
   ClaimType,
+  ClaimExtractionCompletedEvent,
+  ClaimValidation,
+  ClaimValidationCompletedEvent,
   ClarificationQuestion,
   CreateClaimRequest,
   CreateClaimResponse,
@@ -189,6 +192,16 @@ describe('types compile', () => {
       createdAt: '2025-01-01T00:00:00Z',
     };
 
+    const validation: ClaimValidation = {
+      id: 'validation-uuid',
+      claimId: sampleClaim.id,
+      passNumber: 2,
+      layerId: '11.1',
+      status: 'completed',
+      payload: { ok: true },
+      createdAt: '2025-01-01T00:00:00Z',
+    };
+
     const audit: AuditLog = {
       id: 'audit-uuid',
       claimId: sampleClaim.id,
@@ -208,8 +221,9 @@ describe('types compile', () => {
       gap,
       question,
       cache,
+      validation,
       audit,
-    ]).toHaveLength(7);
+    ]).toHaveLength(8);
   });
 
   it('ExtractedData discriminates by kind', () => {
@@ -405,6 +419,14 @@ describe('types compile', () => {
         name: 'claim/pass.completed',
         data: { claimId: sampleClaim.id, passNumber: 1 },
       },
+      {
+        name: 'claim/extraction.completed',
+        data: { claimId: sampleClaim.id, passNumber: 1 },
+      },
+      {
+        name: 'claim/validation.completed',
+        data: { claimId: sampleClaim.id, passNumber: 2 },
+      },
     ];
 
     expect(createRequest.claimType).toBe('theft');
@@ -413,7 +435,7 @@ describe('types compile', () => {
     expect(updateStatus.status).toBe('processing');
     expect(apiResult.ok).toBe(true);
     expect(apiError.code).toBe('bad_request');
-    expect(events).toHaveLength(6);
+    expect(events).toHaveLength(8);
   });
 
   it('literal unions document allowed values', () => {
@@ -512,6 +534,14 @@ describe('types compile', () => {
       name: 'claim/pass.completed',
       data: { claimId: sampleClaim.id, passNumber: 1 },
     };
+    const extractionCompleted: ClaimExtractionCompletedEvent = {
+      name: 'claim/extraction.completed',
+      data: { claimId: sampleClaim.id, passNumber: 1 },
+    };
+    const validationCompleted: ClaimValidationCompletedEvent = {
+      name: 'claim/validation.completed',
+      data: { claimId: sampleClaim.id, passNumber: 2 },
+    };
 
     const events: SpectixInngestEvent[] = [
       uploaded,
@@ -520,9 +550,14 @@ describe('types compile', () => {
       subtypeClassified,
       started,
       completed,
+      extractionCompleted,
+      validationCompleted,
     ];
 
     expect(events.map((event) => event.name)).toContain('claim/pass.completed');
+    expect(events.map((event) => event.name)).toContain(
+      'claim/validation.completed',
+    );
   });
 });
 

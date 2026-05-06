@@ -25,7 +25,8 @@ Specs in this directory are the implementation source for future spikes. Older s
 | #03ד-1b         | Broad extraction prompts (02-05)       | DONE   | backend-broad-extraction-prompts    | #18             |
 | SPRINT-001      | Pass lifecycle completion              | DONE   | sprint/pass-lifecycle-completion    | #38             |
 | SPRINT-002A     | Extraction schema contracts            | DONE   | sprint/extraction-schema-contracts  | #50             |
-| SPRINT-002B     | Subtype extraction routes              | ACTIVE | sprint/subtype-extraction-routes    | pending         |
+| SPRINT-002B     | Subtype extraction routes              | DONE   | sprint/subtype-extraction-routes    | #52             |
+| SPRINT-002C     | Validation layers 11.1-11.3            | ACTIVE | sprint/validation-layers-002c       | pending         |
 | SPRINT-003A     | Synthesis Data Model                   | NEXT   | pending                             | pending         |
 
 Use [spike-template.md](spike-template.md) for new specs.
@@ -40,8 +41,10 @@ Sprint #001 chose Option A for pass lifecycle: pass 1 is the claim-level documen
 
 ## Subtype Extraction
 
-SPRINT-002A defined versioned normalized extraction contracts only and merged in PR #50. SPRINT-002B is active on `sprint/subtype-extraction-routes` and implements the seven MVP normalized routes while preserving broad fallback behavior for non-MVP subtypes. See [sprint-002-subtype-extraction.md](sprint-002-subtype-extraction.md).
+SPRINT-002A defined versioned normalized extraction contracts only and merged in PR #50. SPRINT-002B implemented the seven MVP normalized routes while preserving broad fallback behavior for non-MVP subtypes. See [sprint-002-subtype-extraction.md](sprint-002-subtype-extraction.md).
+
+SPRINT-002C is active on `sprint/validation-layers-002c` and implements deterministic validation layers 11.1 name match, 11.2 date validation, and 11.3 currency validation before SPRINT-003A synthesis.
 
 ## Next Spike
 
-SPRINT-003A is Synthesis Data Model.
+SPRINT-003A is Synthesis Data Model after SPRINT-002C validation-layer review.
