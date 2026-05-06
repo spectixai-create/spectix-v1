@@ -473,3 +473,40 @@ Upload conflict `409` policy and race policies D.2-D.5 are deferred to TECH_DEBT
 - Pilot operations require upload conflict policy or HTTP admin retry.
 
 **Supersedes:** none.
+
+---
+
+## D-029 — pass_number stable across cycles (no pass_kind column)
+
+**Date:** 06/05/2026
+**Status:** Active
+**Decided by:** CEO
+**Source:** design004.2 + design002.8 + Architect joint sign-off.
+
+**Decision:**
+Re-cycles use UPSERT on existing pass_numbers per D-016 (`pass_number=1`
+extraction, `=2` validation, `=3` synthesis). DELETE+INSERT on
+`synthesis_results` with `pass_number=3` literal stays stable across cycles.
+`question_responses` uses `ON CONFLICT (claim_id, question_id) DO UPDATE`,
+accepting per-question response history loss as a PII trade-off (`audit_log`
+preserves timestamps + counts only).
+
+**Reasoning:**
+
+- Avoids a `pass_kind` column, backfill, and broader pass-model migration during
+  UI-002B.
+- Keeps re-cycle behavior compatible with the already shipped Form B
+  `pass_number` model.
+- Minimizes storage of claimant response history while preserving operational
+  timestamps and counts.
+
+**Trade-offs accepted:**
+
+- Prior response content is overwritten when a claimant resubmits the same
+  question.
+- Detailed response history is deferred to TECH_DEBT 11R.
+
+**Supersedes:** Architect's `pass_kind` proposal.
+
+**Trigger to revisit:** any future cycle requiring `pass_number > 3` (not
+anticipated for MVP). On revisit, `pass_kind` column becomes mandatory.

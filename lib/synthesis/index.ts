@@ -5,6 +5,7 @@ export { computeReadinessScore } from './readiness-score';
 export { runSynthesisForValidationRows } from './handler-orchestration';
 export type {
   ClarificationQuestion,
+  ClaimantResponseContext,
   ClaimValidationRow,
   Finding,
   FindingCategory,

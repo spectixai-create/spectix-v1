@@ -14,6 +14,9 @@ import { createMiddlewareClient } from '@/lib/supabase/middleware';
  */
 
 const ADJUSTER_PATHS = ['/dashboard', '/claim', '/questions'];
+const CLAIMANT_RATE_LIMIT_WINDOW_MS = 60_000;
+const CLAIMANT_RATE_LIMIT_MAX = 90;
+const claimantRateLimit = new Map<string, { count: number; resetAt: number }>();
 
 function isAdjusterPath(pathname: string): boolean {
   return ADJUSTER_PATHS.some(
@@ -51,6 +54,36 @@ function redirectWithRefreshedCookies(
   return redirectResponse;
 }
 
+function isClaimantPublicPath(pathname: string): boolean {
+  return pathname.startsWith('/c/') || pathname.startsWith('/api/c/');
+}
+
+function rateLimitKey(request: NextRequest): string {
+  const forwarded = request.headers
+    .get('x-forwarded-for')
+    ?.split(',')[0]
+    ?.trim();
+  const directIp = (request as NextRequest & { ip?: string }).ip;
+  return forwarded || directIp || 'unknown';
+}
+
+function isRateLimited(request: NextRequest): boolean {
+  const now = Date.now();
+  const key = rateLimitKey(request);
+  const current = claimantRateLimit.get(key);
+
+  if (!current || current.resetAt <= now) {
+    claimantRateLimit.set(key, {
+      count: 1,
+      resetAt: now + CLAIMANT_RATE_LIMIT_WINDOW_MS,
+    });
+    return false;
+  }
+
+  current.count += 1;
+  return current.count > CLAIMANT_RATE_LIMIT_MAX;
+}
+
 export async function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-pathname', request.nextUrl.pathname);
@@ -68,6 +101,18 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
   const hasSessionCookie = Boolean(session) || hasRawAuthCookie;
+
+  if (isClaimantPublicPath(pathname) && isRateLimited(request)) {
+    return pathname.startsWith('/api/')
+      ? NextResponse.json(
+          {
+            ok: false,
+            error: { code: 'rate_limited', message: 'יותר מדי בקשות' },
+          },
+          { status: 429 },
+        )
+      : new NextResponse('יותר מדי בקשות', { status: 429 });
+  }
 
   if (pathname === '/login' && session) {
     return redirectWithRefreshedCookies(
@@ -91,5 +136,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)'],
+  matcher: [
+    '/api/c/:path*',
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)',
+  ],
 };

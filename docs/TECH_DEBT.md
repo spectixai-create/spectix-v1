@@ -142,6 +142,96 @@ adjuster-facing strings.
 
 **Owner:** CEO + Product.
 
+### 11J — Document Upload Virus Scanning
+
+**Current state:** UI-002B accepts claimant-uploaded PDF/JPEG/PNG documents with
+size/type validation only. No malware scanning is performed.
+
+**Future requirement:** add virus scanning before processing claimant documents
+with production customer data.
+
+**Trigger:** first production launch gate or first customer requirement for
+malware scanning.
+
+**Owner:** SPRINT-PROD-BLOCK.
+
+### 11K — Multi-Cycle Synthesis Prompt Summarization
+
+**Current state:** re-cycle synthesis can consume current validation and response
+state, but does not summarize long multi-cycle histories.
+
+**Future requirement:** add privacy-safe summarization once multiple claimant
+response cycles become common.
+
+**Trigger:** pilot claims with more than two claimant response cycles or
+adjuster feedback that repeated context is hard to review.
+
+**Owner:** CEO + Product.
+
+### 11L — Short Link Service `s.spectix.com`
+
+**Current state:** UI-002B generates full application magic links for manual
+sharing by adjusters.
+
+**Future requirement:** add a short-link domain for SMS and compact manual
+sharing.
+
+**Trigger:** SMS multi-segment rate >30%.
+
+**Owner:** UI-002C follow-up.
+
+### 11M — Notification Preference Per Claimant
+
+**Current state:** UI-002B stores contact information status but does not
+implement claimant notification preferences.
+
+**Future requirement:** let operations record claimant channel preference before
+automated notifications are enabled.
+
+**Trigger:** first pilot workflow where claimant prefers one channel over
+another.
+
+**Owner:** UI-002C follow-up.
+
+### 11Q — Storage Cleanup For Orphaned Uploads
+
+**Current state:** claimant uploads remove storage objects on known insert/link
+failures, but there is no scheduled cleanup for rare partial failures.
+
+**Future requirement:** periodic storage reconciliation for documents with no
+valid DB row or response linkage.
+
+**Trigger:** first detected orphaned claimant response upload or production
+storage review.
+
+**Owner:** SPRINT-PROD-BLOCK.
+
+### 11R — `question_responses` History Audit Trail (Privacy-Preserving)
+
+**Current state:** UI-002B upserts `question_responses` by
+`(claim_id, question_id)` and preserves response submission timestamps/counts in
+`audit_log`, but does not store historical response content.
+
+**Future requirement:** append-only audit table with hashed response values,
+timestamps, and cycle number. No response content stored.
+
+**Trigger:** forensic requirement from pilot insurer, such as a
+claimant-changed-answer dispute.
+
+**Owner:** SPRINT-PROD-BLOCK.
+
+### 11T — Production Rate Limiter (Redis-Backed)
+
+**Current state:** UI-002B uses an in-memory middleware limiter for claimant
+public routes. This is sufficient only for local/non-prod smoke and small pilots.
+
+**Future requirement:** swap in-memory LRU rate limiter for Upstash Redis or
+equivalent shared production limiter.
+
+**Trigger:** pre-production scale.
+
+**Owner:** SPRINT-PROD-BLOCK.
+
 - [ ] Historical archive for older spikes #00, #00b, #00c, #00d, #00e, #02, #02a, #02b. Deferred to Spike #00z-B.
 - [ ] Replace sample dashboard/claim/questions data with real Supabase data once API contracts land.
 - [ ] OpenClaw real command channel integration remains blocked in the local install because GitHub issue/PR comments are not a supported channel target. Use the local dispatcher as the operational bridge until a safe supported channel or TaskFlow import path exists.

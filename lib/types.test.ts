@@ -127,6 +127,7 @@ describe('types compile', () => {
       ocrText: null,
       extractedData,
       processingStatus: 'processed',
+      responseToQuestionId: null,
       uploadedBy: null,
       createdAt: '2025-01-01T00:00:00Z',
     };
@@ -364,6 +365,7 @@ describe('types compile', () => {
         ocrText: null,
         extractedData: null,
         processingStatus: 'pending',
+        responseToQuestionId: null,
         uploadedBy: null,
         createdAt: '2025-01-01T00:00:00Z',
       },

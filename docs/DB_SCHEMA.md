@@ -11,10 +11,11 @@ Canonical sources:
 - [supabase/migrations/20260506091500_claim_validations.sql](../supabase/migrations/20260506091500_claim_validations.sql)
 - [supabase/migrations/20260506131500_synthesis_results.sql](../supabase/migrations/20260506131500_synthesis_results.sql)
 - [supabase/migrations/20260506160000_ui_support.sql](../supabase/migrations/20260506160000_ui_support.sql)
+- [supabase/migrations/20260506210000_claimant_responses.sql](../supabase/migrations/20260506210000_claimant_responses.sql)
 
-This document mirrors the repository schema through SPRINT-UI-001 adjuster
-brief view support for reading. On future migration changes, update this file
-and [lib/types.ts](../lib/types.ts) in the same PR.
+This document mirrors the repository schema through SPRINT-UI-002B claimant
+response core support. On future migration changes, update this file and
+[lib/types.ts](../lib/types.ts) in the same PR.
 
 ## claims
 
@@ -161,11 +162,17 @@ Columns:
 - `dispatched_by uuid not null`
 - `last_dispatched_by uuid not null`
 - `edited_text text null`
+- `notification_sent_at timestamptz null`
+- `notification_attempts int not null default 0`
+- `notification_last_error text null`
+- `notification_channel text null`
 
 Indexes and constraints:
 
 - `PRIMARY KEY (claim_id, question_id)`
 - `idx_question_dispatches_claim`
+- `question_dispatches_notification_channel_check`: nullable; if set, one of
+  `email`, `sms`, `both`. UI-002B leaves these fields unused until UI-002C.
 
 RLS: enabled with no policies. Server code uses `service_role`, matching the
 existing deny-by-default pattern.
@@ -174,6 +181,63 @@ Important: `dispatched_by` and `last_dispatched_by` intentionally do not have
 DB-level FKs to `auth.users`; the current project schema has no safe public
 table FK convention for Supabase auth users. Route handlers validate the
 authenticated user before writing these fields.
+
+## question_response_drafts
+
+Purpose: claimant autosave state for dispatched clarification questions.
+
+Columns:
+
+- `question_id text not null`
+- `claim_id uuid not null references claims(id) on delete cascade`
+- `response_value jsonb not null`
+- `saved_at timestamptz not null default now()`
+
+Constraints: `PRIMARY KEY (claim_id, question_id)`.
+
+RLS: enabled with no client policies. Server routes and SECURITY DEFINER RPCs
+mediate access.
+
+## question_responses
+
+Purpose: finalized claimant responses. UI-002B overwrites the current response
+per question and keeps privacy-preserving submission timestamps/counts in
+`audit_log`.
+
+Columns:
+
+- `question_id text not null`
+- `claim_id uuid not null references claims(id) on delete cascade`
+- `response_value jsonb not null`
+- `responded_at timestamptz not null default now()`
+
+Indexes and constraints:
+
+- `PRIMARY KEY (claim_id, question_id)`
+- `idx_question_responses_claim`
+
+RLS: enabled with no client policies. Server routes and SECURITY DEFINER RPCs
+mediate access.
+
+## claimant_magic_links
+
+Purpose: one-time claimant portal access links for dispatched questions.
+
+Columns:
+
+- `token_hash text primary key`
+- `claim_id uuid not null references claims(id) on delete cascade`
+- `expires_at timestamptz not null`
+- `used_at timestamptz null`
+- `revoked_at timestamptz null`
+- `created_at timestamptz not null default now()`
+- `created_by uuid not null references auth.users(id)`
+
+Indexes: `idx_claimant_magic_links_active` on `claim_id` for unused and
+unrevoked links.
+
+RLS: enabled with no client policies. Public claimant routes never receive raw
+token hashes.
 
 ## documents
 
@@ -194,8 +258,12 @@ Columns:
 - `processing_status text default 'pending'` (migration #0002)
 - `uploaded_by uuid null`
 - `created_at timestamptz not null default now()`
+- `response_to_question_id text null`
 
-Indexes: `documents_claim_id_idx`, `documents_document_type_idx`, `documents_document_subtype_idx` (partial: `WHERE document_subtype IS NOT NULL`).
+Indexes: `documents_claim_id_idx`, `documents_document_type_idx`,
+`documents_document_subtype_idx` (partial: `WHERE document_subtype IS NOT
+NULL`), `idx_documents_response_question` (partial: `WHERE
+response_to_question_id IS NOT NULL`).
 
 CHECK constraints:
 
@@ -234,6 +302,10 @@ Processing lifecycle semantics:
 - `public.retry_document_processing(p_document_id uuid, p_reason text default 'manual_retry', p_actor_type text default 'system', p_actor_id text default null)`: resets the same document row to `pending` for MVP retry, writes the previous failure state to `audit_log`, and reopens pass 1.
 - `public.finalize_pass_after_document_processing(p_claim_id uuid, p_pass_number int default 1)`: serializes finalizers per claim/pass, keeps pass 1 `in_progress` while any document is non-terminal, moves it to `completed` when all documents are terminal without blocking failures, or `failed` when all documents are terminal and at least one has a blocking failure. It returns `emit_completed_event = true` only for a real transition into `completed`.
 - `public.replace_synthesis_results(p_claim_id uuid, p_pass_number int, p_results jsonb)`: atomically replaces synthesis rows for one claim/pass using DELETE + INSERT in one database transaction. Used by SPRINT-003A; synthesis code must not UPSERT `synthesis_results`.
+- `public.validate_claimant_magic_link(p_token_hash text, p_claim_id uuid)`: validates a one-time claimant magic link and returns the link row or typed `P000x` errors.
+- `public.save_draft(p_token_hash text, p_claim_id uuid, p_question_id text, p_response_value jsonb)`: validates the link, sets local `lock_timeout = '5s'`, and upserts one draft response.
+- `public.link_document_to_question(p_token_hash text, p_claim_id uuid, p_document_id uuid, p_question_id text)`: validates the link and marks a document as the response for a dispatched question.
+- `public.finalize_question_responses(p_token_hash text, p_claim_id uuid)`: validates the link, requires drafts for all dispatched questions, upserts finalized responses, marks the link used, moves the claim from `pending_info` to `processing`, inserts a privacy-preserving claimant audit row, and returns pending response document IDs for recycle.
 
 ## Storage
 
@@ -350,6 +422,9 @@ Columns: `id uuid primary key`, `claim_id uuid references claims(id) null`, `act
 
 Indexes: `audit_log_claim_id_idx`, `audit_log_created_at_idx`.
 
+CHECK constraints: `audit_log_actor_type_check` allows `system`, `user`,
+`rule_engine`, `llm`, `gap_analyzer`, `human`, and `claimant`.
+
 JSONB: `details` is `Record<string, unknown>` in [lib/types.ts](../lib/types.ts).
 
 SPRINT-002B normalized extraction audit actions:
@@ -372,6 +447,7 @@ SPRINT-002B normalized extraction audit actions:
 - `adjuster_request_info`
 - `adjuster_escalate`
 - `adjuster_unescalate`
+- `claimant_response_submitted`
 
 These actions use safe metadata only and do not store raw model output or secrets.
 Adjuster actions do not write a top-level `cost_usd` column; this table has no

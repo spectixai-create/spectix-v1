@@ -31,6 +31,7 @@ export function ActionPanel({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+  const [magicLinkUrl, setMagicLinkUrl] = useState<string | null>(null);
   const [reason, setReason] = useState('');
   const { claim } = snapshot;
   const selectedQuestionIds = useMemo(
@@ -43,6 +44,7 @@ export function ActionPanel({
 
   function runAction(path: string, body?: unknown) {
     setMessage(null);
+    setMagicLinkUrl(null);
     startTransition(async () => {
       const response = await fetch(`/api/claims/${claim.id}/${path}`, {
         method: 'POST',
@@ -58,9 +60,23 @@ export function ActionPanel({
         return;
       }
 
+      const payload = (await response.json().catch(() => null)) as {
+        data?: { magic_link_url?: string };
+      } | null;
+      setMagicLinkUrl(payload?.data?.magic_link_url ?? null);
       router.refresh();
-      setMessage('הפעולה בוצעה');
+      setMessage(
+        payload?.data?.magic_link_url
+          ? 'נוצר קישור לשיתוף ידני עם המבוטח'
+          : 'הפעולה בוצעה',
+      );
     });
+  }
+
+  async function copyMagicLink() {
+    if (!magicLinkUrl) return;
+    await navigator.clipboard.writeText(magicLinkUrl);
+    setMessage('הקישור הועתק');
   }
 
   const actionsDisabled = isPending || claim.status === 'rejected_no_coverage';
@@ -91,7 +107,9 @@ export function ActionPanel({
               selectedQuestionIds.length === 0
             }
             onClick={() =>
-              runAction('request-info', { question_ids: selectedQuestionIds })
+              runAction('dispatch-questions', {
+                question_ids: selectedQuestionIds,
+              })
             }
           >
             <HelpCircle className="h-4 w-4" aria-hidden="true" />
@@ -149,6 +167,18 @@ export function ActionPanel({
             <Send className="h-4 w-4" aria-hidden="true" />
             {message}
           </p>
+        ) : null}
+        {magicLinkUrl ? (
+          <div className="flex flex-col gap-2 rounded-md border bg-muted/40 p-3 sm:flex-row">
+            <input
+              readOnly
+              className="ltr-isolate min-w-0 flex-1 rounded-md border bg-background px-3 py-2 text-sm"
+              value={magicLinkUrl}
+            />
+            <Button type="button" variant="outline" onClick={copyMagicLink}>
+              העתקת קישור
+            </Button>
+          </div>
         ) : null}
       </CardContent>
     </Card>

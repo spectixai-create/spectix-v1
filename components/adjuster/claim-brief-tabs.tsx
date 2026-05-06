@@ -26,6 +26,10 @@ export function ClaimBriefTabs({
         <FindingsTab findings={snapshot.findings} />
         <QuestionsList
           claimId={snapshot.claim.id}
+          claimContact={{
+            claimantEmail: snapshot.claim.claimantEmail,
+            claimantPhone: snapshot.claim.claimantPhone,
+          }}
           questions={snapshot.questions}
         />
       </TabsContent>

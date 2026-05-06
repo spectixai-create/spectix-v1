@@ -47,6 +47,13 @@ export type ClaimValidationRow = {
   created_at?: string;
 };
 
+export type ClaimantResponseContext = {
+  question_id: string;
+  question_text: string | null;
+  expected_answer_type: QuestionAnswerType | null;
+  response_value: Record<string, unknown>;
+};
+
 export type SynthesisResultKind = 'finding' | 'question' | 'readiness_score';
 
 export type SynthesisResultRow = {
@@ -60,4 +67,5 @@ export type SynthesisOutput = {
   findings: Finding[];
   questions: ClarificationQuestion[];
   readinessScore: ReadinessScore;
+  claimantResponses: ClaimantResponseContext[];
 };

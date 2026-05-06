@@ -43,6 +43,7 @@ type DbDocumentRow = {
   ocr_text: string | null;
   extracted_data: Document['extractedData'];
   processing_status: Document['processingStatus'];
+  response_to_question_id?: string | null;
   uploaded_by: string | null;
   created_at: string;
 };
@@ -313,6 +314,7 @@ function mapDbRowToDocument(row: DbDocumentRow): Document {
     ocrText: row.ocr_text,
     extractedData: row.extracted_data ?? null,
     processingStatus: row.processing_status,
+    responseToQuestionId: row.response_to_question_id ?? null,
     uploadedBy: row.uploaded_by,
     createdAt: row.created_at,
   };

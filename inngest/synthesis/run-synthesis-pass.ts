@@ -6,6 +6,7 @@ import { callClaudeWithCostGuard } from '@/lib/cost-cap';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
   runSynthesisForValidationRows,
+  type ClaimantResponseContext,
   type ClaimValidationRow,
   type SynthesisResultRow,
 } from '@/lib/synthesis';
@@ -45,6 +46,19 @@ type StepLike = {
 };
 
 type SupabaseLike = ReturnType<typeof createAdminClient>;
+
+type QuestionResponseRow = {
+  question_id: string;
+  response_value: Record<string, unknown>;
+};
+
+type PreviousQuestionRow = {
+  payload: {
+    id?: string;
+    text?: string;
+    expected_answer_type?: string;
+  };
+};
 
 type RunSynthesisPassArgs = {
   event: ClaimValidationCompletedEvent;
@@ -114,16 +128,62 @@ export async function runSynthesisPass({
     return (data ?? []) as ClaimValidationRow[];
   });
 
+  const claimantResponses = await step.run(
+    'read-claimant-responses',
+    async () => {
+      const { data: responses, error: responsesError } = await supabaseAdmin
+        .from('question_responses')
+        .select('question_id, response_value')
+        .eq('claim_id', claimId);
+
+      if (responsesError) throw responsesError;
+      if (!responses || responses.length === 0) return [];
+
+      const { data: previousQuestions, error: questionsError } =
+        await supabaseAdmin
+          .from('synthesis_results')
+          .select('payload')
+          .eq('claim_id', claimId)
+          .eq('pass_number', SYNTHESIS_PASS_NUMBER)
+          .eq('kind', 'question');
+
+      if (questionsError) throw questionsError;
+
+      const questionPayloads = new Map(
+        ((previousQuestions ?? []) as PreviousQuestionRow[]).map((row) => [
+          String(row.payload.id ?? ''),
+          row.payload,
+        ]),
+      );
+
+      return ((responses ?? []) as QuestionResponseRow[]).map((response) => {
+        const question = questionPayloads.get(response.question_id);
+
+        return {
+          question_id: response.question_id,
+          question_text: question?.text ?? null,
+          expected_answer_type: normalizeQuestionAnswerType(
+            question?.expected_answer_type,
+          ),
+          response_value: response.response_value,
+        } satisfies ClaimantResponseContext;
+      });
+    },
+  );
+
   const findings = await step.run('derive-findings', async () => {
-    return runSynthesisForValidationRows(validationRows).findings;
+    return runSynthesisForValidationRows(validationRows, claimantResponses)
+      .findings;
   });
 
   const questions = await step.run('generate-questions', async () => {
-    return runSynthesisForValidationRows(validationRows).questions;
+    return runSynthesisForValidationRows(validationRows, claimantResponses)
+      .questions;
   });
 
   const readinessScore = await step.run('compute-readiness-score', async () => {
-    return runSynthesisForValidationRows(validationRows).readinessScore;
+    return runSynthesisForValidationRows(validationRows, claimantResponses)
+      .readinessScore;
   });
 
   await step.run('persist-synthesis-results', async () => {
@@ -202,6 +262,7 @@ export async function runSynthesisPass({
         pass_number: SYNTHESIS_PASS_NUMBER,
         findings_count: findings.length,
         questions_count: questions.length,
+        claimant_response_count: claimantResponses.length,
         score: readinessScore.score,
         final_status: finalStatus,
         claim_status_updated: Boolean(claimUpdate),
@@ -222,9 +283,25 @@ export async function runSynthesisPass({
     passNumber: SYNTHESIS_PASS_NUMBER,
     findingsCount: findings.length,
     questionsCount: questions.length,
+    claimantResponseCount: claimantResponses.length,
     readinessScore: readinessScore.score,
     finalStatus,
   };
+}
+
+function normalizeQuestionAnswerType(
+  value: string | undefined,
+): ClaimantResponseContext['expected_answer_type'] {
+  if (
+    value === 'text' ||
+    value === 'document' ||
+    value === 'confirmation' ||
+    value === 'correction'
+  ) {
+    return value;
+  }
+
+  return null;
 }
 
 async function writeAudit({
