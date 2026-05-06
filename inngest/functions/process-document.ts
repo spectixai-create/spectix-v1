@@ -6,6 +6,7 @@ import {
   type ClassifyDocumentResult,
 } from '@/lib/llm/classify-document';
 import { DEFAULT_MODEL } from '@/lib/llm/client';
+import { validateNormalizedExtractionEnvelope } from '@/lib/extraction-contracts';
 import {
   SUBTYPE_DETERMINISTIC_ACTOR_ID,
   SUBTYPE_PRECALL_SENTINEL,
@@ -33,6 +34,19 @@ import {
   routeBySubtype,
   type ExtractionRoute,
 } from '@/lib/llm/extract/route-by-subtype';
+import {
+  NormalizedExtractorLLMError,
+  extractBoardingPassNormalizedFromStorage,
+  extractFlightBookingOrTicketNormalizedFromStorage,
+  extractHotelLetterNormalizedFromStorage,
+  extractMedicalVisitNormalizedFromStorage,
+  extractPoliceReportNormalizedFromStorage,
+  extractReceiptGeneralNormalizedFromStorage,
+  extractWitnessLetterNormalizedFromStorage,
+  routeByNormalizedSubtype,
+  type NormalizedExtractionResult,
+  type NormalizedSubtypeRoute,
+} from '@/lib/llm/extract/normalized';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type {
   DocumentExtractedEvent,
@@ -44,6 +58,7 @@ import type {
   DocumentUploadedEvent,
   PassCompletedEvent,
   DocumentType,
+  ExtractedData,
   RoutedExtractionData,
 } from '@/lib/types';
 
@@ -96,6 +111,7 @@ type ProcessDocumentArgs = {
   classifier?: typeof classifyDocumentFromStorage;
   subtypeClassifier?: typeof classifySubtypeFromStorage;
   extractor?: typeof runExtractionByRoute;
+  normalizedExtractor?: typeof runNormalizedExtractionByRoute;
 };
 
 type FailureAuditActor = {
@@ -120,6 +136,7 @@ export async function runProcessDocument({
   classifier = classifyDocumentFromStorage,
   subtypeClassifier = classifySubtypeFromStorage,
   extractor = runExtractionByRoute,
+  normalizedExtractor = runNormalizedExtractionByRoute,
 }: ProcessDocumentArgs) {
   const { documentId, claimId } = event.data;
 
@@ -475,6 +492,247 @@ export async function runProcessDocument({
     };
   }
 
+  const normalizedRoute = routeByNormalizedSubtype(
+    classifierResult.documentType,
+    subtypeResult.documentSubtype,
+  );
+  let normalizedFallbackReason: string | null = null;
+  let normalizedFallbackRoute: Exclude<
+    NormalizedSubtypeRoute,
+    'fallback_broad'
+  > | null = null;
+
+  if (normalizedRoute !== 'fallback_broad') {
+    normalizedFallbackRoute = normalizedRoute;
+    let normalizedResult: NormalizedExtractionResult | null = null;
+    let normalizedFailureReason: string | null = null;
+
+    try {
+      normalizedResult = (await step.run(
+        'claude-normalized-extract',
+        async () =>
+          normalizedExtractor(normalizedRoute, {
+            documentId: claimed.id,
+            fileName: claimed.file_name ?? 'unknown',
+          }),
+      )) as NormalizedExtractionResult;
+    } catch (error) {
+      normalizedFailureReason =
+        error instanceof Error ? error.message : String(error);
+
+      if (
+        error instanceof NormalizedExtractorLLMError &&
+        error.costUsd !== undefined
+      ) {
+        await step.run(
+          'upsert-pass-normalized-extraction-failure-cost',
+          async () => {
+            const { error: rpcError } = await supabaseAdmin.rpc(
+              'upsert_pass_increment',
+              {
+                p_claim_id: claimId,
+                p_pass_number: 1,
+                p_calls_increment: 1,
+                p_cost_increment: error.costUsd ?? 0,
+              },
+            );
+
+            if (rpcError) {
+              throw new Error(
+                `upsert_pass_increment failed: ${rpcError.message}`,
+              );
+            }
+          },
+        );
+      }
+    }
+
+    if (normalizedResult) {
+      const normalizedValidation = validateNormalizedExtractionEnvelope(
+        normalizedResult.data,
+      );
+      if (!normalizedValidation.ok) {
+        normalizedFailureReason = `normalized_extraction_validation_failed: ${normalizedValidation.issues
+          .map((issue) => issue.code)
+          .join(',')}`;
+      } else {
+        normalizedResult = {
+          ...normalizedResult,
+          data: normalizedValidation.payload,
+        };
+      }
+    }
+
+    if (normalizedResult && normalizedFailureReason !== null) {
+      await step.run(
+        'upsert-pass-normalized-extraction-validation-failure-cost',
+        async () => {
+          const { error } = await supabaseAdmin.rpc('upsert_pass_increment', {
+            p_claim_id: claimId,
+            p_pass_number: 1,
+            p_calls_increment: 1,
+            p_cost_increment: normalizedResult.costUsd,
+          });
+
+          if (error) {
+            throw new Error(`upsert_pass_increment failed: ${error.message}`);
+          }
+        },
+      );
+    }
+
+    if (normalizedResult && normalizedFailureReason === null) {
+      await step.run('upsert-pass-normalized-extraction-cost', async () => {
+        const { error } = await supabaseAdmin.rpc('upsert_pass_increment', {
+          p_claim_id: claimId,
+          p_pass_number: 1,
+          p_calls_increment: 1,
+          p_cost_increment: normalizedResult.costUsd,
+        });
+
+        if (error) {
+          throw new Error(`upsert_pass_increment failed: ${error.message}`);
+        }
+      });
+
+      const normalizedData = buildNormalizedExtractionData({
+        base: finalizeOutcome.extractedData,
+        extractionResult: normalizedResult,
+      });
+      const successPersistOutcome = (await step.run(
+        'finalize-normalized-extraction-success',
+        async () => {
+          const { data, error } = await supabaseAdmin
+            .from('documents')
+            .update({
+              processing_status: 'processed',
+              extracted_data: markDocumentProcessingTerminal(normalizedData, {
+                phase: 'extraction_completed',
+                blockingFailure: false,
+              }),
+            })
+            .eq('id', documentId)
+            .eq('processing_status', 'processing')
+            .select('id')
+            .maybeSingle();
+
+          if (error) throw error;
+          if (!data) {
+            logger.warn(
+              '[skip-extraction-finalize] state changed before normalized persistence',
+              {
+                documentId,
+                expected: 'processing',
+              },
+            );
+
+            return { persisted: false };
+          }
+
+          const { error: auditError } = await supabaseAdmin
+            .from('audit_log')
+            .insert({
+              claim_id: claimId,
+              actor_type: 'llm',
+              actor_id: normalizedResult.modelId,
+              action: 'document_normalized_extraction_completed',
+              target_table: 'documents',
+              target_id: documentId,
+              details: {
+                route: normalizedRoute,
+                document_type: classifierResult.documentType,
+                document_subtype: subtypeResult.documentSubtype,
+                status: 'completed',
+                fallback_used: false,
+                cost_usd: normalizedResult.costUsd,
+                input_tokens: normalizedResult.inputTokens,
+                output_tokens: normalizedResult.outputTokens,
+              },
+            });
+
+          if (auditError) {
+            logger.error('[audit-failure]', { documentId, error: auditError });
+          }
+          return { persisted: true };
+        },
+      )) as { persisted: boolean };
+
+      if (!successPersistOutcome.persisted) {
+        await finalizePassAfterDocumentTerminalState({
+          claimId,
+          step,
+          logger,
+          supabaseAdmin,
+        });
+
+        return {
+          status: 'processed',
+          documentId,
+          transitioned: true,
+          extraction: 'normalized_completed_unpersisted',
+        };
+      }
+
+      const processedEvent: DocumentProcessedEvent = {
+        name: 'claim/document.processed',
+        data: {
+          claimId,
+          documentId,
+          documentType: classifierResult.documentType,
+        },
+      };
+      const extractedEvent: DocumentExtractedEvent = {
+        name: 'claim/document.extracted',
+        data: {
+          claimId,
+          documentId,
+          documentType: classifierResult.documentType,
+          documentSubtype: subtypeResult.documentSubtype,
+        },
+      };
+      await step.sendEvent('emit-processed', processedEvent);
+      await step.sendEvent('emit-extracted', extractedEvent);
+      await finalizePassAfterDocumentTerminalState({
+        claimId,
+        step,
+        logger,
+        supabaseAdmin,
+      });
+
+      return {
+        status: 'processed',
+        documentId,
+        transitioned: finalizeOutcome.transitioned,
+        extraction: 'normalized_completed',
+      };
+    }
+
+    normalizedFallbackReason =
+      normalizedFailureReason ?? 'normalized_extraction_failed';
+    await step.run('audit-normalized-extraction-failed', async () => {
+      const { error } = await supabaseAdmin.from('audit_log').insert({
+        claim_id: claimId,
+        actor_type: 'llm',
+        actor_id: DEFAULT_MODEL,
+        action: 'document_normalized_extraction_failed',
+        target_table: 'documents',
+        target_id: documentId,
+        details: {
+          route: normalizedRoute,
+          document_type: classifierResult.documentType,
+          document_subtype: subtypeResult.documentSubtype,
+          status: 'failed',
+          fallback_used: true,
+          error: normalizedFallbackReason,
+        },
+      });
+
+      if (error) {
+        logger.error('[audit-failure]', { documentId, error });
+      }
+    });
+  }
+
   const route = routeBySubtype(
     classifierResult.documentType,
     subtypeResult.documentSubtype,
@@ -534,11 +792,47 @@ export async function runProcessDocument({
           logger.error('[audit-failure]', { documentId, error });
         }
 
+        if (normalizedFallbackReason && normalizedFallbackRoute) {
+          const { error: normalizedAuditError } = await supabaseAdmin
+            .from('audit_log')
+            .insert({
+              claim_id: claimId,
+              actor_type: 'system',
+              actor_id: SYSTEM_ACTOR_ID,
+              action: 'document_normalized_extraction_deferred',
+              target_table: 'documents',
+              target_id: documentId,
+              details: {
+                route: normalizedFallbackRoute,
+                fallback_route: route,
+                document_type: classifierResult.documentType,
+                document_subtype: subtypeResult.documentSubtype,
+                status: 'deferred',
+                fallback_used: true,
+                reason: route,
+              },
+            });
+
+          if (normalizedAuditError) {
+            logger.error('[audit-failure]', {
+              documentId,
+              error: normalizedAuditError,
+            });
+          }
+        }
+
         return { persisted: true };
       },
     )) as { persisted: boolean };
 
     if (!deferredPersistOutcome.persisted) {
+      await finalizePassAfterDocumentTerminalState({
+        claimId,
+        step,
+        logger,
+        supabaseAdmin,
+      });
+
       return {
         status: 'processed',
         documentId,
@@ -609,6 +903,13 @@ export async function runProcessDocument({
     )) as { persisted: boolean };
 
     if (!failedPersistOutcome.persisted) {
+      await finalizePassAfterDocumentTerminalState({
+        claimId,
+        step,
+        logger,
+        supabaseAdmin,
+      });
+
       return {
         status: 'failed',
         documentId,
@@ -683,14 +984,12 @@ export async function runProcessDocument({
       await step.sendEvent('emit-process-failed', processFailedEvent);
     }
 
-    if (failedPersistOutcome.persisted) {
-      await finalizePassAfterDocumentTerminalState({
-        claimId,
-        step,
-        logger,
-        supabaseAdmin,
-      });
-    }
+    await finalizePassAfterDocumentTerminalState({
+      claimId,
+      step,
+      logger,
+      supabaseAdmin,
+    });
 
     return {
       status: failedPersistOutcome.persisted ? 'failed' : 'processed',
@@ -766,6 +1065,38 @@ export async function runProcessDocument({
 
       if (auditError) {
         logger.error('[audit-failure]', { documentId, error: auditError });
+      }
+
+      if (normalizedFallbackReason && normalizedFallbackRoute) {
+        const { error: fallbackAuditError } = await supabaseAdmin
+          .from('audit_log')
+          .insert({
+            claim_id: claimId,
+            actor_type: 'llm',
+            actor_id: extractionResult.modelId,
+            action: 'document_normalized_extraction_fallback_completed',
+            target_table: 'documents',
+            target_id: documentId,
+            details: {
+              route: normalizedFallbackRoute,
+              fallback_route: route,
+              document_type: classifierResult.documentType,
+              document_subtype: subtypeResult.documentSubtype,
+              status: 'completed',
+              fallback_used: true,
+              fallback_reason: normalizedFallbackReason,
+              cost_usd: extractionResult.costUsd,
+              input_tokens: extractionResult.inputTokens,
+              output_tokens: extractionResult.outputTokens,
+            },
+          });
+
+        if (fallbackAuditError) {
+          logger.error('[audit-failure]', {
+            documentId,
+            error: fallbackAuditError,
+          });
+        }
       }
       return { persisted: true };
     },
@@ -880,6 +1211,20 @@ type BuildExtractionDataInput = {
   extractionResult: ExtractionResult;
   base: Record<string, unknown>;
 };
+
+function buildNormalizedExtractionData({
+  extractionResult,
+  base,
+}: {
+  extractionResult: NormalizedExtractionResult;
+  base: Record<string, unknown>;
+}): ExtractedData {
+  return {
+    ...extractionResult.data,
+    classifier: asRecord(base.classifier),
+    subtype_classifier: asRecord(base.subtype_classifier),
+  };
+}
 
 function buildRoutedExtractionData({
   route,
@@ -1053,6 +1398,28 @@ export async function runExtractionByRoute(
       return extractHotelGenericFromStorage(input);
     case 'medical':
       return extractMedicalFromStorage(input);
+  }
+}
+
+export async function runNormalizedExtractionByRoute(
+  route: Exclude<NormalizedSubtypeRoute, 'fallback_broad'>,
+  input: { documentId: string; fileName: string },
+): Promise<NormalizedExtractionResult> {
+  switch (route) {
+    case 'receipt_general':
+      return extractReceiptGeneralNormalizedFromStorage(input);
+    case 'police_report':
+      return extractPoliceReportNormalizedFromStorage(input);
+    case 'medical_visit':
+      return extractMedicalVisitNormalizedFromStorage(input);
+    case 'hotel_letter':
+      return extractHotelLetterNormalizedFromStorage(input);
+    case 'flight_booking_or_ticket':
+      return extractFlightBookingOrTicketNormalizedFromStorage(input);
+    case 'boarding_pass':
+      return extractBoardingPassNormalizedFromStorage(input);
+    case 'witness_letter':
+      return extractWitnessLetterNormalizedFromStorage(input);
   }
 }
 

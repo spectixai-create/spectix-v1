@@ -316,10 +316,14 @@ export type NormalizedExtractionValidationResult =
       deferred?: DeferredNormalizedExtractionEnvelope;
     };
 
-type FieldType = 'string' | 'number' | 'string_array' | 'line_item_array';
+export type NormalizedExtractionFieldType =
+  | 'string'
+  | 'number'
+  | 'string_array'
+  | 'line_item_array';
 
-type RequiredFieldSpec = {
-  type: FieldType;
+export type NormalizedExtractionRequiredFieldSpec = {
+  type: NormalizedExtractionFieldType;
   allowNotPresent: boolean;
 };
 
@@ -338,7 +342,7 @@ const ROUTE_BY_SUBTYPE: Record<
 
 const REQUIRED_FIELDS_BY_SUBTYPE: Record<
   SupportedMvpExtractionSubtype,
-  Record<string, RequiredFieldSpec>
+  Record<string, NormalizedExtractionRequiredFieldSpec>
 > = {
   receipt_general: {
     merchant_name: { type: 'string', allowNotPresent: false },
@@ -403,6 +407,64 @@ const REQUIRED_FIELDS_BY_SUBTYPE: Record<
   },
 };
 
+const OPTIONAL_FIELDS_BY_SUBTYPE: Record<
+  SupportedMvpExtractionSubtype,
+  readonly string[]
+> = {
+  receipt_general: [
+    'tax_amount',
+    'payment_method',
+    'receipt_number',
+    'location',
+    'purchaser_name',
+    'line_items',
+  ],
+  police_report: [
+    'officer_name',
+    'case_status',
+    'loss_theft_damage_type',
+    'property_list',
+    'witness_references',
+  ],
+  medical_visit: [
+    'provider_address',
+    'doctor_name',
+    'diagnosis_codes',
+    'prescribed_medication',
+    'follow_up_instructions',
+    'invoice_amount',
+  ],
+  hotel_letter: [
+    'reservation_number',
+    'room_number',
+    'staff_signer_name_or_title',
+    'contact_details',
+    'incident_description',
+  ],
+  flight_booking_or_ticket: [
+    'arrival_datetime',
+    'ticket_number',
+    'fare_amount',
+    'currency',
+    'seat_or_class',
+    'travel_agency',
+  ],
+  boarding_pass: [
+    'seat',
+    'gate',
+    'boarding_group',
+    'sequence_number',
+    'booking_reference',
+  ],
+  witness_letter: [
+    'witness_contact_details',
+    'signature_presence',
+    'location',
+    'supporting_facts',
+    'contradictions_or_uncertainty_flags',
+  ],
+};
+
 const SECRET_METADATA_KEYS = [
   'api_key',
   'apikey',
@@ -433,6 +495,18 @@ export function expectedRouteForSubtype(
   subtype: SupportedMvpExtractionSubtype,
 ): NormalizedExtractionRoute {
   return ROUTE_BY_SUBTYPE[subtype];
+}
+
+export function getNormalizedExtractionFieldSpecs(
+  subtype: SupportedMvpExtractionSubtype,
+): {
+  required: Record<string, NormalizedExtractionRequiredFieldSpec>;
+  optional: readonly string[];
+} {
+  return {
+    required: REQUIRED_FIELDS_BY_SUBTYPE[subtype],
+    optional: OPTIONAL_FIELDS_BY_SUBTYPE[subtype],
+  };
 }
 
 export function buildUnsupportedSubtypeDeferredEnvelope(input: {
@@ -823,7 +897,7 @@ function validateModelMetadata(
 
 function validateNormalizedField(
   value: unknown,
-  type: FieldType,
+  type: NormalizedExtractionFieldType,
   path: string,
 ): NormalizedExtractionValidationIssue | null {
   if (!isRecord(value)) {
@@ -883,7 +957,10 @@ function validateNormalizedField(
   return null;
 }
 
-function matchesFieldType(value: unknown, type: FieldType): boolean {
+function matchesFieldType(
+  value: unknown,
+  type: NormalizedExtractionFieldType,
+): boolean {
   switch (type) {
     case 'string':
       return typeof value === 'string' && value.length > 0;

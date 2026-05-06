@@ -123,9 +123,15 @@ Run `pnpm test:e2e` for UI, routing, auth, or interaction changes.
   `llm/<default model id>`.
 - Broad extraction audits use `document_extraction_completed`,
   `document_extraction_failed`, and `document_extraction_deferred`.
-  Extraction failure is degraded success: document processing remains
-  `processed`, classifier/subtype data remains persisted, and
-  `extraction_error` is written into `documents.extracted_data`.
+  Blocking extraction failure marks the document `failed`, preserves
+  classifier/subtype data, and writes `extraction_error` into
+  `documents.extracted_data`.
+- Normalized extraction audits use `document_normalized_extraction_completed`,
+  `document_normalized_extraction_failed`,
+  `document_normalized_extraction_deferred`, and
+  `document_normalized_extraction_fallback_completed`. Payloads must include
+  only safe route/status/fallback/cost metadata and must not include secrets or
+  raw unsafe model output.
 - `SPECTIX_FAKE_CLAUDE_CLASSIFIER=true` enables the non-production fake
   classifier path for both broad and subtype classification.
 - Public document status endpoints must verify both `claim_id` and document

@@ -120,7 +120,9 @@ SPRINT-002A normalized extraction envelope:
 - Unsupported subtype extraction must be deferred, not completed.
 - Malformed model output must fail validation.
 - Low-confidence structurally valid extraction is represented as a warning and is non-blocking.
-- SPRINT-002A defines contracts/guards only; SPRINT-002B will implement dedicated subtype prompts/routes.
+- SPRINT-002B writes `kind = normalized_extraction` only for specialized MVP route success. Legacy broad fallback success continues to write the existing `kind = extraction` shape.
+- SPRINT-002B maps DB subtype names explicitly: `general_receipt` -> `receipt_general`, `flight_booking` and `flight_ticket` -> `flight_booking_or_ticket`, and `witnesses` -> `witness_letter`.
+- Non-MVP subtype values continue through broad fallback or existing skip/defer behavior. No relational extraction tables or migrations are added in SPRINT-002B.
 
 Processing lifecycle semantics:
 
@@ -253,6 +255,15 @@ Columns: `id uuid primary key`, `claim_id uuid references claims(id) null`, `act
 Indexes: `audit_log_claim_id_idx`, `audit_log_created_at_idx`.
 
 JSONB: `details` is `Record<string, unknown>` in [lib/types.ts](../lib/types.ts).
+
+SPRINT-002B normalized extraction audit actions:
+
+- `document_normalized_extraction_completed`
+- `document_normalized_extraction_failed`
+- `document_normalized_extraction_deferred`
+- `document_normalized_extraction_fallback_completed`
+
+These actions use safe metadata only and do not store raw model output or secrets.
 
 ## Trigger Semantics
 

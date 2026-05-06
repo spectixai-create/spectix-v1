@@ -40,7 +40,7 @@ Sprint #001 chose Option A for pass lifecycle: pass 1 is the claim-level documen
 
 ## Subtype Extraction
 
-SPRINT-002A defined versioned normalized extraction contracts only and merged in PR #50. Dedicated subtype prompts/routes are SPRINT-002B scope on `sprint/subtype-extraction-routes`. See [sprint-002-subtype-extraction.md](sprint-002-subtype-extraction.md).
+SPRINT-002A defined versioned normalized extraction contracts only and merged in PR #50. SPRINT-002B is active on `sprint/subtype-extraction-routes` and implements the seven MVP normalized routes while preserving broad fallback behavior for non-MVP subtypes. See [sprint-002-subtype-extraction.md](sprint-002-subtype-extraction.md).
 
 ## Next Spike
 
