@@ -100,6 +100,48 @@
 
 **Owner:** CEO + Adjuster lead.
 
+### 11A — Admin Retry Endpoint UI
+
+**Current state:** SPRINT-UI-001 deliberately does not expose the SPRINT-002D
+admin retry endpoint in the adjuster UI. The endpoint remains behind the
+existing backend auth decision and is not part of adjuster workflow MVP.
+
+**Future requirement:** add an operations-only retry control after repo-wide
+admin/internal auth is defined and reviewed.
+
+**Trigger:** first pilot or support workflow requiring non-developer recovery of
+`errored` claims.
+
+**Owner:** CEO.
+
+### 11B — Question Text Inline Edit
+
+**Current state:** SPRINT-UI-001 lets adjusters select generated questions for
+dispatch intent but defers inline question text editing. The API supports
+`edited_texts`, but the MVP UI keeps the generated Hebrew text unchanged.
+
+**Future requirement:** inline edit control with audit-visible edited text and
+validation against unsafe/raw content.
+
+**Trigger:** first adjuster review where generated question wording needs manual
+editing before claimant follow-up.
+
+**Owner:** CEO + Adjuster lead.
+
+### 11C — UI String i18n Externalization
+
+**Current state:** the repo has no `next-intl`, `i18next`, or `react-intl`
+pattern. SPRINT-UI-001 centralizes hardcoded Hebrew strings in
+`lib/ui/strings-he.ts` without introducing an i18n dependency.
+
+**Future requirement:** move UI strings into a formal i18n catalog before adding
+additional locales or large-scale copy variants.
+
+**Trigger:** second UI language, white-label copy requirement, or more than 100
+adjuster-facing strings.
+
+**Owner:** CEO + Product.
+
 - [ ] Historical archive for older spikes #00, #00b, #00c, #00d, #00e, #02, #02a, #02b. Deferred to Spike #00z-B.
 - [ ] Replace sample dashboard/claim/questions data with real Supabase data once API contracts land.
 - [ ] OpenClaw real command channel integration remains blocked in the local install because GitHub issue/PR comments are not a supported channel target. Use the local dispatcher as the operational bridge until a safe supported channel or TaskFlow import path exists.

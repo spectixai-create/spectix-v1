@@ -3,8 +3,7 @@ import type { NormalizedExtractionEnvelope } from './extraction-contracts';
 /**
  * Spectix — source-of-truth types
  *
- * Mirrors /supabase/migrations/0001_initial_schema.sql through
- * /supabase/migrations/0005_document_subtype.sql.
+ * Mirrors Supabase migrations through SPRINT-UI-001 UI support.
  * On schema change: update migration FIRST, then this file.
  * Future migrations may extend; do not add speculative fields here.
  *
@@ -196,6 +195,8 @@ export interface Claim {
   /** Queryable recommendation extracted from the current brief. */
   briefRecommendation: BriefRecommendation | null;
   briefGeneratedAt: string | null;
+  /** Added in SPRINT-UI-001 for adjuster escalation workflow. */
+  escalatedToInvestigator: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -329,6 +330,16 @@ export interface SynthesisResult {
   kind: 'finding' | 'question' | 'readiness_score';
   payload: Record<string, unknown>;
   createdAt: string;
+}
+
+export interface QuestionDispatch {
+  questionId: string;
+  claimId: string;
+  firstDispatchedAt: string;
+  lastDispatchedAt: string;
+  dispatchedBy: string;
+  lastDispatchedBy: string;
+  editedText: string | null;
 }
 
 export interface AuditLog {
