@@ -9,8 +9,11 @@ Canonical sources:
 - [supabase/migrations/0005_document_subtype.sql](../supabase/migrations/0005_document_subtype.sql)
 - [supabase/migrations/0006_errored_state_and_cost_cap.sql](../supabase/migrations/0006_errored_state_and_cost_cap.sql)
 - [supabase/migrations/20260506091500_claim_validations.sql](../supabase/migrations/20260506091500_claim_validations.sql)
+- [supabase/migrations/20260506131500_synthesis_results.sql](../supabase/migrations/20260506131500_synthesis_results.sql)
 
-This document mirrors the repository schema through migration #0006 for reading. On future migration changes, update this file and [lib/types.ts](../lib/types.ts) in the same PR.
+This document mirrors the repository schema through SPRINT-003A synthesis
+storage for reading. On future migration changes, update this file and
+[lib/types.ts](../lib/types.ts) in the same PR.
 
 ## claims
 
@@ -113,6 +116,34 @@ JSONB: `payload` maps to validation payload contracts in
 metadata and evidence references only. They must not store raw OCR text, raw
 model output, raw file content, or secrets.
 
+## synthesis_results
+
+Purpose: deterministic SPRINT-003A synthesis output derived from
+`claim_validations` without LLM calls.
+
+Columns:
+
+- `id uuid primary key default gen_random_uuid()`
+- `claim_id uuid not null references claims(id) on delete cascade`
+- `pass_number int not null`
+- `kind text not null`
+- `payload jsonb not null`
+- `created_at timestamptz not null default now()`
+
+Indexes and constraints:
+
+- `idx_synthesis_results_claim`
+- `idx_synthesis_results_claim_pass`
+- `synthesis_results_kind_valid`: `finding`, `question`, `readiness_score`
+
+RLS: enabled with no policies. Server code uses `service_role`, matching the
+existing deny-by-default pattern.
+
+JSONB: `payload` maps to synthesis contracts in
+[lib/synthesis/types.ts](../lib/synthesis/types.ts). Findings/questions must use
+safe validation evidence references and must not store raw OCR text, raw model
+output, raw file content, or secrets.
+
 ## documents
 
 Purpose: uploaded files and extracted document data.
@@ -171,6 +202,7 @@ Processing lifecycle semantics:
 - `public.reopen_pass_for_document_processing(p_claim_id uuid, p_pass_number int default 1, p_reason text default 'document_uploaded', p_document_id uuid default null)`: reopens pass 1 to `in_progress` when a new document or retry makes document processing non-terminal again. Preserves pass cost counters and clears `completed_at`.
 - `public.retry_document_processing(p_document_id uuid, p_reason text default 'manual_retry', p_actor_type text default 'system', p_actor_id text default null)`: resets the same document row to `pending` for MVP retry, writes the previous failure state to `audit_log`, and reopens pass 1.
 - `public.finalize_pass_after_document_processing(p_claim_id uuid, p_pass_number int default 1)`: serializes finalizers per claim/pass, keeps pass 1 `in_progress` while any document is non-terminal, moves it to `completed` when all documents are terminal without blocking failures, or `failed` when all documents are terminal and at least one has a blocking failure. It returns `emit_completed_event = true` only for a real transition into `completed`.
+- `public.replace_synthesis_results(p_claim_id uuid, p_pass_number int, p_results jsonb)`: atomically replaces synthesis rows for one claim/pass using DELETE + INSERT in one database transaction. Used by SPRINT-003A; synthesis code must not UPSERT `synthesis_results`.
 
 ## Storage
 

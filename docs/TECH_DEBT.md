@@ -90,6 +90,16 @@
 **Owner:** CEO.
 **Reference:** SPRINT-002D v1.1 admin auth precondition.
 
+### 11z — Readiness Score Weights Calibration
+
+**Current state:** SPRINT-003A uses placeholder readiness score weights `{ high: 30, medium: 15, low: 5 }`.
+
+**Future requirement:** evidence-based reweighting from pilot data.
+
+**Trigger:** 50+ claims reviewed by adjusters with decision data captured.
+
+**Owner:** CEO + Adjuster lead.
+
 - [ ] Historical archive for older spikes #00, #00b, #00c, #00d, #00e, #02, #02a, #02b. Deferred to Spike #00z-B.
 - [ ] Replace sample dashboard/claim/questions data with real Supabase data once API contracts land.
 - [ ] OpenClaw real command channel integration remains blocked in the local install because GitHub issue/PR comments are not a supported channel target. Use the local dispatcher as the operational bridge until a safe supported channel or TaskFlow import path exists.
