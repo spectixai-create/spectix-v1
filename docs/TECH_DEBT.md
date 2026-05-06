@@ -100,7 +100,7 @@
 
 **Owner:** CEO + Adjuster lead.
 
-### 11A — Admin Retry Endpoint UI
+### 11D — Admin Retry Endpoint UI
 
 **Current state:** SPRINT-UI-001 deliberately does not expose the SPRINT-002D
 admin retry endpoint in the adjuster UI. The endpoint remains behind the
@@ -114,7 +114,7 @@ admin/internal auth is defined and reviewed.
 
 **Owner:** CEO.
 
-### 11B — Question Text Inline Edit
+### 11E — Question Text Inline Edit
 
 **Current state:** SPRINT-UI-001 lets adjusters select generated questions for
 dispatch intent but defers inline question text editing. The API supports
@@ -128,7 +128,7 @@ editing before claimant follow-up.
 
 **Owner:** CEO + Adjuster lead.
 
-### 11C — UI String i18n Externalization
+### 11F — UI String i18n Externalization
 
 **Current state:** the repo has no `next-intl`, `i18next`, or `react-intl`
 pattern. SPRINT-UI-001 centralizes hardcoded Hebrew strings in

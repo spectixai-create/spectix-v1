@@ -1,78 +1,101 @@
-﻿# CEO Handoff - Next Chat
+# CEO Handoff - Next Chat
+
+Updated after PR #68 / SPRINT-UI-001 merge.
 
 ## Bootstrap Reading Order
 
 For new CEO chats, read in this order:
 
-1. `docs/project/INDEX.md` (master index)
-2. `docs/project/project_status_03_05_v3_0.md`
-3. `docs/project/POST_V30_HISTORY.md`
-4. `docs/project/ANTI_PATTERNS.md`
-5. `docs/agents/workflow/SPRINT-002B_STATUS.md`
-6. `docs/agents/workflow/ACTIVE_GATES.md`
-7. `docs/agents/workflow/CHAT_TRANSITION_LOG.md` (this directory, most recent transition)
+1. `docs/CURRENT_STATE.md`
+2. `docs/agents/workflow/ACTIVE_GATES.md`
+3. `docs/agents/workflow/CHAT_TRANSITION_LOG.md`
+4. `docs/management/designs/design001.10_state_machine_06_05.md`
+5. `docs/management/designs/design002.7_synthesis_decomposition_06_05.md`
+6. `docs/management/designs/design003.4_ui_requirements_06_05.md`
+7. `docs/management/sprints/sprint_ui001.2_brief_view_implementation_06_05.md`
 
-External Project Knowledge upload is no longer required.
+External Project Knowledge upload is no longer required for canonical repo
+state, but `design004.1_claimant_responses_06_05.md` currently remains external
+and pending user decisions before SPRINT-UI-002.
 
 ## Current Date And Repo State
 
-- Date: 2026-05-05 18:49:43 +03:00
+- Date: 2026-05-06
 - Repo: `spectixai-create/spectix-v1`
 - Local path: `C:\Users\smart\spectix`
-- main HEAD: `07d055825e97c2b0f1ac4e568ba6cef4966eadf2`
-- Active PR: #52
-- Active branch: `sprint/subtype-extraction-routes`
+- main HEAD: `51d6dee22ffdd614f224582fe86b707ca6c8b345`
+- Latest merged PR: #68, `SPRINT-UI-001: Adjuster brief view MVP`
+- Remaining open PR: #47, `Record OpenClaw Slack routing blocker`
 
-## Active Sprint
+## Completed Sprints
 
-SPRINT-002B - Priority Subtype Extraction Routes (7 MVP routes)
+- SPRINT-002B - Priority subtype extraction routes.
+- SPRINT-002C - Validation layers 11.1-11.3.
+- SPRINT-002D - `errored` recovery and soft cost cap.
+- SPRINT-003A - Deterministic synthesis MVP.
+- SPRINT-UI-001 - Adjuster brief view MVP.
 
-## SPRINT-002B / PR #52 Final State
+## Current Active Task
 
-- PR URL: <https://github.com/spectixai-create/spectix-v1/pull/52>
-- Branch retained for 24h after merge: `sprint/subtype-extraction-routes`
-- Smoke-tested SHA: `86bec004dcb02cc830b1c32ff7dfdf7ea4dffee4`
-- Merged PR head: `f2a7fc08f7846ffbfe13ddef9cc2e7bd9adf3085`
-- Merge commit: `754c87fbba2d7dec11364e4ca54d2cf54bc6f86a`
-- Status: merged to `main`
-- Smoke: SMOKE-002B-RETRY-005 passed in non-production on claim `9222197e-2760-4c10-8b71-501a2aeb4158`.
-- SPRINT-003A must not start until MERGE-PR52-001 post-merge queue is completed.
+SYNC-006 post-PR68 docs-only state sync.
 
-## Recent Completed Work
+## PR #68 Final State
 
-- SPRINT-001 merged.
-- SPRINT-002A merged.
-- PR #51 state sync merged.
-- SPRINT-002B implementation merged as PR #52.
-- First non-prod smoke failed and was fixed without contract loosening.
-- SMOKE-002B-RETRY-005 passed after local Inngest env correction.
-- TECH_DEBT 11n baseline recorded.
+- PR URL: <https://github.com/spectixai-create/spectix-v1/pull/68>
+- Merge method: squash.
+- Merge commit / current main HEAD:
+  `51d6dee22ffdd614f224582fe86b707ca6c8b345`
+- PR head before merge: `0420a1efec0b2a6f394fbfc337960f1343244eb2`
+- Base before merge: `21b63dc97f622fff7489c9f2228bb84956b1d1f6`
+- Branch retained: yes.
+- Non-production UI smoke: PASS after fix-forward.
+- Scenarios 1-10: PASS.
+- Production Supabase touched: no.
+- Deploy run by Codex: no.
 
-## Current Blocker / Next Gate
+## Current Product Surface
 
-- Complete MERGE-PR52-001 post-merge queue.
-- SPRINT-003A is not approved until this queue is completed and merged.
-- Production smoke remains not approved.
-- Production Supabase remains forbidden.
-- Deploy remains not approved.
+- `/dashboard` claims list.
+- `/claim/[id]` adjuster brief view.
+- Findings, documents, validation, and audit tabs.
+- Approve, reject, request-info, escalate, and unescalate actions.
+- `question_dispatches` support.
+- `claims.escalated_to_investigator` support.
+- Hebrew RTL adjuster UI.
 
-## Current Workflow
+## Next Gate
 
-Codex report -> CEO GPT plan -> Claude review -> CEO GPT final prompt -> Codex execution
+After SYNC-006, the next gate is SPRINT-UI-002 planning / pre-flight, not
+implementation.
 
-This is not autonomous orchestration. ChatGPT chats are not the source of truth. Repo docs and PRs are the source of truth.
+SPRINT-UI-002 may proceed only after:
+
+1. User decisions on claimant response design:
+   - Decision 1: notification channel.
+   - Decision 2: claimant auth method.
+   - Decision 8: re-cycle trigger.
+2. Codex pre-flight on email/SMS infrastructure in current `main`.
+3. CEO GPT gate approval.
+
+If the user reports the first signed LOI from an Israeli travel insurer, the
+next gate becomes SPRINT-PROD-BLOCK by default rather than UI-002.
+
+## Customer Discovery Track
+
+- Target: 5 conversations with Israeli travel insurers.
+- Trigger to PROD-BLOCK: first signed LOI.
 
 ## Hard Prohibitions
 
 - No production Supabase.
 - No production smoke.
-- No merge without CEO approval.
 - No deploy.
+- No SPRINT-UI-002 implementation without gate approval.
 - No `.env.local` edits.
 - No secrets.
-- No native OpenClaw.
+- No native OpenClaw orchestration.
 - No cron.
-- No 24/7.
+- No 24/7 operation.
 - No auto-merge.
 - No auto-deploy.
 
@@ -80,8 +103,8 @@ This is not autonomous orchestration. ChatGPT chats are not the source of truth.
 
 Read:
 
-1. `docs/agents/workflow/CEO_HANDOFF_NEXT_CHAT.md`
-2. `docs/agents/workflow/SPRINT-002B_STATUS.md`
-3. `docs/agents/workflow/ACTIVE_GATES.md`
+1. `docs/CURRENT_STATE.md`
+2. `docs/agents/workflow/ACTIVE_GATES.md`
+3. `docs/agents/workflow/CHAT_TRANSITION_LOG.md`
 
-Then ask for latest Codex/Claude update before issuing the next prompt.
+Then review SYNC-006 and decide the next planning gate.
