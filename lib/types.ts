@@ -322,6 +322,15 @@ export interface ClaimValidation {
   createdAt: string;
 }
 
+export interface SynthesisResult {
+  id: string;
+  claimId: string;
+  passNumber: number;
+  kind: 'finding' | 'question' | 'readiness_score';
+  payload: Record<string, unknown>;
+  createdAt: string;
+}
+
 export interface AuditLog {
   id: string;
   claimId: string | null;
@@ -749,6 +758,14 @@ export interface ClaimValidationCompletedEvent {
   };
 }
 
+export interface ClaimSynthesisCompletedEvent {
+  name: 'claim/synthesis.completed';
+  data: {
+    claimId: string;
+    passNumber: number;
+  };
+}
+
 export type SpectixInngestEvent =
   | DocumentUploadedEvent
   | DocumentProcessedEvent
@@ -760,4 +777,5 @@ export type SpectixInngestEvent =
   | PassStartEvent
   | PassCompletedEvent
   | ClaimExtractionCompletedEvent
-  | ClaimValidationCompletedEvent;
+  | ClaimValidationCompletedEvent
+  | ClaimSynthesisCompletedEvent;
