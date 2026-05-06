@@ -4,11 +4,11 @@ Updated by Codex atomically with each spike PR. CEO updates this file only for d
 
 ## Version
 
-Spectix Spike #19 • 2026-05-03
+Spectix SPRINT-002C • 2026-05-06
 
 ## Current Phase
 
-Claim intake writes real claim rows, uploads supporting documents to Supabase Storage, classifies documents through the Inngest + Claude broad + subtype classifier pipeline, persists broad and normalized extraction results into `documents.extracted_data`, closes pass 1 only after true terminal document-level processing, and now has SPRINT-002C in development for validation layers 11.1-11.3.
+Claim intake writes real claim rows, uploads supporting documents to Supabase Storage, classifies documents through the Inngest + Claude broad + subtype classifier pipeline, persists broad and normalized extraction results into `documents.extracted_data`, closes pass 1 only after true terminal document-level processing, and now has SPRINT-002C validation layers merged for claim-level name, date, and currency validation.
 
 ## Completed Spikes
 
@@ -34,14 +34,49 @@ Claim intake writes real claim rows, uploads supporting documents to Supabase St
 - SPRINT-001 - Pass lifecycle completion after claim-level document processing.
 - SPRINT-002A - Extraction schema contracts in PR #50.
 - SPRINT-002B - Priority subtype extraction routes in PR #52.
+- SPRINT-002C - Cross-document validation layers 11.1-11.3 in PR #60.
 
-## Active Spike
+## Current Sprint Status
 
-SPRINT-002C - Validation layers 11.1-11.3 is active on branch `sprint/validation-layers-002c`; PR pending. Scope is deterministic `name_match`, date validation, and currency validation over normalized extraction envelopes. Authenticity, anomaly, synthesis, UI, broad fallback adapter, and live FX rollout are deferred.
+**SPRINT-002C - Cross-Document Validation Layers (11.1-11.3)** - DONE
 
-## Next Spike
+- Merged: PR #60 -> main
+- Merge commit: `828e16ef3e04a66fff85a67611fc4fa40ab6ef6d`
+- Scope shipped: layer 11.1 (`name_match`), 11.2 (date validation), 11.3 (currency validation)
+- Migration: `claim_validations` table created
+- Inngest events: `claim/extraction.completed`, `claim/validation.completed`
+- Handler: `run-validation-pass`
+- FX provider: `FakeExchangeRateProvider` default; `FetchExchangeRateProvider` implemented but disabled
+- Out of scope (deferred): 11.4 authenticity, 11.5 anomaly
 
-SPRINT-003A - Synthesis Data Model after SPRINT-002C review.
+**SPRINT-DESIGN-001 - Pipeline State Machine + Sync Contracts** - DESIGN COMPLETE
+
+- Document: [design001.6_state_machine_06_05.md](management/designs/design001.6_state_machine_06_05.md)
+- Status: target spec. Partially aligned with PR #60. Audit pending (AUDIT-001).
+- Audit will identify gaps between spec and main; gaps become SPRINT-002D items or TECH_DEBT.
+
+**SPRINT-DESIGN-002 - Synthesis Layer Decomposition** - IN PLANNING
+
+- Status: skeleton spec drafted in [design002.1_synthesis_decomposition_06_05.md](management/designs/design002.1_synthesis_decomposition_06_05.md).
+- Iteration 1 to expand after AUDIT-001 outputs.
+
+**SPRINT-003A - Synthesis Data Model** - READY FOR PLANNING (blocked behind DESIGN-002)
+
+## Recent Merges
+
+| PR  | Title                                       | Merge SHA  | Date       | Notes                                     |
+| --- | ------------------------------------------- | ---------- | ---------- | ----------------------------------------- |
+| #61 | SYNC-002: docs management folder            | `683c8b8…` | 2026-05-06 | Planning artifacts                        |
+| #60 | SPRINT-002C: validation layers 11.1-11.3    | `828e16e…` | 2026-05-06 | Smoked + merged                           |
+| #59 | SPRINT-002C verification report             | `06f9ecc…` | 2026-05-06 | Pre-implementation audit                  |
+| #58 | PLAN-OVERVIEW verification                  | `df5de0c…` | 2026-05-06 | Documentation                             |
+| #57 | .gitignore for `.claude/`, `.diag/`         | `07d0654…` | 2026-05-06 | Tooling                                   |
+| #56 | Post-merge retro for SPRINT-002B            | `bc971bf…` | 2026-05-06 | ANTI-PATTERNS #8 and #9                   |
+| #52 | SPRINT-002B: 7 normalized extraction routes | `754c87f…` | 2026-05-06 | 9/9 docs smoke pass before merge decision |
+
+## Open PRs
+
+- #47 - Record OpenClaw Slack routing blocker (informational, no code).
 
 ## Agent Operations
 
