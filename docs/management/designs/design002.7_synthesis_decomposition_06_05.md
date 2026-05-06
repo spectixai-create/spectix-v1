@@ -1,3 +1,5 @@
+**SUPERSEDED by design002.8_synthesis_decomposition_06_05.md (06/05/2026).**
+
 # SPRINT-DESIGN-002 — Synthesis Layer Decomposition (v1.6, iteration 7)
 
 **Date:** 06/05/2026
