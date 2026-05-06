@@ -1,3 +1,10 @@
+# SUPERSEDED
+
+This file is superseded by `docs/management/designs/design001.7_state_machine_06_05.md`.
+Kept for history.
+
+---
+
 # Pipeline State Machine + Sync Contracts v1.5 (iteration 6)
 
 **Date:** 06/05/2026
