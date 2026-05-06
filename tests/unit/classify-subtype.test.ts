@@ -1,5 +1,7 @@
+import { NonRetriableError } from 'inngest';
 import { describe, expect, it, vi } from 'vitest';
 
+import { CostCapHaltError } from '@/lib/cost-cap';
 import {
   SUBTYPE_DETERMINISTIC_ACTOR_ID,
   SubtypeClassifierLLMError,
@@ -165,6 +167,19 @@ describe('classifySubtypeFromStorage', () => {
     ).rejects.toBeInstanceOf(SubtypeClassifierLLMError);
   });
 
+  it('preserves CostCapHaltError without wrapping', async () => {
+    const promise = classifySubtypeFromStorage(baseInput('receipt'), {
+      supabaseAdmin: fakeSupabase() as never,
+      callClaude: vi.fn(async () => {
+        throw new CostCapHaltError('cap reached');
+      }) as never,
+    });
+
+    await expect(promise).rejects.toBeInstanceOf(CostCapHaltError);
+    await expect(promise).rejects.toBeInstanceOf(NonRetriableError);
+    await expect(promise).rejects.not.toBeInstanceOf(SubtypeClassifierLLMError);
+  });
+
   it('wraps parsed null responses in SubtypeClassifierLLMError', async () => {
     await expect(
       classifySubtypeFromStorage(baseInput('receipt'), {
@@ -197,7 +212,12 @@ describe('classifySubtypeFromStorage', () => {
 });
 
 function baseInput(broad: DocumentType) {
-  return { documentId: 'doc-id', fileName: 'evidence.pdf', broad };
+  return {
+    claimId: 'claim-id',
+    documentId: 'doc-id',
+    fileName: 'evidence.pdf',
+    broad,
+  };
 }
 
 function fakeClaude(parsed: {
@@ -222,13 +242,27 @@ function fakeSupabase(options?: {
   downloadError?: boolean;
 }) {
   return {
-    from() {
+    from(table: string) {
       return {
         select() {
           return this;
         },
         eq() {
           return this;
+        },
+        maybeSingle() {
+          if (table === 'claims') {
+            return Promise.resolve({
+              data: {
+                id: 'claim-id',
+                status: 'processing',
+                total_llm_cost_usd: 0,
+              },
+              error: null,
+            });
+          }
+
+          return Promise.resolve({ data: null, error: null });
         },
         single() {
           return Promise.resolve({

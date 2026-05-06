@@ -403,3 +403,73 @@ Trade-offs accepted:
 - Route implementation waits for a merged contract surface.
 - Any schema expansion beyond JSONB normalized extraction remains deferred until
   SPRINT-003A or a later CEO-approved migration spike.
+
+---
+
+## D-027 — Backend Lifecycle Canonical = Event/Pass-Driven
+
+**Date:** 2026-05-06
+**Status:** Active
+**Decided by:** CEO
+
+**Context:**
+AUDIT-001 identified that design001.6 specified a fine-grained 11-state claim vocabulary with guarded transitions, while shipped main uses an event/pass-driven lifecycle: Inngest events such as `claim/extraction.completed` and `claim/validation.completed`, plus the `passes` table for stage tracking.
+
+**Decision:**
+Backend lifecycle is canonical as the event/pass-driven model. `claim.status` carries only coarse UI-hint values. Current DB values after SPRINT-002D are `intake`, `processing`, `pending_info`, `ready`, `reviewed`, `cost_capped`, `errored`, and the existing `rejected_no_coverage` rejected variant. Stage tracking is derived from `passes`, `claim_validations`, and future synthesis result tables.
+
+Fine-grained states such as `documents_open`, `extraction_complete`, `validating`, `validation_complete`, and `synthesizing` are deferred to V2 hardening or removed if the UI proves it does not need them.
+
+**Reasoning:**
+
+- Aligns canonical state with implementation that has already shipped and smoked.
+- Avoids a broad claim-state migration before SPRINT-003A.
+- Keeps stage semantics in pass/event tables where current workers already write them.
+
+**Trade-offs accepted:**
+
+- UI must compose stage state from `passes` and related tables instead of relying on a single claim status.
+- design001.6 remains historical and superseded by design001.7.
+
+**Revisit when:**
+
+- UI implementation proves that coarse claim status plus pass/event state is insufficient.
+
+**Supersedes:** conflicting fine-grained state vocabulary in design001.6.
+
+---
+
+## D-028 — SPRINT-002D Scope = Minimal Pre-Synthesis Prerequisites
+
+**Date:** 2026-05-06
+**Status:** Active
+**Decided by:** CEO
+
+**Context:**
+AUDIT-001 identified several gaps and partial matches versus design001.6. Starting synthesis with no recoverable system-error state and no cost guard creates real production risk, while the remaining race-policy and fine-grained-state items are deferrable.
+
+**Decision:**
+SPRINT-002D scope is limited to:
+
+1. `errored` state plus admin recovery helpers.
+2. Soft LLM cost cap enforcement before claim-scoped LLM calls.
+
+Upload conflict `409` policy and race policies D.2-D.5 are deferred to TECH_DEBT 11w. Fine-grained claim-state vocabulary and guarded transitions per state are not implemented in SPRINT-002D per D-027.
+
+**Reasoning:**
+
+- `errored` prevents stuck claims from requiring manual DB intervention.
+- Cost cap prevents unbounded spend before synthesis adds more LLM calls.
+- Other audit findings are UX polish, operational hardening, or V2 scope.
+
+**Trade-offs accepted:**
+
+- Soft cost cap has concurrency tolerance until TECH_DEBT 11v is implemented.
+- Admin retry endpoint may remain inaccessible if no admin auth pattern exists.
+
+**Revisit when:**
+
+- Soft cost tolerance exceeds business tolerance.
+- Pilot operations require upload conflict policy or HTTP admin retry.
+
+**Supersedes:** none.

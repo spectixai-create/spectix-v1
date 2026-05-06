@@ -1,4 +1,5 @@
 import { callClaudeJSON } from '@/lib/llm/client';
+import { createAdminClient } from '@/lib/supabase/admin';
 import {
   callExtractorJSON,
   nullableNumber,
@@ -49,9 +50,10 @@ Privacy rule: diagnosisBrief must be brief. Do not copy a full sensitive
 medical narrative. Use null or empty arrays when unknown.`;
 
 export async function extractMedicalFromStorage(
-  input: { documentId: string; fileName: string },
+  input: { claimId: string; documentId: string; fileName: string },
   deps: ExtractorDeps = {},
 ): Promise<ExtractMedicalResult> {
+  const supabaseAdmin = deps.supabaseAdmin ?? createAdminClient();
   const contentBlocks = await prepareExtractionPayload(
     {
       ...input,
@@ -65,6 +67,8 @@ export async function extractMedicalFromStorage(
   return callExtractorJSON<MedicalJson, MedicalReportExtraction>({
     system: MEDICAL_SYSTEM_PROMPT,
     contentBlocks,
+    claimId: input.claimId,
+    supabaseAdmin,
     callClaude: deps.callClaude ?? callClaudeJSON,
     LLMError: MedicalExtractorLLMError,
     mapParsed: mapMedical,

@@ -1,4 +1,5 @@
 import { callClaudeJSON } from '@/lib/llm/client';
+import { createAdminClient } from '@/lib/supabase/admin';
 import {
   callExtractorJSON,
   nullableNumber,
@@ -47,9 +48,10 @@ Each item has description, quantity, unitPrice, total.
 Use null when unknown. Do not invent amounts.`;
 
 export async function extractReceiptFromStorage(
-  input: { documentId: string; fileName: string },
+  input: { claimId: string; documentId: string; fileName: string },
   deps: ExtractorDeps = {},
 ): Promise<ExtractReceiptResult> {
+  const supabaseAdmin = deps.supabaseAdmin ?? createAdminClient();
   const contentBlocks = await prepareExtractionPayload(
     {
       ...input,
@@ -63,6 +65,8 @@ export async function extractReceiptFromStorage(
   return callExtractorJSON<ReceiptJson, ReceiptExtraction>({
     system: RECEIPT_SYSTEM_PROMPT,
     contentBlocks,
+    claimId: input.claimId,
+    supabaseAdmin,
     callClaude: deps.callClaude ?? callClaudeJSON,
     LLMError: ReceiptExtractorLLMError,
     mapParsed: mapReceipt,

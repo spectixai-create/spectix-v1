@@ -1,5 +1,6 @@
 import type { BetaContentBlockParam } from '@anthropic-ai/sdk/resources/beta/messages/messages';
 
+import { CostCapHaltError, callClaudeWithCostGuard } from '@/lib/cost-cap';
 import { callClaudeJSON } from '@/lib/llm/client';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -67,6 +68,8 @@ export async function prepareExtractionPayload(
 }
 
 export async function callExtractorJSON<TParsed, TData>(input: {
+  claimId: string;
+  supabaseAdmin: ReturnType<typeof createAdminClient>;
   system: string;
   contentBlocks: BetaContentBlockParam[];
   maxTokens?: number;
@@ -77,12 +80,19 @@ export async function callExtractorJSON<TParsed, TData>(input: {
   let result: Awaited<ReturnType<typeof callClaudeJSON<TParsed>>>;
 
   try {
-    result = await input.callClaude<TParsed>({
-      system: input.system,
-      contentBlocks: input.contentBlocks,
-      maxTokens: input.maxTokens ?? 800,
+    result = await callClaudeWithCostGuard({
+      claimId: input.claimId,
+      supabaseAdmin: input.supabaseAdmin,
+      call: () =>
+        input.callClaude<TParsed>({
+          system: input.system,
+          contentBlocks: input.contentBlocks,
+          maxTokens: input.maxTokens ?? 800,
+        }),
     });
   } catch (error) {
+    if (error instanceof CostCapHaltError) throw error;
+
     throw new input.LLMError(
       `Claude extraction API call failed: ${
         error instanceof Error ? error.message : String(error)

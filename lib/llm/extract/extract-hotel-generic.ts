@@ -1,4 +1,5 @@
 import { callClaudeJSON } from '@/lib/llm/client';
+import { createAdminClient } from '@/lib/supabase/admin';
 import {
   callExtractorJSON,
   nullableBoolean,
@@ -50,9 +51,10 @@ languageQuality, redFlags.
 Use null or empty arrays when unknown.`;
 
 export async function extractHotelGenericFromStorage(
-  input: { documentId: string; fileName: string },
+  input: { claimId: string; documentId: string; fileName: string },
   deps: ExtractorDeps = {},
 ): Promise<ExtractHotelGenericResult> {
+  const supabaseAdmin = deps.supabaseAdmin ?? createAdminClient();
   const contentBlocks = await prepareExtractionPayload(
     {
       ...input,
@@ -66,6 +68,8 @@ export async function extractHotelGenericFromStorage(
   return callExtractorJSON<HotelJson, HotelLetterExtraction>({
     system: HOTEL_GENERIC_SYSTEM_PROMPT,
     contentBlocks,
+    claimId: input.claimId,
+    supabaseAdmin,
     callClaude: deps.callClaude ?? callClaudeJSON,
     LLMError: HotelGenericExtractorLLMError,
     mapParsed: mapHotel,

@@ -6,13 +6,14 @@ import {
   type NormalizedExtractionWarning,
   type SupportedMvpExtractionSubtype,
 } from '@/lib/extraction-contracts';
+import { CostCapHaltError, callClaudeWithCostGuard } from '@/lib/cost-cap';
 import { callClaudeJSON } from '@/lib/llm/client';
 import {
   prepareExtractionPayload,
   type BaseExtractionResult,
   type ExtractorDeps,
 } from '@/lib/llm/extract/common';
-import type { createAdminClient } from '@/lib/supabase/admin';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 import { buildExtractionSystemPrompt } from './build-system-prompt';
 
@@ -61,6 +62,7 @@ export class NormalizedExtractorLLMError extends Error {
 
 export async function extractNormalizedFromStorage(
   input: {
+    claimId: string;
     documentId: string;
     fileName: string;
     subtype: SupportedMvpExtractionSubtype;
@@ -69,6 +71,7 @@ export async function extractNormalizedFromStorage(
   deps: ExtractorDeps = {},
 ): Promise<NormalizedExtractionResult> {
   const callClaude = deps.callClaude ?? callClaudeJSON;
+  const supabaseAdmin = deps.supabaseAdmin ?? createAdminClient();
   const system = buildExtractionSystemPrompt(input.subtype);
   const contentBlocks = await prepareExtractionPayload(
     {
@@ -85,12 +88,19 @@ export async function extractNormalizedFromStorage(
   >;
 
   try {
-    result = await callClaude<NormalizedModelPayload>({
-      system,
-      contentBlocks,
-      maxTokens: 1200,
+    result = await callClaudeWithCostGuard({
+      claimId: input.claimId,
+      supabaseAdmin,
+      call: () =>
+        callClaude<NormalizedModelPayload>({
+          system,
+          contentBlocks,
+          maxTokens: 1200,
+        }),
     });
   } catch (error) {
+    if (error instanceof CostCapHaltError) throw error;
+
     throw new NormalizedExtractorLLMError(
       `Claude normalized extraction API call failed: ${
         error instanceof Error ? error.message : String(error)

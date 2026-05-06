@@ -26,7 +26,8 @@ export type ClaimStatus =
   | 'ready'
   | 'reviewed'
   | 'rejected_no_coverage'
-  | 'cost_capped';
+  | 'cost_capped'
+  | 'errored';
 
 export type PassStatus =
   | 'pending'

@@ -8,7 +8,7 @@ export const MEDICAL_VISIT_NORMALIZED_PROMPT_ID =
   'sprint-002b:medical_visit:v1';
 
 export function extractMedicalVisitNormalizedFromStorage(
-  input: { documentId: string; fileName: string },
+  input: { claimId: string; documentId: string; fileName: string },
   deps?: NormalizedExtractorDeps,
 ): Promise<NormalizedExtractionResult> {
   return extractNormalizedFromStorage(

@@ -1,4 +1,5 @@
 import { inngest } from '../client';
+import { handleClaimScopedFunctionFailure } from './claim-failure';
 import {
   ClassifierLLMError,
   ClassifierPreCallError,
@@ -201,6 +202,7 @@ export async function runProcessDocument({
     try {
       classifierResult = (await step.run('claude-classify', async () =>
         classifier({
+          claimId,
           documentId: claimed.id,
           fileName: claimed.file_name ?? 'unknown',
         }),
@@ -232,6 +234,7 @@ export async function runProcessDocument({
     try {
       subtypeResult = (await step.run('claude-classify-subtype', async () =>
         subtypeClassifier({
+          claimId,
           documentId: claimed.id,
           fileName: claimed.file_name ?? 'unknown',
           broad: classifierResult.documentType,
@@ -514,6 +517,7 @@ export async function runProcessDocument({
         'claude-normalized-extract',
         async () =>
           normalizedExtractor(normalizedRoute, {
+            claimId,
             documentId: claimed.id,
             fileName: claimed.file_name ?? 'unknown',
           }),
@@ -880,6 +884,7 @@ export async function runProcessDocument({
   try {
     extractionResult = (await step.run('claude-extract', async () =>
       extractor(route, {
+        claimId,
         documentId: claimed.id,
         fileName: claimed.file_name ?? 'unknown',
       }),
@@ -1394,7 +1399,7 @@ function asRecord(value: unknown): Record<string, unknown> {
 
 export async function runExtractionByRoute(
   route: Exclude<ExtractionRoute, 'skip_dedicated' | 'skip_other'>,
-  input: { documentId: string; fileName: string },
+  input: { claimId: string; documentId: string; fileName: string },
 ): Promise<ExtractionResult> {
   switch (route) {
     case 'receipt':
@@ -1410,7 +1415,7 @@ export async function runExtractionByRoute(
 
 export async function runNormalizedExtractionByRoute(
   route: Exclude<NormalizedSubtypeRoute, 'fallback_broad'>,
-  input: { documentId: string; fileName: string },
+  input: { claimId: string; documentId: string; fileName: string },
 ): Promise<NormalizedExtractionResult> {
   switch (route) {
     case 'receipt_general':
@@ -1458,7 +1463,19 @@ function getFailureAuditActor(
 }
 
 export const processDocument = inngest.createFunction(
-  PROCESS_DOCUMENT_CONFIG,
+  {
+    ...PROCESS_DOCUMENT_CONFIG,
+    onFailure: async ({ event, error, step, logger }) =>
+      handleClaimScopedFunctionFailure({
+        event,
+        error,
+        step: step as unknown as {
+          run: (name: string, fn: () => Promise<unknown>) => Promise<unknown>;
+        },
+        logger,
+        functionId: PROCESS_DOCUMENT_CONFIG.id,
+      }),
+  },
   { event: 'claim/document.uploaded' },
   async ({ event, step, logger }) =>
     runProcessDocument({

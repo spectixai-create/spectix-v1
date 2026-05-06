@@ -1,5 +1,6 @@
 import type { BetaContentBlockParam } from '@anthropic-ai/sdk/resources/beta/messages/messages';
 
+import { CostCapHaltError, callClaudeWithCostGuard } from '@/lib/cost-cap';
 import { callClaudeJSON } from './client';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
@@ -62,6 +63,7 @@ export const SUBTYPE_PRECALL_SENTINEL = 'subtype-classifier:pre-call-failure';
 
 export async function classifySubtypeFromStorage(
   input: {
+    claimId: string;
     documentId: string;
     fileName: string;
     broad: DocumentType;
@@ -92,16 +94,24 @@ export async function classifySubtypeFromStorage(
   }
 
   const contentBlocks = await preparePayload(input, deps);
+  const supabaseAdmin = deps.supabaseAdmin ?? createAdminClient();
   const callClaude = deps.callClaude ?? callClaudeJSON;
   let result: Awaited<ReturnType<typeof callClaudeJSON<SubtypeJsonOutput>>>;
 
   try {
-    result = await callClaude<SubtypeJsonOutput>({
-      system: buildSubtypeSystemPrompt(input.broad),
-      contentBlocks,
-      maxTokens: 500,
+    result = await callClaudeWithCostGuard({
+      claimId: input.claimId,
+      supabaseAdmin,
+      call: () =>
+        callClaude<SubtypeJsonOutput>({
+          system: buildSubtypeSystemPrompt(input.broad),
+          contentBlocks,
+          maxTokens: 500,
+        }),
     });
   } catch (error) {
+    if (error instanceof CostCapHaltError) throw error;
+
     throw new SubtypeClassifierLLMError(
       `Claude subtype API call failed: ${error instanceof Error ? error.message : String(error)}`,
       error,
@@ -179,7 +189,12 @@ function fakeSubtypeResult(broad: DocumentType): ClassifySubtypeResult {
 }
 
 async function preparePayload(
-  input: { documentId: string; fileName: string; broad: DocumentType },
+  input: {
+    claimId: string;
+    documentId: string;
+    fileName: string;
+    broad: DocumentType;
+  },
   deps: SubtypeClassifierDeps,
 ): Promise<BetaContentBlockParam[]> {
   const supabaseAdmin = deps.supabaseAdmin ?? createAdminClient();
