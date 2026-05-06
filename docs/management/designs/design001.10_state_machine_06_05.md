@@ -1,3 +1,5 @@
+**SUPERSEDED by design001.11_state_machine_06_05.md (06/05/2026).**
+
 # Pipeline State Machine + Sync Contracts v1.9 (iteration 10)
 
 **Date:** 06/05/2026
