@@ -447,6 +447,8 @@ SPRINT-002B normalized extraction audit actions:
 - `adjuster_request_info`
 - `adjuster_escalate`
 - `adjuster_unescalate`
+- `claimant_link_opened`
+- `claimant_token_invalid`
 - `claimant_response_submitted`
 
 These actions use safe metadata only and do not store raw model output or secrets.

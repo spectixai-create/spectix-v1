@@ -7,6 +7,8 @@ export type ClaimantRpcErrorCode =
   | 'question_not_dispatched'
   | 'document_not_found'
   | 'no_questions_dispatched'
+  | 'claim_not_pending_info'
+  | 'claim_not_found'
   | 'db_error';
 
 export type ClaimantRpcErrorResponse = {
@@ -62,6 +64,22 @@ export function mapClaimantRpcError(error: {
       status: 400,
       code: 'no_questions_dispatched',
       message: 'לא נמצאו שאלות לשליחה',
+    };
+  }
+
+  if (error.code === 'P0009' || marker.includes('claim_not_pending_info')) {
+    return {
+      status: 409,
+      code: 'claim_not_pending_info',
+      message: 'לא ניתן לשלוח תשובות בשלב הנוכחי של התביעה',
+    };
+  }
+
+  if (error.code === 'P0010' || marker.includes('claim_not_found')) {
+    return {
+      status: 404,
+      code: 'claim_not_found',
+      message: 'התביעה לא נמצאה',
     };
   }
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { recordClaimantTokenInvalidAttempt } from '@/lib/claimant/audit';
 import { mapClaimantRpcError } from '@/lib/claimant/errors';
 import { hashClaimantToken } from '@/lib/claimant/tokens';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -82,6 +83,12 @@ export async function POST(
 
   if (tokenError) {
     const mapped = mapClaimantRpcError(tokenError);
+    await recordClaimantTokenInvalidAttempt({
+      claimId: params.claim_id,
+      attemptedEndpoint: '/api/c/[claim_id]/upload',
+      code: mapped.code,
+      supabase,
+    });
     return jsonError(mapped.code, mapped.message, mapped.status);
   }
 
@@ -136,6 +143,12 @@ export async function POST(
     await supabase.from('documents').delete().eq('id', documentId);
     await supabase.storage.from('claim-documents').remove([path]);
     const mapped = mapClaimantRpcError(linkError);
+    await recordClaimantTokenInvalidAttempt({
+      claimId: params.claim_id,
+      attemptedEndpoint: '/api/c/[claim_id]/upload',
+      code: mapped.code,
+      supabase,
+    });
     return jsonError(mapped.code, mapped.message, mapped.status);
   }
 
@@ -152,6 +165,12 @@ export async function POST(
 
   if (draftError) {
     const mapped = mapClaimantRpcError(draftError);
+    await recordClaimantTokenInvalidAttempt({
+      claimId: params.claim_id,
+      attemptedEndpoint: '/api/c/[claim_id]/upload',
+      code: mapped.code,
+      supabase,
+    });
     return jsonError(mapped.code, mapped.message, mapped.status);
   }
 

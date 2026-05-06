@@ -214,12 +214,27 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
+  v_claim_status text;
   v_question_count int := 0;
   v_draft_count int := 0;
   v_new_document_ids jsonb := '[]'::jsonb;
 BEGIN
   PERFORM set_config('lock_timeout', '5s', true);
   PERFORM public.validate_claimant_magic_link(p_token_hash, p_claim_id);
+
+  SELECT status
+  INTO v_claim_status
+  FROM public.claims
+  WHERE id = p_claim_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'claim_not_found' USING ERRCODE = 'P0010';
+  END IF;
+
+  IF v_claim_status <> 'pending_info' THEN
+    RAISE EXCEPTION 'claim_not_pending_info' USING ERRCODE = 'P0009';
+  END IF;
 
   SELECT count(*)
   INTO v_question_count
@@ -271,8 +286,7 @@ BEGIN
   UPDATE public.claims
   SET status = 'processing',
       updated_at = now()
-  WHERE id = p_claim_id
-    AND status = 'pending_info';
+  WHERE id = p_claim_id;
 
   SELECT COALESCE(jsonb_agg(id ORDER BY created_at), '[]'::jsonb)
   INTO v_new_document_ids

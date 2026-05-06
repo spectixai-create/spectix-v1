@@ -3,6 +3,12 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildClaimantLinkOpenedAudit,
+  buildClaimantTokenInvalidAudit,
+  claimantTokenStateFromErrorCode,
+} from '@/lib/claimant/audit';
+import { mapClaimantRpcError } from '@/lib/claimant/errors';
+import {
   buildClaimantMagicLinkUrl,
   hashClaimantToken,
 } from '@/lib/claimant/tokens';
@@ -104,6 +110,128 @@ describe('UI-002B migration and recycle contracts', () => {
     expect(rollback).toContain(
       'DROP TABLE IF EXISTS public.claimant_magic_links',
     );
+  });
+
+  it('guards finalize by pending_info before response side effects', () => {
+    const migration = readFileSync(
+      'supabase/migrations/20260506210000_claimant_responses.sql',
+      'utf8',
+    );
+    const guardIndex = migration.indexOf("v_claim_status <> 'pending_info'");
+    const responseInsertIndex = migration.indexOf(
+      'INSERT INTO public.question_responses',
+    );
+    const draftDeleteIndex = migration.indexOf(
+      'DELETE FROM public.question_response_drafts',
+    );
+    const tokenUseIndex = migration.indexOf(
+      'UPDATE public.claimant_magic_links',
+    );
+    const submittedAuditIndex = migration.indexOf(
+      "'claimant_response_submitted'",
+    );
+
+    expect(migration).toContain(
+      "RAISE EXCEPTION 'claim_not_pending_info' USING ERRCODE = 'P0009'",
+    );
+    expect(migration).toContain(
+      "RAISE EXCEPTION 'claim_not_found' USING ERRCODE = 'P0010'",
+    );
+    expect(guardIndex).toBeGreaterThan(-1);
+    expect(responseInsertIndex).toBeGreaterThan(guardIndex);
+    expect(draftDeleteIndex).toBeGreaterThan(guardIndex);
+    expect(tokenUseIndex).toBeGreaterThan(guardIndex);
+    expect(submittedAuditIndex).toBeGreaterThan(guardIndex);
+  });
+
+  it('maps non-pending finalize to HTTP 409 before recycle event emission', () => {
+    const mapped = mapClaimantRpcError({
+      code: 'P0009',
+      message: 'claim_not_pending_info',
+    });
+    const finalizeRoute = readFileSync(
+      'app/api/c/[claim_id]/finalize/route.ts',
+      'utf8',
+    );
+    const errorReturnIndex = finalizeRoute.indexOf('return jsonError(');
+    const recycleEmitIndex = finalizeRoute.indexOf(
+      "name: 'claim/responses.submitted'",
+    );
+
+    expect(mapped).toMatchObject({
+      status: 409,
+      code: 'claim_not_pending_info',
+    });
+    expect(errorReturnIndex).toBeGreaterThan(-1);
+    expect(recycleEmitIndex).toBeGreaterThan(errorReturnIndex);
+  });
+
+  it('records claimant audit actions without token, link, or response leakage', () => {
+    const opened = buildClaimantLinkOpenedAudit({
+      claimId: 'claim-1',
+      state: 'valid',
+    });
+    const invalid = buildClaimantTokenInvalidAudit({
+      claimId: 'claim-1',
+      attemptedEndpoint: '/api/c/[claim_id]/finalize',
+      state: 'expired',
+    });
+    const serializedDetails = JSON.stringify([opened.details, invalid.details]);
+
+    expect(opened).toMatchObject({
+      action: 'claimant_link_opened',
+      actor_type: 'claimant',
+      actor_id: 'claim-1',
+      details: { claim_id: 'claim-1', valid: true, state: 'valid' },
+    });
+    expect(invalid).toMatchObject({
+      action: 'claimant_token_invalid',
+      actor_type: 'claimant',
+      actor_id: 'claim-1',
+      details: {
+        claim_id: 'claim-1',
+        attempted_endpoint: '/api/c/[claim_id]/finalize',
+        state: 'expired',
+      },
+    });
+    expect(serializedDetails).not.toContain('token=');
+    expect(serializedDetails).not.toContain('token_hash');
+    expect(serializedDetails).not.toContain('magic_link_url');
+    expect(serializedDetails).not.toContain('response_value');
+  });
+
+  it('claimant GET path logs valid and invalid link-opened states', () => {
+    const portalSource = readFileSync('lib/claimant/portal.ts', 'utf8');
+    const openedAuditCalls = portalSource.match(
+      /recordClaimantLinkOpened/g,
+    ) ?? ['import'];
+
+    expect(openedAuditCalls).toHaveLength(3);
+    expect(portalSource).toContain(
+      "await recordClaimantLinkOpened({ claimId, state: 'invalid' })",
+    );
+    expect(portalSource).toContain(
+      'await recordClaimantLinkOpened({ claimId, state })',
+    );
+  });
+
+  it('logs invalid-token audits from claimant RPC routes only for token states', () => {
+    expect(claimantTokenStateFromErrorCode('token_not_found')).toBe('invalid');
+    expect(claimantTokenStateFromErrorCode('token_expired')).toBe('expired');
+    expect(claimantTokenStateFromErrorCode('token_used')).toBe('used');
+    expect(claimantTokenStateFromErrorCode('token_revoked')).toBe('revoked');
+    expect(
+      claimantTokenStateFromErrorCode('claim_not_pending_info'),
+    ).toBeNull();
+
+    for (const route of [
+      'app/api/c/[claim_id]/draft/route.ts',
+      'app/api/c/[claim_id]/upload/route.ts',
+      'app/api/c/[claim_id]/finalize/route.ts',
+    ]) {
+      const source = readFileSync(route, 'utf8');
+      expect(source).toContain('recordClaimantTokenInvalidAttempt');
+    }
   });
 
   it('registers recycle and validation events without notification providers', () => {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { inngest } from '@/inngest/client';
+import { recordClaimantTokenInvalidAttempt } from '@/lib/claimant/audit';
 import { mapClaimantRpcError } from '@/lib/claimant/errors';
 import { hashClaimantToken } from '@/lib/claimant/tokens';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -33,6 +34,12 @@ export async function POST(
 
   if (error) {
     const mapped = mapClaimantRpcError(error);
+    await recordClaimantTokenInvalidAttempt({
+      claimId: params.claim_id,
+      attemptedEndpoint: '/api/c/[claim_id]/finalize',
+      code: mapped.code,
+      supabase,
+    });
     return jsonError(mapped.code, mapped.message, mapped.status);
   }
 

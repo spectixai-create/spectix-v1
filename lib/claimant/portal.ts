@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { recordClaimantLinkOpened } from '@/lib/claimant/audit';
 import { hashClaimantToken } from '@/lib/claimant/tokens';
 import type {
   ClaimantPortalSnapshot,
@@ -55,7 +56,10 @@ export async function fetchClaimantPortalSnapshot({
   claimId: string;
   token: string | null;
 }): Promise<ClaimantPortalSnapshot> {
-  if (!token) return emptySnapshot('invalid', claimId);
+  if (!token) {
+    await recordClaimantLinkOpened({ claimId, state: 'invalid' });
+    return emptySnapshot('invalid', claimId);
+  }
 
   const supabase = createAdminClient();
   const tokenHash = hashClaimantToken(token);
@@ -69,6 +73,7 @@ export async function fetchClaimantPortalSnapshot({
 
   if (linkError) throw linkError;
   const state = getLinkState(link as MagicLinkRow | null);
+  await recordClaimantLinkOpened({ claimId, state });
   if (state !== 'valid') return emptySnapshot(state, claimId);
 
   const [
