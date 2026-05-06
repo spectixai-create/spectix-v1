@@ -37,3 +37,34 @@ Project Knowledge has been migrated to `docs/project/` as of this PR. New chats 
 2. Read `docs/agents/workflow/SPRINT-002B_STATUS.md`.
 3. Read `docs/agents/workflow/ACTIVE_GATES.md`.
 4. Confirm MERGE-PR52-001 is complete before starting SPRINT-003A.
+
+## Transition Update - 2026-05-06 (post PR #68 merge)
+
+### State
+
+- PR #68 (`SPRINT-UI-001: Adjuster brief view MVP`) merged to `main`.
+- Merge method: squash.
+- Merge commit / current main HEAD:
+  `51d6dee22ffdd614f224582fe86b707ca6c8b345`.
+- PR head before merge: `0420a1efec0b2a6f394fbfc337960f1343244eb2`.
+- Branch retained: `sprint/ui-001-adjuster-brief-view`.
+- Non-production UI smoke passed after fix-forward.
+- Smoke scenarios 1-10 passed.
+- Fix-forward root cause: dispatched question checkbox was disabled.
+- Fix-forward result: dispatched questions can be selected and re-dispatched;
+  `question_dispatches` preserves one row per `(claim_id, question_id)`,
+  preserves `first_dispatched_at`, and updates `last_dispatched_at`.
+- Production project `fcqporzsihuqtfohqtxs` was not touched.
+- Remaining open PR: #47 (`Record OpenClaw Slack routing blocker`).
+
+### Pending Action Item For New Chat
+
+1. Review and merge SYNC-006 after docs-only diff verification.
+2. Do not start SPRINT-UI-002 implementation.
+3. Prepare SPRINT-UI-002 planning / pre-flight only after:
+   - user decisions on claimant notification channel, claimant auth method, and
+     re-cycle trigger;
+   - Codex pre-flight on email/SMS infrastructure in current `main`;
+   - CEO GPT gate approval.
+4. If the first signed LOI from an Israeli travel insurer is reported, switch
+   the next gate to SPRINT-PROD-BLOCK.
