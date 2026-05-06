@@ -1,6 +1,6 @@
 import type { BetaContentBlockParam } from '@anthropic-ai/sdk/resources/beta/messages/messages';
 
-import { callClaudeWithCostGuard } from '@/lib/cost-cap';
+import { CostCapHaltError, callClaudeWithCostGuard } from '@/lib/cost-cap';
 import { callClaudeJSON } from './client';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
@@ -110,6 +110,8 @@ export async function classifySubtypeFromStorage(
         }),
     });
   } catch (error) {
+    if (error instanceof CostCapHaltError) throw error;
+
     throw new SubtypeClassifierLLMError(
       `Claude subtype API call failed: ${error instanceof Error ? error.message : String(error)}`,
       error,

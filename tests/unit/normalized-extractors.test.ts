@@ -1,5 +1,7 @@
+import { NonRetriableError } from 'inngest';
 import { describe, expect, it, vi } from 'vitest';
 
+import { CostCapHaltError } from '@/lib/cost-cap';
 import {
   NormalizedExtractorLLMError,
   NormalizedExtractorPreCallError,
@@ -207,6 +209,21 @@ describe('normalized MVP extractors', () => {
       ).rejects.toBeInstanceOf(NormalizedExtractorLLMError);
     },
   );
+
+  it('preserves CostCapHaltError without wrapping', async () => {
+    const promise = extractReceiptGeneralNormalizedFromStorage(baseInput(), {
+      supabaseAdmin: fakeSupabase() as never,
+      callClaude: vi.fn(async () => {
+        throw new CostCapHaltError('cap reached');
+      }) as never,
+    });
+
+    await expect(promise).rejects.toBeInstanceOf(CostCapHaltError);
+    await expect(promise).rejects.toBeInstanceOf(NonRetriableError);
+    await expect(promise).rejects.not.toBeInstanceOf(
+      NormalizedExtractorLLMError,
+    );
+  });
 
   it.each(routeCases)(
     '$subtype malformed JSON is controlled',

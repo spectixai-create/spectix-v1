@@ -1,6 +1,6 @@
 import type { BetaContentBlockParam } from '@anthropic-ai/sdk/resources/beta/messages/messages';
 
-import { callClaudeWithCostGuard } from '@/lib/cost-cap';
+import { CostCapHaltError, callClaudeWithCostGuard } from '@/lib/cost-cap';
 import { callClaudeJSON } from './client';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { DocumentType } from '@/lib/types';
@@ -107,6 +107,8 @@ export async function classifyDocumentFromStorage(
         }),
     });
   } catch (error) {
+    if (error instanceof CostCapHaltError) throw error;
+
     throw new ClassifierLLMError(
       `Claude API call failed: ${error instanceof Error ? error.message : String(error)}`,
       error,

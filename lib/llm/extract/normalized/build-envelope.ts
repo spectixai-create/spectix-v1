@@ -6,7 +6,7 @@ import {
   type NormalizedExtractionWarning,
   type SupportedMvpExtractionSubtype,
 } from '@/lib/extraction-contracts';
-import { callClaudeWithCostGuard } from '@/lib/cost-cap';
+import { CostCapHaltError, callClaudeWithCostGuard } from '@/lib/cost-cap';
 import { callClaudeJSON } from '@/lib/llm/client';
 import {
   prepareExtractionPayload,
@@ -99,6 +99,8 @@ export async function extractNormalizedFromStorage(
         }),
     });
   } catch (error) {
+    if (error instanceof CostCapHaltError) throw error;
+
     throw new NormalizedExtractorLLMError(
       `Claude normalized extraction API call failed: ${
         error instanceof Error ? error.message : String(error)

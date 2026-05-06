@@ -1,5 +1,7 @@
+import { NonRetriableError } from 'inngest';
 import { describe, expect, it, vi } from 'vitest';
 
+import { CostCapHaltError } from '@/lib/cost-cap';
 import {
   ClassifierLLMError,
   ClassifierPreCallError,
@@ -43,6 +45,19 @@ describe('classifyDocumentFromStorage', () => {
         }) as never,
       }),
     ).rejects.toBeInstanceOf(ClassifierLLMError);
+  });
+
+  it('C3a.1 preserves CostCapHaltError without wrapping', async () => {
+    const promise = classifyDocumentFromStorage(baseInput(), {
+      supabaseAdmin: fakeSupabase() as never,
+      callClaude: vi.fn(async () => {
+        throw new CostCapHaltError('cap reached');
+      }) as never,
+    });
+
+    await expect(promise).rejects.toBeInstanceOf(CostCapHaltError);
+    await expect(promise).rejects.toBeInstanceOf(NonRetriableError);
+    await expect(promise).rejects.not.toBeInstanceOf(ClassifierLLMError);
   });
 
   it('C3b wraps malformed JSON in ClassifierLLMError', async () => {
