@@ -47,6 +47,27 @@
 - [ ] 11s. SPRINT-002C skips broad fallback `extracted_data.kind = 'extraction'` rows instead of adapting them into validation-layer inputs. Add an explicit broad fallback adapter when validation must include non-MVP broad outputs. **Owner:** CEO. **Trigger:** first validation smoke where skipped broad fallback documents materially affect name/date/currency validation.
 - [ ] 11t. SPRINT-002C name matching has no Hebrew-English transliteration utility. It performs conservative Unicode/case/diacritic normalization plus Levenshtein similarity only. Add transliteration when mixed Hebrew/English real documents produce false mismatches. **Owner:** CEO. **Trigger:** two real or smoke cases where the same claimant appears in Hebrew and English and validation reports mismatch.
 - [ ] 11u. SPRINT-002C live FX conversion is implemented behind provider selection but disabled by default; the default provider is deterministic fake rates. Live FX enablement requires a separate CEO-approved release/env decision plus monitoring. **Owner:** CEO. **Trigger:** production-like validation requires non-fake exchange rates.
+
+---
+
+### 11v — Hard Cost Cap via Postgres Atomic Function
+
+**Current state (MVP):** soft cap with concurrency-induced tolerance. Target $2.00 per claim, effective range $1.50-$2.50 due to Inngest concurrency cap of 5 (max 5 concurrent LLM calls × ~$0.10 each = $0.50 worst-case overrun).
+
+**Implementation:** `callClaudeWithCostGuard` wrapper checks `total_llm_cost_usd` before each call, throws `CostCapHaltError` (extends `NonRetriableError`) if cap reached. Race condition: concurrent calls can all pass guard at $1.95 -> all settle -> total $2.45. Acceptable for MVP.
+
+**Future requirement (V2):** atomic increment-and-check via custom Postgres function or `SELECT ... FOR UPDATE` on claims row. One DB round-trip per LLM call, no race possible.
+
+**Trigger to implement:**
+
+- Production cost spike where soft-cap tolerance exceeds business tolerance, OR
+- Regulatory requirement for hard caps, OR
+- Pricing per claim becomes per-cent-sensitive.
+
+**Owner:** CEO.
+**Estimated work:** 0.5-1 day Postgres function + Inngest wrapper integration + tests.
+**Reference:** design001.6 Section H.1.
+
 - [ ] Historical archive for older spikes #00, #00b, #00c, #00d, #00e, #02, #02a, #02b. Deferred to Spike #00z-B.
 - [ ] Replace sample dashboard/claim/questions data with real Supabase data once API contracts land.
 - [ ] OpenClaw real command channel integration remains blocked in the local install because GitHub issue/PR comments are not a supported channel target. Use the local dispatcher as the operational bridge until a safe supported channel or TaskFlow import path exists.
