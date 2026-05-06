@@ -1,4 +1,4 @@
-# Chat Transition Log
+﻿# Chat Transition Log
 
 ## Transition 1 - 2026-05-05
 
@@ -21,3 +21,19 @@
 ## Migration Note (added by PR #55)
 
 Project Knowledge has been migrated to `docs/project/` as of this PR. New chats should read from there. External upload is not required.
+
+## Transition Update - 2026-05-06 (post PR #52 merge)
+
+### State
+
+- PR #52 merged to `main` at `754c87fbba2d7dec11364e4ca54d2cf54bc6f86a`.
+- SMOKE-002B-RETRY-005 passed on non-production project `aozbgunwhafabfmuwjol`.
+- Smoke claim: `SMOKE-002B-005-20260505185743` / `9222197e-2760-4c10-8b71-501a2aeb4158`.
+- Active blocker: MERGE-PR52-001 post-merge queue must be completed before SPRINT-003A starts.
+
+### Pending Action Item For New Chat
+
+1. Read `docs/project/INDEX.md`.
+2. Read `docs/agents/workflow/SPRINT-002B_STATUS.md`.
+3. Read `docs/agents/workflow/ACTIVE_GATES.md`.
+4. Confirm MERGE-PR52-001 is complete before starting SPRINT-003A.

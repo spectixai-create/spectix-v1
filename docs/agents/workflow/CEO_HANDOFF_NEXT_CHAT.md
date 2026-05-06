@@ -1,4 +1,4 @@
-# CEO Handoff - Next Chat
+﻿# CEO Handoff - Next Chat
 
 ## Bootstrap Reading Order
 
@@ -27,34 +27,34 @@ External Project Knowledge upload is no longer required.
 
 SPRINT-002B - Priority Subtype Extraction Routes (7 MVP routes)
 
-## Current PR #52 State
+## SPRINT-002B / PR #52 Final State
 
 - PR URL: <https://github.com/spectixai-create/spectix-v1/pull/52>
-- Branch: `sprint/subtype-extraction-routes`
-- Current head SHA: `86bec004dcb02cc830b1c32ff7dfdf7ea4dffee4`
-- State: open
-- Mergeable: `MERGEABLE`
-- Draft: false
-- Status: smoke failed on old head, Codex fix pushed, waiting for CEO approval for fresh non-prod smoke retry.
-- Do not merge yet.
-- Do not rerun smoke unless CEO explicitly approves.
+- Branch retained for 24h after merge: `sprint/subtype-extraction-routes`
+- Smoke-tested SHA: `86bec004dcb02cc830b1c32ff7dfdf7ea4dffee4`
+- Merged PR head: `f2a7fc08f7846ffbfe13ddef9cc2e7bd9adf3085`
+- Merge commit: `754c87fbba2d7dec11364e4ca54d2cf54bc6f86a`
+- Status: merged to `main`
+- Smoke: SMOKE-002B-RETRY-005 passed in non-production on claim `9222197e-2760-4c10-8b71-501a2aeb4158`.
+- SPRINT-003A must not start until MERGE-PR52-001 post-merge queue is completed.
 
 ## Recent Completed Work
 
 - SPRINT-001 merged.
 - SPRINT-002A merged.
 - PR #51 state sync merged.
-- SPRINT-002B implementation opened as PR #52.
-- First non-prod smoke failed.
-- Fix commit pushed after failure.
+- SPRINT-002B implementation merged as PR #52.
+- First non-prod smoke failed and was fixed without contract loosening.
+- SMOKE-002B-RETRY-005 passed after local Inngest env correction.
+- TECH_DEBT 11n baseline recorded.
 
 ## Current Blocker / Next Gate
 
-- Need fresh non-prod smoke retry on updated PR #52 head.
-- Target project: `aozbgunwhafabfmuwjol`
-- Forbidden production project: `fcqporzsihuqtfohqtxs`
-- Production smoke is not approved.
-- PR merge is not approved.
+- Complete MERGE-PR52-001 post-merge queue.
+- SPRINT-003A is not approved until this queue is completed and merged.
+- Production smoke remains not approved.
+- Production Supabase remains forbidden.
+- Deploy remains not approved.
 
 ## Current Workflow
 

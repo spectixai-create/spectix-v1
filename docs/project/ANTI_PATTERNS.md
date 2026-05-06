@@ -1,4 +1,4 @@
-# Anti-Patterns
+﻿# Anti-Patterns
 
 This document lists project anti-patterns that were observed and tied to repo or PR evidence. Entries without enough evidence are intentionally omitted rather than reconstructed from memory.
 
@@ -58,6 +58,14 @@ This document lists project anti-patterns that were observed and tied to repo or
 
 **Mitigation:** Before upload, verify the local app and Inngest dev server are both reachable, `/api/inngest` registration succeeds, and Inngest function registration returns a successful response.
 
+## 8. Smoke Verification Against The Wrong JSON Path
+
+**Observed:** During SMOKE-002B-RETRY-005, the first local verifier incorrectly checked normalized required fields at `normalized_data.report_or_filing_date` and `normalized_data.flight_date`. The persisted SPRINT-002A envelope stores subtype fields under `normalized_data.fields.*`, so the initial verifier produced a false 7/9 result even though the smoke data itself had valid normalized envelopes.
+
+**Evidence:** PR #52 merged from head `f2a7fc08f7846ffbfe13ddef9cc2e7bd9adf3085` after SMOKE-002B-RETRY-005 passed on claim `9222197e-2760-4c10-8b71-501a2aeb4158`. The smoke evidence showed `report_or_filing_date` and `flight_date` present under `normalized_data.fields`. The successful baseline was recorded in `docs/TECH_DEBT.md` item 11n.
+
+**Mitigation:** Smoke verifiers must read the canonical envelope from `lib/extraction-contracts.ts` or call `validateNormalizedExtractionEnvelope`. Do not infer persisted JSON paths from memory, especially for nested normalized fields.
+
 ## Omitted Entries
 
-No required entries were omitted. Entries 6 and 7 rely on active PR evidence rather than a merged historical doc because the failures happened after PR #53.
+No required entries were omitted. Entries 6-8 are now backed by merged PR #52 / PR #55 evidence and the SPRINT-002B post-merge smoke records.
