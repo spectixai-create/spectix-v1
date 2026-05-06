@@ -9,7 +9,6 @@ import type {
 const ROUTE_FIELD_KINDS: Record<string, Record<string, NormalizedFieldKind>> = {
   receipt_general: {
     purchaser_name: 'name',
-    merchant_name: 'name',
     transaction_date: 'date',
     total_amount: 'amount',
     tax_amount: 'amount',
@@ -17,29 +16,21 @@ const ROUTE_FIELD_KINDS: Record<string, Record<string, NormalizedFieldKind>> = {
   },
   police_report: {
     named_claimant_or_persons: 'name',
-    officer_name: 'name',
-    police_agency_or_station: 'name',
     report_or_filing_date: 'date',
     incident_date: 'date',
   },
   medical_visit: {
     patient_name: 'name',
-    provider_name: 'name',
-    doctor_name: 'name',
     visit_date: 'date',
     invoice_amount: 'amount',
   },
   hotel_letter: {
     guest_name: 'name',
-    hotel_or_property_name: 'name',
-    staff_signer_name_or_title: 'name',
     stay_dates_or_incident_date: 'date',
     letter_date: 'date',
   },
   flight_booking_or_ticket: {
     passenger_name: 'name',
-    airline_or_carrier: 'name',
-    travel_agency: 'name',
     departure_datetime: 'date',
     arrival_datetime: 'date',
     fare_amount: 'amount',
@@ -47,14 +38,10 @@ const ROUTE_FIELD_KINDS: Record<string, Record<string, NormalizedFieldKind>> = {
   },
   boarding_pass: {
     passenger_name: 'name',
-    airline_or_carrier: 'name',
     flight_date: 'date',
     boarding_or_departure_time: 'date',
   },
   witness_letter: {
-    witness_name: 'name',
-    relationship_to_claimant: 'name',
-    witness_contact_details: 'name',
     letter_date: 'date',
     incident_date_or_timeframe: 'date',
   },

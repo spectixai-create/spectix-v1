@@ -15,11 +15,9 @@ type Collection = ReturnType<typeof collectNormalizedExtractionFields>;
 export function runDateValidationLayer({
   collection,
   claim,
-  now = new Date(),
 }: {
   collection: Collection;
   claim: ValidationClaimContext;
-  now?: Date;
 }): ValidationLayerResult<DateValidationPayload> {
   const dateRefs = getFieldsByKind(collection, 'date');
   const timeline = dateRefs.flatMap((field) =>
@@ -53,7 +51,7 @@ export function runDateValidationLayer({
     policyCoverageRule(claim),
     submissionTimingRule(claim),
     travelContainmentRule(claim, timeline),
-    documentAgeRule(timeline, now),
+    documentAgeRule(timeline, claim),
   ];
 
   return {
@@ -215,12 +213,23 @@ function travelContainmentRule(
 
 function documentAgeRule(
   timeline: DateValidationPayload['timeline'],
-  now: Date,
+  claim: ValidationClaimContext,
 ): DateRuleResult {
-  const today = now.toISOString().slice(0, 10);
-  const future = timeline.filter((item) => item.date > today);
+  const incident = normalizeDateOnly(claim.incidentDate ?? '');
+  if (!incident) {
+    return {
+      rule_id: 'document_age',
+      status: 'skipped',
+      reason: 'missing_incident_date',
+      evidence: [],
+    };
+  }
 
-  if (timeline.length === 0) {
+  const documentDates = timeline.filter((item) =>
+    isDocumentReportDatePath(item.source.field_path),
+  );
+
+  if (documentDates.length === 0) {
     return {
       rule_id: 'document_age',
       status: 'skipped',
@@ -229,12 +238,23 @@ function documentAgeRule(
     };
   }
 
+  const beforeIncident = documentDates.filter((item) => item.date < incident);
+
   return {
     rule_id: 'document_age',
-    status: future.length > 0 ? 'fail' : 'pass',
-    reason: future.length > 0 ? 'future_document_date' : undefined,
-    evidence: future.map((item) => item.source),
+    status: beforeIncident.length > 0 ? 'fail' : 'pass',
+    reason:
+      beforeIncident.length > 0
+        ? 'document_date_before_incident_date'
+        : undefined,
+    evidence: beforeIncident.map((item) => item.source),
   };
+}
+
+function isDocumentReportDatePath(fieldPath: string): boolean {
+  return /report_or_filing_date|visit_date|letter_date|transaction_date/i.test(
+    fieldPath,
+  );
 }
 
 function skippedRules(reason: string): DateRuleResult[] {

@@ -56,16 +56,50 @@ describe('SPRINT-002C name_match layer', () => {
     expect(result.payload.summary.mismatches).toBe(1);
   });
 
-  it('excludes witness_letter name fields', () => {
+  it('ignores non-claimant entity fields when comparing names', () => {
     const result = runNameMatchLayer(
       collection([
-        doc('d1', 'receipt_general', { purchaser_name: field('Dana Cohen') }),
-        doc('d2', 'witness_letter', { witness_name: field('Avi Levi') }),
+        doc('d1', 'receipt_general', {
+          purchaser_name: field('Dana Cohen'),
+          merchant_name: field('Airport Pharmacy'),
+        }),
+        doc('d2', 'medical_visit', {
+          patient_name: field('Dana Cohen'),
+          provider_name: field('Tel Aviv Clinic'),
+          doctor_name: field('Dr. Other Person'),
+        }),
+        doc('d3', 'flight_booking_or_ticket', {
+          passenger_name: field('Dana Cohen'),
+          airline_or_carrier: field('El Al'),
+          travel_agency: field('Travel Office'),
+        }),
+        doc('d4', 'hotel_letter', {
+          guest_name: field('Dana Cohen'),
+          hotel_or_property_name: field('Hotel Plaza'),
+          staff_signer_name_or_title: field('Front Desk Manager'),
+        }),
       ]),
     );
 
-    expect(result.payload.summary.witness_name_fields_excluded).toBe(1);
+    expect(result.payload.outcome).toBe('exact');
+    expect(result.payload.summary.total_name_fields).toBe(4);
+    expect(result.payload.summary.mismatches).toBe(0);
+  });
+
+  it('excludes witness_letter identity fields from name_match', () => {
+    const result = runNameMatchLayer(
+      collection([
+        doc('d1', 'receipt_general', { purchaser_name: field('Dana Cohen') }),
+        doc('d2', 'witness_letter', {
+          witness_name: field('Avi Levi'),
+          relationship_to_claimant: field('Friend'),
+          witness_contact_details: field('avi@example.com'),
+        }),
+      ]),
+    );
+
     expect(result.payload.summary.total_name_fields).toBe(1);
+    expect(result.payload.summary.mismatches).toBe(0);
   });
 
   it('normalizes whitespace, case, and diacritics', () => {
@@ -146,18 +180,33 @@ describe('SPRINT-002C date validation layer', () => {
     expect(rule(result.payload, 'travel_containment')?.status).toBe('pass');
   });
 
-  it('flags future document dates in document_age', () => {
+  it('fails document_age when police report date is before incident date', () => {
     const result = runDateValidationLayer({
       collection: collection([
         doc('d1', 'police_report', {
-          report_or_filing_date: field('2026-05-08'),
+          report_or_filing_date: field('2026-05-09'),
         }),
       ]),
-      claim: claim({ incidentDate: '2026-05-02' }),
-      now: new Date('2026-05-06T00:00:00Z'),
+      claim: claim({ incidentDate: '2026-05-10' }),
     });
 
     expect(rule(result.payload, 'document_age')?.status).toBe('fail');
+    expect(rule(result.payload, 'document_age')?.reason).toBe(
+      'document_date_before_incident_date',
+    );
+  });
+
+  it('passes document_age when police report date is on or after incident date', () => {
+    const result = runDateValidationLayer({
+      collection: collection([
+        doc('d1', 'police_report', {
+          report_or_filing_date: field('2026-05-10'),
+        }),
+      ]),
+      claim: claim({ incidentDate: '2026-05-10' }),
+    });
+
+    expect(rule(result.payload, 'document_age')?.status).toBe('pass');
   });
 
   it('skips when no dates exist', () => {
@@ -293,6 +342,17 @@ describe('SPRINT-002C validation pass integration', () => {
       'emit-validation-completed',
       expect.objectContaining({ name: 'claim/validation.completed' }),
     );
+    expect(step.run.mock.calls.map((call) => call[0])).toEqual(
+      expect.arrayContaining([
+        'audit-layer-11.1-started',
+        'audit-layer-11.1-completed',
+        'audit-layer-11.2-started',
+        'audit-layer-11.2-completed',
+        'audit-layer-11.3-started',
+        'audit-layer-11.3-completed',
+      ]),
+    );
+    expect(supabase.auditLog[0]?.details).not.toHaveProperty('status');
   });
 });
 

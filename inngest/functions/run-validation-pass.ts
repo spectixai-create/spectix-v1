@@ -221,13 +221,14 @@ async function runLayer<P extends Record<string, unknown>>({
   claimId: string;
   run: () => Promise<ValidationLayerResult<P>>;
 }): Promise<ValidationLayerResult<P | Record<string, unknown>>> {
-  await writeAudit({
-    supabaseAdmin,
-    logger,
-    claimId,
-    layerId,
-    action: 'claim_validation_layer_started',
-    status: 'completed',
+  await step.run(`audit-layer-${layerId}-started`, async () => {
+    await writeAudit({
+      supabaseAdmin,
+      logger,
+      claimId,
+      layerId,
+      action: 'claim_validation_layer_started',
+    });
   });
 
   let result: ValidationLayerResult<P | Record<string, unknown>>;
@@ -261,13 +262,15 @@ async function runLayer<P extends Record<string, unknown>>({
     if (error) throw error;
   });
 
-  await writeAudit({
-    supabaseAdmin,
-    logger,
-    claimId,
-    layerId,
-    action: actionForStatus(result.status),
-    status: result.status,
+  await step.run(`audit-layer-${layerId}-${result.status}`, async () => {
+    await writeAudit({
+      supabaseAdmin,
+      logger,
+      claimId,
+      layerId,
+      action: actionForStatus(result.status),
+      status: result.status,
+    });
   });
 
   return result;
@@ -286,8 +289,15 @@ async function writeAudit({
   claimId: string;
   layerId: ValidationLayerId;
   action: string;
-  status: LayerStatus;
+  status?: LayerStatus;
 }) {
+  const details: Record<string, unknown> = {
+    layer_id: layerId,
+    pass_number: VALIDATION_PASS_NUMBER,
+    cost_usd: 0,
+  };
+  if (status) details.status = status;
+
   const { error } = await supabaseAdmin.from('audit_log').insert({
     claim_id: claimId,
     actor_type: 'system',
@@ -295,12 +305,7 @@ async function writeAudit({
     action,
     target_table: 'claim_validations',
     target_id: null,
-    details: {
-      layer_id: layerId,
-      pass_number: VALIDATION_PASS_NUMBER,
-      status,
-      cost_usd: 0,
-    },
+    details,
   });
 
   if (error) {
