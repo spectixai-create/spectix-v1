@@ -1,25 +1,33 @@
 # Current State
 
-Updated by Codex for SYNC-010 after PR #76.
+Updated by Codex for SYNC-011 after PR #78.
 
 ## Version
 
-Spectix post PR #76 / UI-002B manual demo polish complete - 2026-05-07
+Spectix post PR #78 / UI-002C claimant email notifications complete -
+2026-05-07
 
 ## Current Phase
 
 The non-production MVP pipeline covers intake, document upload,
 classification, normalized extraction, validation, deterministic synthesis, the
-adjuster-facing brief view, and the core claimant response flow without
-automated notifications.
+adjuster-facing brief view, the claimant response flow, and email-only claimant
+notifications via Resend.
 
 Current `main` HEAD is
-`4bdaf6dcaac0244ccfd1f0d7258ab7cfc8b5ea8a`, the merge commit for PR #76
-(`DEMO: Polish UI-002B manual link sharing and demo script`).
+`b4b6158712a018dda3a99ad9fcf657a901f8a328`, the merge commit for PR #78
+(`UI-002C: claimant email notifications (Resend, email-only)`).
 
-The accepted MVP flow is manual magic-link sharing: the adjuster receives a
-`magic_link_url` from dispatch/regenerate-link and shares it manually with the
-claimant.
+The accepted claimant contact flow is:
+
+- If the claim has a claimant email, dispatch attempts a Resend email
+  notification.
+- The adjuster still receives a `magic_link_url`.
+- Manual magic-link sharing remains preserved as the fallback and operating
+  procedure.
+
+Twilio, SMS automation, WhatsApp automation, and multi-provider fallback are not
+part of the approved MVP scope.
 
 ## Completed Spikes And Sprints
 
@@ -57,43 +65,47 @@ claimant.
 - SYNC-009 - UI-002C deferral recorded in PR #75.
 - DEMO-POLISH-001 - UI-002B manual-link copy fallback and demo script in PR
   #76.
+- SYNC-010 + DEMO-PACK-001 - UI-002C email-only spec and demo package in PR
+  #77.
+- SPRINT-UI-002C - Claimant email notifications via Resend, email-only, in PR
+  #78.
 
 ## Current Sprint Status
 
-**DEMO-POLISH-001 - UI-002B Manual Demo Polish** - DONE
+**SPRINT-UI-002C - Claimant Email Notifications** - DONE
 
-- Merged: PR #76 -> `main`
+- Merged: PR #78 -> `main`
 - Merge method: merge commit
 - Merge commit / current main HEAD:
-  `4bdaf6dcaac0244ccfd1f0d7258ab7cfc8b5ea8a`
-- Scope: manual magic-link copy fallback and demo script.
-- Production Supabase touched: no
-- Deploy run by Codex: no
-- Smoke run by Codex: no
-- UI-002C started: no
+  `b4b6158712a018dda3a99ad9fcf657a901f8a328`
+- Scope: claimant email notifications via Resend, email-only.
+- Manual fallback preserved: yes.
+- Twilio/SMS/WhatsApp added: no.
+- Production Supabase touched: no.
+- Manual deploy run by Codex: no.
+- Production smoke run: no.
 
-**SYNC-009 - UI-002C Deferral** - DONE
+Post-merge staging validation:
 
-- Merged: PR #75 -> `main`
-- Merge method: merge commit
-- Merge commit: `7f2fe87e6e843bf17c276de20c7a941110771c87`
-- Scope: docs-only UI-002C deferral / manual-flow state.
-- Production Supabase touched: no
-- Deploy run by Codex: no
-- Smoke run by Codex: no
-- UI-002C started: no
+- Vercel status for `b4b6158`: success.
+- Staging URL: `https://staging.spectix.co.il`.
+- Staging health: PASS, HTTP 200, `ok:true`.
+- Non-production Supabase target: `aozbgunwhafabfmuwjol`.
+- Email path: PASS with safe test recipient fixture.
+- No-email path: PASS.
+- Invalid Resend webhook signature: PASS, HTTP 400.
+- Manual fallback and copy-denied fallback: PASS.
+- Generated claimant link origin matched staging.
+- Audit leakage scan: PASS.
+- Secrets, raw tokens, and full magic links printed: no.
 
 **SPRINT-UI-002B - Claimant Responses Core Flow** - DONE
 
 - Merged: PR #72 -> `main`
-- Final-head validation: PASS
+- Final-head validation: PASS.
 - Non-production final-head verification: PASS on `aozbgunwhafabfmuwjol`
   only.
-- Production Supabase touched: no
-- Deploy run by Codex: no
-- Notifications sent: no
-- Resend/Twilio added: no
-- UI-002C started: no
+- Production Supabase touched: no.
 
 Scope shipped:
 
@@ -110,35 +122,16 @@ Scope shipped:
   extraction, validation, synthesis.
 - D-029 registered in [DECISIONS.md](DECISIONS.md).
 
-## UI-002C Notification Status
-
-**SPRINT-UI-002C - Claimant Email Notifications** is deferred/skipped and is
-not approved for implementation.
-
-Future UI-002C scope is email-only via Resend per D-030. Twilio, SMS fallback,
-WhatsApp automation, and multi-provider fallback are out of MVP scope.
-
-UI-002C remains gated. It may be reconsidered only after:
-
-1. Resend account exists.
-2. `spectix.co.il` domain is registered.
-3. DKIM/SPF/DMARC are configured and Resend domain verification passes.
-4. Resend webhook secret is generated/configured.
-5. Vercel non-production env readiness is verified for `RESEND_API_KEY`,
-   `RESEND_WEBHOOK_SECRET`, and `APP_BASE_URL`.
-6. CEO GPT approves UI-002C dispatch.
-
-UI-002C must not start automatically.
-
 ## Active Gates
 
 See [ACTIVE_GATES.md](agents/workflow/ACTIVE_GATES.md).
 
-Immediate next gate is the manual UI-002B insurer demo package / customer
-discovery / LOI track, not UI-002C implementation.
+Immediate next operational gate is **Real-case tuning round 1 /
+pilot-readiness validation planning**. This SYNC PR records state only and does
+not start real-case tuning.
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
-next gate becomes SPRINT-PROD-BLOCK by default rather than UI-002C.
+next gate becomes SPRINT-PROD-BLOCK by default.
 
 ## Customer Discovery Track
 
@@ -150,18 +143,20 @@ next gate becomes SPRINT-PROD-BLOCK by default rather than UI-002C.
 - Outreach email: [ui002b_outreach_email_he.md](demo/ui002b_outreach_email_he.md).
 - Demo checklist: [ui002b_demo_checklist.md](demo/ui002b_demo_checklist.md).
 - Trigger to SPRINT-PROD-BLOCK: first signed LOI.
-- Production Supabase remains forbidden unless SPRINT-PROD-BLOCK is explicitly
-  approved.
+- Production Supabase remains forbidden unless SPRINT-PROD-BLOCK or another
+  production-readiness gate is explicitly approved.
 
 ## Recent Merges
 
-| PR  | Title                                               | Merge SHA  | Date       | Notes             |
-| --- | --------------------------------------------------- | ---------- | ---------- | ----------------- |
-| #76 | DEMO: Polish UI-002B manual link sharing and script | `4bdaf6d…` | 2026-05-07 | Demo polish       |
-| #75 | SYNC-009: Record UI-002C deferral                   | `7f2fe87…` | 2026-05-07 | Docs/state sync   |
-| #74 | SYNC-008: Reconcile handoff/current state           | `4c03f9f…` | 2026-05-07 | Docs/state sync   |
-| #73 | SYNC-007: Record post-PR72 UI-002B state            | `1252ade…` | 2026-05-07 | Docs/state sync   |
-| #72 | UI-002B: claimant responses core flow               | `ebdb75c…` | 2026-05-07 | Product core flow |
+| PR  | Title                                                      | Merge SHA  | Date       | Notes               |
+| --- | ---------------------------------------------------------- | ---------- | ---------- | ------------------- |
+| #78 | UI-002C: claimant email notifications (Resend, email-only) | `b4b6158…` | 2026-05-07 | Email notifications |
+| #77 | SYNC-010: Add UI-002C email-only spec and demo package     | `4315cf7…` | 2026-05-07 | Docs/demo package   |
+| #76 | DEMO: Polish UI-002B manual link sharing and demo script   | `4bdaf6d…` | 2026-05-07 | Demo polish         |
+| #75 | SYNC-009: Record UI-002C deferral                          | `7f2fe87…` | 2026-05-07 | Docs/state sync     |
+| #74 | SYNC-008: Reconcile handoff/current state                  | `4c03f9f…` | 2026-05-07 | Docs/state sync     |
+| #73 | SYNC-007: Record post-PR72 UI-002B state                   | `1252ade…` | 2026-05-07 | Docs/state sync     |
+| #72 | UI-002B: claimant responses core flow                      | `ebdb75c…` | 2026-05-07 | Product core flow   |
 
 ## Open PRs
 
@@ -171,9 +166,10 @@ next gate becomes SPRINT-PROD-BLOCK by default rather than UI-002C.
 
 - Non-production project: `aozbgunwhafabfmuwjol`.
 - Production project: `fcqporzsihuqtfohqtxs` remains forbidden unless explicitly
-  approved under SPRINT-PROD-BLOCK.
-- Deploy remains not approved unless explicitly approved.
-- OpenClaw/native orchestration remains not approved.
+  approved under a production-readiness gate.
+- Production deploy, production smoke, and manual production actions remain not
+  approved unless explicitly gated.
+- OpenClaw/native orchestration remains blocked while PR #47 remains open.
 - Cron, 24/7 operation, auto-merge, and auto-deploy remain not approved.
 
 ## Known Tech Debt
