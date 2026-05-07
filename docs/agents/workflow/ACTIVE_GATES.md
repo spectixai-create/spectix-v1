@@ -1,14 +1,15 @@
 # Active Gates
 
-Updated after PR #73 / SYNC-007 post-PR72 state sync merge.
+Updated after PR #74 / SYNC-008 and UI-002C deferral decision.
 
 ## Current Main
 
 - Repo: `spectixai-create/spectix-v1`
 - Current main HEAD:
-  `1252ade89ddc7124d0745d2bc97f3e599ae16855`
-- Latest merge: PR #73, `SYNC-007: Record post-PR72 UI-002B state`
-- PR #73 branch retained: yes
+  `4c03f9f7b63fdffab140968151a385231a6fda42`
+- Latest merge: PR #74,
+  `SYNC-008: Reconcile handoff and current state after PR73`
+- PR #74 branch retained: yes
 
 ## Open PRs
 
@@ -16,6 +17,8 @@ Updated after PR #73 / SYNC-007 post-PR72 state sync merge.
 
 ## Recently Merged
 
+- #74 - SYNC-008 post PR #73 handoff/current-state reconcile, merge commit
+  `4c03f9f7b63fdffab140968151a385231a6fda42`
 - #73 - SYNC-007 post PR #72 UI-002B state sync, merge commit
   `1252ade89ddc7124d0745d2bc97f3e599ae16855`
 - #72 - UI-002B claimant responses core flow, merge commit
@@ -35,8 +38,9 @@ Approved:
 
 - No implementation, smoke, deploy, production, Supabase, notification provider,
   or OpenClaw work is currently approved.
-- The active gate is UI-002C notification sprint planning/dispatch readiness
-  only, pending the explicit approvals below.
+- The active gate is manual UI-002B end-to-end demo readiness / operational QA
+  and customer discovery/LOI tracking. Any runtime demo, smoke, Supabase access,
+  deploy, or production activity still requires explicit gate approval.
 
 Not approved:
 
@@ -75,18 +79,44 @@ Notifications are still not implemented.
 
 ## UI-002C Gate
 
-UI-002C is not approved automatically.
+UI-002C is deferred/skipped for now and is not approved automatically.
 
-UI-002C may proceed only after:
+UI-002C readiness is deferred until Resend/DNS/webhook/env setup is manually
+configured and verifiable:
 
 1. vov confirms non-production Resend account readiness.
-2. vov confirms Twilio Israel number readiness.
-3. Required notification environment variables are available or declared for
+2. `spectix.co.il` DNS is configured for Resend domain verification.
+3. Resend webhook setup is configured.
+4. Required notification environment variables are available or declared for
    non-production.
-4. CEO GPT approves UI-002C dispatch.
+5. Codex/CEO GPT can verify readiness without printing secrets.
+6. CEO GPT approves UI-002C dispatch.
+
+Current readiness blockers recorded by SYNC-009:
+
+- Codex cannot safely operate the already-open browser/account sessions for
+  Resend or DNS setup.
+- Public DNS for `spectix.co.il` currently returns NXDOMAIN.
+- Vercel env read access exists, but notification env vars are not configured.
+
+Resend/DNS/Vercel notification setup is not blocking the current manual UI-002B
+flow.
 
 UI-002C remains a notification sprint only. It must not imply production access,
 deploy, provider sends, or UI-002C implementation before explicit gate approval.
+
+## Manual UI-002B Demo-Readiness Gate
+
+The current working flow is manual magic-link sharing from UI-002B. Adjusters
+can use the returned `magic_link_url` from dispatch/regenerate-link responses
+and share it with claimants manually.
+
+Next operational gate:
+
+1. Prepare manual UI-002B end-to-end demo-readiness / operational QA plan.
+2. Keep the customer discovery track active.
+3. Do not run smoke, mutate Supabase, deploy, or touch production unless a
+   future prompt explicitly approves that gated action.
 
 ## SPRINT-PROD-BLOCK Gate
 

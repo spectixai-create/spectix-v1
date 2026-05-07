@@ -1,6 +1,6 @@
 # CEO Handoff - Next Chat
 
-Updated after PR #73 / SYNC-007 post-PR72 state sync merge.
+Updated after PR #74 / SYNC-008 and UI-002C deferral decision.
 
 ## Bootstrap Reading Order
 
@@ -20,8 +20,10 @@ For new CEO chats, read in this order:
 - Date: 2026-05-07
 - Repo: `spectixai-create/spectix-v1`
 - Local path: `C:\Users\smart\spectix`
-- main HEAD: `1252ade89ddc7124d0745d2bc97f3e599ae16855`
-- Latest merged PR: #73, `SYNC-007: Record post-PR72 UI-002B state`
+- main HEAD: `4c03f9f7b63fdffab140968151a385231a6fda42`
+- Latest merged PR: #74,
+  `SYNC-008: Reconcile handoff and current state after PR73`
+- Previous state-sync PR: #73, `SYNC-007: Record post-PR72 UI-002B state`
 - Previous product PR: #72, `UI-002B: claimant responses core flow`
 - Remaining open PR: #47, `Record OpenClaw Slack routing blocker`
 
@@ -35,10 +37,25 @@ For new CEO chats, read in this order:
 - SPRINT-UI-002A - Claimant responses pre-flight.
 - SPRINT-UI-002B - Claimant responses core flow.
 - SYNC-007 - Post-PR72 UI-002B state sync.
+- SYNC-008 - Post-PR73 handoff/current-state reconcile.
 
 ## Current Active Task
 
-SYNC-008 docs-only handoff/current-state reconcile after PR #73.
+SYNC-009 docs-only update recording UI-002C deferral and the manual UI-002B
+operational path.
+
+## PR #74 Final State
+
+- PR URL: <https://github.com/spectixai-create/spectix-v1/pull/74>
+- Merge method: squash.
+- Merge commit / current main HEAD:
+  `4c03f9f7b63fdffab140968151a385231a6fda42`
+- Scope: docs-only post-PR73 handoff/current-state reconcile.
+- SYNC-008 status: complete and merged.
+- Production Supabase touched: no.
+- Deploy run by Codex: no.
+- Smoke run by Codex: no.
+- UI-002C started: no.
 
 ## PR #73 Final State
 
@@ -88,14 +105,24 @@ SYNC-008 docs-only handoff/current-state reconcile after PR #73.
 
 ## Next Gate
 
-After SYNC-008, the next gate remains UI-002C notification sprint
-planning/dispatch readiness only, not implementation.
+UI-002C email automation is deferred/skipped for now. Do not start UI-002C
+automatically.
 
-UI-002C may proceed only after:
+Exact next action: manual UI-002B end-to-end demo-readiness validation /
+operational QA, or customer discovery/LOI track work. Any runtime demo, smoke,
+Supabase access, deploy, or production action still requires explicit gate
+approval.
+
+Current accepted MVP/pilot workflow: adjusters use the UI-002B returned
+`magic_link_url` and share it manually with claimants. Notifications are not
+implemented.
+
+UI-002C may be reconsidered only after:
 
 1. vov confirms non-production Resend account readiness.
-2. vov confirms Twilio Israel number readiness.
-3. Notification environment readiness is confirmed for non-production.
+2. `spectix.co.il` DNS is configured for Resend domain verification.
+3. Resend webhook and notification environment readiness are confirmed for
+   non-production.
 4. CEO GPT approves UI-002C dispatch.
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
@@ -129,5 +156,6 @@ Read:
 2. `docs/agents/workflow/ACTIVE_GATES.md`
 3. `docs/agents/workflow/CHAT_TRANSITION_LOG.md`
 
-Then review SYNC-008 and decide whether any UI-002C planning/dispatch readiness
-work is appropriate. Do not start UI-002C implementation automatically.
+Then review SYNC-009 and decide whether to move into manual UI-002B
+demo-readiness validation or customer discovery/LOI track work. Do not start
+UI-002C implementation automatically.

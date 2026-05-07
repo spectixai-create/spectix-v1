@@ -154,3 +154,32 @@ Project Knowledge has been migrated to `docs/project/` as of this PR. New chats 
    - CEO GPT approves UI-002C dispatch.
 4. If the first signed LOI from an Israeli travel insurer is reported, switch
    the next gate to SPRINT-PROD-BLOCK by default rather than UI-002C.
+
+## Transition Update - 2026-05-07 (UI-002C deferred)
+
+### State
+
+- PR #74 (`SYNC-008: Reconcile handoff and current state after PR73`) merged to
+  `main`.
+- Merge method: squash.
+- Merge commit / current main HEAD:
+  `4c03f9f7b63fdffab140968151a385231a6fda42`.
+- UI-002B claimant response core remains the current working product flow.
+- UI-002C email automation is skipped/deferred for now because Codex does not
+  have safe browser/account access to complete Resend/DNS setup.
+- Public DNS for `spectix.co.il` currently returns NXDOMAIN.
+- Vercel env read access exists, but notification env vars are not configured.
+- Notifications remain unimplemented.
+- Manual magic-link sharing remains the accepted MVP/pilot workflow.
+- Production Supabase, non-production Supabase mutation, deploy, smoke,
+  OpenClaw/native orchestration, cron, 24/7 operation, auto-merge, and
+  auto-deploy remain not approved.
+
+### Pending Action Item For New Chat
+
+1. Review SYNC-009 docs-only PR.
+2. Do not start UI-002C automatically.
+3. Move next to manual UI-002B end-to-end demo-readiness validation /
+   operational QA, or customer discovery/LOI track work.
+4. If the first signed LOI from an Israeli travel insurer is reported, switch
+   the next gate to SPRINT-PROD-BLOCK by default.
