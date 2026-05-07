@@ -59,6 +59,7 @@ export async function POST(
     expires_at: result.expiresAt,
     contact_status: result.contactStatus,
     dispatched_question_count: result.dispatchedQuestionCount,
+    notification_attempted: result.notificationAttempted,
     snapshot: result.snapshot,
   });
 }

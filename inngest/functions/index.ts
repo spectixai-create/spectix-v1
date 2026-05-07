@@ -9,6 +9,7 @@
 
 import { processDocument } from './process-document';
 import { claimRecycleFunction } from './claim-recycle';
+import { claimantNotifyFunction } from './claimant-notify';
 import { runValidationPassFunction } from './run-validation-pass';
 import { watchdogStuckDocuments } from './watchdog-stuck-documents';
 import { runSynthesisPassFunction } from '../synthesis/run-synthesis-pass';
@@ -16,6 +17,7 @@ import { runSynthesisPassFunction } from '../synthesis/run-synthesis-pass';
 export const functions = [
   processDocument,
   claimRecycleFunction,
+  claimantNotifyFunction,
   watchdogStuckDocuments,
   runValidationPassFunction,
   runSynthesisPassFunction,

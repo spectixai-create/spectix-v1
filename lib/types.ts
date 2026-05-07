@@ -825,6 +825,32 @@ export interface ClaimResponsesSubmittedEvent {
   };
 }
 
+export interface ClaimDispatchQuestionsEvent {
+  name: 'claim/dispatch-questions';
+  data: {
+    claim_id: string;
+    dispatch_id: string;
+    claimant_email: string;
+    claimant_first_name: string | null;
+    claim_number: string | null;
+    magic_link_url: string;
+    question_count: number;
+  };
+}
+
+export interface ResendEmailReceivedEvent {
+  name: 'resend/email.received';
+  data: {
+    claim_id: string;
+    dispatch_id: string;
+    status:
+      | 'email.sent'
+      | 'email.delivered'
+      | 'email.bounced'
+      | 'email.complained';
+  };
+}
+
 export type SpectixInngestEvent =
   | DocumentUploadedEvent
   | DocumentProcessedEvent
@@ -839,4 +865,6 @@ export type SpectixInngestEvent =
   | ClaimValidationRequestedEvent
   | ClaimValidationCompletedEvent
   | ClaimSynthesisCompletedEvent
-  | ClaimResponsesSubmittedEvent;
+  | ClaimResponsesSubmittedEvent
+  | ClaimDispatchQuestionsEvent
+  | ResendEmailReceivedEvent;

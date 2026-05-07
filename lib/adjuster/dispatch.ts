@@ -7,12 +7,14 @@ import {
   normalizeQuestionIds,
   planQuestionDispatches,
 } from '@/lib/adjuster/service';
+import { inngest } from '@/inngest/client';
 import { fetchClaimDetail } from '@/lib/adjuster/data';
 import type { ClaimDetailSnapshot } from '@/lib/adjuster/types';
 import {
   getClaimantContactStatus,
   type ClaimantContactStatus,
 } from '@/lib/claimant/contact';
+import { buildNotificationDispatchId } from '@/lib/claimant/notifications';
 import {
   buildClaimantMagicLinkUrl,
   generateClaimantToken,
@@ -30,6 +32,7 @@ export type DispatchQuestionsResult =
       expiresAt: string;
       contactStatus: ClaimantContactStatus;
       dispatchedQuestionCount: number;
+      notificationAttempted: boolean;
       snapshot: ClaimDetailSnapshot | null;
     }
   | { ok: false; status: number; code: string; message: string };
@@ -163,12 +166,44 @@ export async function dispatchClaimQuestions({
 
   if (auditError) throw auditError;
 
+  const contactStatus = getClaimantContactStatus(claim);
+  let notificationAttempted = false;
+
+  if (contactStatus.claimant_email) {
+    try {
+      await inngest.send({
+        name: 'claim/dispatch-questions',
+        data: {
+          claim_id: claimId,
+          dispatch_id: buildNotificationDispatchId({
+            claimId,
+            date: new Date(now),
+          }),
+          claimant_email: contactStatus.claimant_email,
+          claimant_first_name: contactStatus.claimant_first_name,
+          claim_number: contactStatus.claim_number,
+          magic_link_url: magicLinkUrl,
+          question_count: questionIds.length,
+        },
+      });
+      notificationAttempted = true;
+    } catch (error) {
+      await recordNotificationQueueFailure({
+        supabase,
+        claimId,
+        questionIds,
+        error,
+      });
+    }
+  }
+
   return {
     ok: true,
     magicLinkUrl,
     expiresAt,
-    contactStatus: getClaimantContactStatus(claim),
+    contactStatus,
     dispatchedQuestionCount: questionIds.length,
+    notificationAttempted,
     snapshot: await fetchClaimDetail(claimId),
   };
 }
@@ -341,6 +376,40 @@ async function updateClaimToPendingInfo(claimId: string): Promise<void> {
     .in('status', ['ready', 'pending_info']);
 
   if (error) throw error;
+}
+
+async function recordNotificationQueueFailure({
+  supabase,
+  claimId,
+  questionIds,
+  error,
+}: {
+  supabase: ReturnType<typeof createAdminClient>;
+  claimId: string;
+  questionIds: string[];
+  error: unknown;
+}): Promise<void> {
+  try {
+    await supabase
+      .from('question_dispatches')
+      .update({
+        notification_attempts: 1,
+        notification_channel: 'email',
+        notification_last_error: sanitizeNotificationError(error),
+      })
+      .eq('claim_id', claimId)
+      .in('question_id', questionIds)
+      .throwOnError();
+  } catch {
+    // Notification queue failures must not break the manual magic-link path.
+  }
+}
+
+function sanitizeNotificationError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  return (message || 'notification_queue_failed')
+    .replace(/https?:\/\/\S+/g, '[url]')
+    .slice(0, 500);
 }
 
 function dispatchErrorResult(

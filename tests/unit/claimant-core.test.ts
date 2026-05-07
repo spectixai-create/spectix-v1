@@ -14,10 +14,11 @@ import {
 } from '@/lib/claimant/tokens';
 import {
   extractFirstName,
+  buildGreeting,
   getClaimantContactStatus,
   normalizeContactValue,
 } from '@/lib/claimant/contact';
-import { validateUi002bRuntimeEnv } from '@/instrumentation';
+import { validateUi002cRuntimeEnv } from '@/instrumentation';
 
 describe('UI-002B claimant token and contact helpers', () => {
   it('hashes tokens without exposing the raw token in the URL helper', () => {
@@ -58,16 +59,16 @@ describe('UI-002B claimant token and contact helpers', () => {
     });
   });
 
-  it('keeps UI-002B production env validation limited to APP_BASE_URL and SKIP_NOTIFICATIONS', () => {
+  it('validates UI-002C production env requirements without Twilio', () => {
     expect(() =>
-      validateUi002bRuntimeEnv({
+      validateUi002cRuntimeEnv({
         NODE_ENV: 'production',
         NEXT_PHASE: 'phase-production-build',
       } as NodeJS.ProcessEnv),
     ).not.toThrow();
 
     expect(() =>
-      validateUi002bRuntimeEnv({
+      validateUi002cRuntimeEnv({
         NODE_ENV: 'production',
         APP_BASE_URL: 'https://app.example',
         SKIP_NOTIFICATIONS: '',
@@ -75,11 +76,33 @@ describe('UI-002B claimant token and contact helpers', () => {
     ).toThrow(/SKIP_NOTIFICATIONS/);
 
     expect(() =>
-      validateUi002bRuntimeEnv({
+      validateUi002cRuntimeEnv({
         NODE_ENV: 'production',
         APP_BASE_URL: 'https://app.example',
       } as NodeJS.ProcessEnv),
+    ).toThrow(/RESEND_API_KEY/);
+
+    expect(() =>
+      validateUi002cRuntimeEnv({
+        NODE_ENV: 'production',
+        APP_BASE_URL: 'https://app.example',
+        RESEND_API_KEY: 're_test',
+      } as NodeJS.ProcessEnv),
+    ).toThrow(/RESEND_WEBHOOK_SECRET/);
+
+    expect(() =>
+      validateUi002cRuntimeEnv({
+        NODE_ENV: 'production',
+        APP_BASE_URL: 'https://app.example',
+        RESEND_API_KEY: 're_test',
+        RESEND_WEBHOOK_SECRET: 'whsec_test',
+      } as NodeJS.ProcessEnv),
     ).not.toThrow();
+  });
+
+  it('builds Hebrew greetings without double שלום', () => {
+    expect(buildGreeting(extractFirstName(null))).toBe('שלום');
+    expect(buildGreeting(extractFirstName('דנה כהן'))).toBe('שלום דנה');
   });
 });
 

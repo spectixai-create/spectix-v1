@@ -62,14 +62,21 @@ export function ActionPanel({
       }
 
       const payload = (await response.json().catch(() => null)) as {
-        data?: { magic_link_url?: string };
+        data?: {
+          magic_link_url?: string;
+          notification_attempted?: boolean;
+          contact_status?: { claimant_email?: string | null };
+        };
       } | null;
       setMagicLinkUrl(payload?.data?.magic_link_url ?? null);
       router.refresh();
       setMessage(
-        payload?.data?.magic_link_url
-          ? 'נוצר קישור לשיתוף ידני עם המבוטח'
-          : 'הפעולה בוצעה',
+        payload?.data?.notification_attempted &&
+          payload.data.contact_status?.claimant_email
+          ? `אימייל נשלח ל-${payload.data.contact_status.claimant_email}. הקישור זמין גם לשיתוף ידני.`
+          : payload?.data?.magic_link_url
+            ? 'נוצר קישור לשיתוף ידני עם המבוטח'
+            : 'הפעולה בוצעה',
       );
     });
   }
