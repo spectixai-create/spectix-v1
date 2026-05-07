@@ -305,7 +305,7 @@ Processing lifecycle semantics:
 - `public.validate_claimant_magic_link(p_token_hash text, p_claim_id uuid)`: validates a one-time claimant magic link and returns the link row or typed `P000x` errors.
 - `public.save_draft(p_token_hash text, p_claim_id uuid, p_question_id text, p_response_value jsonb)`: validates the link, sets local `lock_timeout = '5s'`, and upserts one draft response.
 - `public.link_document_to_question(p_token_hash text, p_claim_id uuid, p_document_id uuid, p_question_id text)`: validates the link and marks a document as the response for a dispatched question.
-- `public.finalize_question_responses(p_token_hash text, p_claim_id uuid)`: validates the link, requires drafts for all dispatched questions, upserts finalized responses, marks the link used, moves the claim from `pending_info` to `processing`, inserts a privacy-preserving claimant audit row, and returns pending response document IDs for recycle.
+- `public.finalize_question_responses(p_token_hash text, p_claim_id uuid)`: validates the link, locks the claim row, requires `claims.status = 'pending_info'`, requires drafts for all dispatched questions, upserts finalized responses, marks the link used, moves the claim to `processing`, inserts a privacy-preserving claimant audit row, and returns pending response document IDs for recycle. Non-`pending_info` claims raise `claim_not_pending_info` / `P0009` before responses, draft deletion, token use, audit, or recycle event side effects.
 
 ## Storage
 

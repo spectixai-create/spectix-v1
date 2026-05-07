@@ -1,20 +1,21 @@
 # Current State
 
-Updated by Codex after PR #68 / SPRINT-UI-001 merge.
+Updated by Codex after PR #72 / SPRINT-UI-002B merge.
 
 ## Version
 
-Spectix post SPRINT-UI-001 • 2026-05-06
+Spectix post SPRINT-UI-002B • 2026-05-07
 
 ## Current Phase
 
-The core non-production MVP pipeline now covers intake, document upload,
-classification, normalized extraction, validation, deterministic synthesis, and
-the first adjuster-facing brief view.
+The non-production MVP pipeline now covers intake, document upload,
+classification, normalized extraction, validation, deterministic synthesis, the
+adjuster-facing brief view, and the core claimant response flow without
+external notifications.
 
 Current `main` HEAD is
-`51d6dee22ffdd614f224582fe86b707ca6c8b345`, the squash merge commit for PR
-#68 (`SPRINT-UI-001: Adjuster brief view MVP`).
+`ebdb75c71ff340a3e5366672521bb74b83263d59`, the squash merge commit for PR
+#72 (`UI-002B: claimant responses core flow`).
 
 ## Completed Spikes And Sprints
 
@@ -45,61 +46,73 @@ Current `main` HEAD is
 - SPRINT-002D - `errored` recovery and soft cost cap in PR #65.
 - SPRINT-003A - Deterministic synthesis MVP in PR #66.
 - SPRINT-UI-001 - Adjuster brief view MVP in PR #68.
+- SPRINT-UI-002A - Claimant responses pre-flight in PR #70.
+- SPRINT-UI-002B - Claimant responses core flow in PR #72.
 
 ## Current Sprint Status
 
-**SPRINT-UI-001 - Adjuster Brief View MVP** - DONE
+**SPRINT-UI-002B - Claimant Responses Core Flow** - DONE
 
-- Merged: PR #68 -> `main`
+- Merged: PR #72 -> `main`
+- Merge method: squash
 - Merge commit / current main HEAD:
-  `51d6dee22ffdd614f224582fe86b707ca6c8b345`
-- PR head before merge: `0420a1efec0b2a6f394fbfc337960f1343244eb2`
-- Base before merge: `21b63dc97f622fff7489c9f2228bb84956b1d1f6`
-- Non-production UI smoke: PASS after fix-forward
-- Smoke scenarios 1-10: PASS
+  `ebdb75c71ff340a3e5366672521bb74b83263d59`
+- PR head before merge: `07d02725da51f586e6e10fb685f5b5b5a2b72bbd`
+- Base before merge: `62f6b05453ab9a8cb1b2dc533f21f09355eaa6c6`
+- Final-head validation: PASS
+- Tests: PASS, 23 files / 356 tests
+- Non-production final-head verification: PASS on `aozbgunwhafabfmuwjol`
+  only
 - Production Supabase touched: no
 - Deploy run by Codex: no
+- Notifications sent: no
+- Resend/Twilio added: no
+- UI-002C started: no
 
 Scope shipped:
 
-- `/dashboard` claims list.
-- `/claim/[id]` adjuster brief view.
-- Findings, documents, validation, and audit tabs.
-- Approve, reject, request-info, escalate, and unescalate adjuster actions.
-- `question_dispatches` support.
-- `claims.escalated_to_investigator` support.
-- Hebrew RTL adjuster UI.
+- Claimant magic links.
+- Draft responses and finalized question responses.
+- Document-to-question linking via `documents.response_to_question_id`.
+- Claimant public RTL page at `/c/[claim_id]`.
+- Claimant draft, upload, and finalize APIs.
+- Adjuster dispatch and regenerate-link endpoints returning a manual-share URL.
+- Dispatch badges, copy-link support, and no-contact manual-share state.
+- Claimant response recycle Path A: no documents -> validation requested.
+- Claimant response recycle Path B: documents present -> document fan-out,
+  extraction, validation, synthesis.
+- D-029 registered in [DECISIONS.md](DECISIONS.md).
 
-Fix-forward recorded:
+Final-head fix-forward recorded:
 
-- Root cause: already-dispatched question checkboxes were visually shown but
-  disabled, blocking required re-dispatch.
-- Result: dispatched questions remain visually marked as previously dispatched
-  but can be selected and re-dispatched.
-- DB behavior verified: one row is preserved per `(claim_id, question_id)`,
-  `first_dispatched_at` is preserved, and `last_dispatched_at` is updated.
+- `finalize_question_responses` now requires `claims.status = pending_info`
+  before inserting responses, deleting drafts, marking tokens used, auditing
+  submission, or allowing recycle event emission.
+- Claimant link opens audit `claimant_link_opened`.
+- Rejected claimant token RPC attempts audit `claimant_token_invalid`.
+- Audit details are privacy-safe and do not include tokens, magic links, answer
+  text, file contents, or response payloads.
 
-**SPRINT-UI-002** - NOT APPROVED FOR IMPLEMENTATION
+**SPRINT-UI-002C - Notifications** - NOT APPROVED FOR IMPLEMENTATION
 
-SPRINT-UI-002 may proceed only after planning and pre-flight gates are complete.
-It is not active implementation work.
+UI-002C is the next candidate sprint but remains gated. Notifications are still
+not implemented.
 
 ## Active Gates
 
 See [ACTIVE_GATES.md](agents/workflow/ACTIVE_GATES.md).
 
-Immediate next gate after SYNC-006 is SPRINT-UI-002 planning / pre-flight, not
-implementation. Required inputs before implementation:
+Immediate next gate after SYNC-007 is UI-002C notification sprint
+planning/dispatch, not automatic implementation. UI-002C may proceed only after:
 
-1. User decisions on claimant response design:
-   - Decision 1: notification channel.
-   - Decision 2: claimant auth method.
-   - Decision 8: re-cycle trigger.
-2. Codex pre-flight on email/SMS infrastructure in current `main`.
-3. CEO GPT gate approval.
+1. vov confirms non-production Resend account readiness.
+2. vov confirms Twilio Israel number readiness.
+3. Required notification environment variables are available or declared for
+   non-production.
+4. CEO GPT approves UI-002C dispatch.
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
-next gate becomes SPRINT-PROD-BLOCK rather than UI-002 by default.
+next gate becomes SPRINT-PROD-BLOCK rather than UI-002C by default.
 
 ## Customer Discovery Track
 
@@ -108,26 +121,22 @@ next gate becomes SPRINT-PROD-BLOCK rather than UI-002 by default.
 - Production Supabase remains forbidden unless SPRINT-PROD-BLOCK is explicitly
   approved.
 
-## External / Pending Context
-
-- `design004.1_claimant_responses_06_05.md` exists outside the repo as a CEO
-  Claude skeleton for SPRINT-UI-002 iteration 1.
-- It is not yet committed to the repo.
-- It requires user decisions and implementation pre-flight before any UI-002
-  implementation handoff.
-
 ## Recent Merges
 
-| PR  | Title                                     | Merge SHA  | Date       | Notes                             |
-| --- | ----------------------------------------- | ---------- | ---------- | --------------------------------- |
-| #68 | SPRINT-UI-001: Adjuster brief view MVP    | `51d6dee…` | 2026-05-06 | Smoked + merged after fix-forward |
-| #67 | SYNC-005: UI design artifacts             | `21b63dc…` | 2026-05-06 | Docs/design sync                  |
-| #66 | SPRINT-003A: Synthesis MVP                | `d830e6e…` | 2026-05-06 | Smoked + merged                   |
-| #65 | SPRINT-002D: errored + soft cost cap      | `bf02185…` | 2026-05-06 | Smoked + merged                   |
-| #63 | SYNC-001: post PR #60 docs sync           | `e6048db…` | 2026-05-06 | Docs sync                         |
-| #62 | AUDIT-001: PR #60 vs design001.6 findings | `9bae49f…` | 2026-05-06 | Audit report                      |
-| #61 | SYNC-002: docs management folder          | `683c8b8…` | 2026-05-06 | Planning artifacts                |
-| #60 | SPRINT-002C: validation layers 11.1-11.3  | `828e16e…` | 2026-05-06 | Smoked + merged                   |
+| PR  | Title                                      | Merge SHA  | Date       | Notes                             |
+| --- | ------------------------------------------ | ---------- | ---------- | --------------------------------- |
+| #72 | UI-002B: claimant responses core flow      | `ebdb75c…` | 2026-05-07 | Final-head verified + merged      |
+| #71 | DOCS: Add UI-002B core implementation spec | `62f6b05…` | 2026-05-07 | Docs/spec ingestion               |
+| #70 | UI-002A: claimant responses pre-flight     | `760e97d…` | 2026-05-07 | Docs + checks only                |
+| #69 | SYNC-006: Record post-PR68 UI state        | `004ff93…` | 2026-05-06 | Docs/state sync                   |
+| #68 | SPRINT-UI-001: Adjuster brief view MVP     | `51d6dee…` | 2026-05-06 | Smoked + merged after fix-forward |
+| #67 | SYNC-005: UI design artifacts              | `21b63dc…` | 2026-05-06 | Docs/design sync                  |
+| #66 | SPRINT-003A: Synthesis MVP                 | `d830e6e…` | 2026-05-06 | Smoked + merged                   |
+| #65 | SPRINT-002D: errored + soft cost cap       | `bf02185…` | 2026-05-06 | Smoked + merged                   |
+| #63 | SYNC-001: post PR #60 docs sync            | `e6048db…` | 2026-05-06 | Docs sync                         |
+| #62 | AUDIT-001: PR #60 vs design001.6 findings  | `9bae49f…` | 2026-05-06 | Audit report                      |
+| #61 | SYNC-002: docs management folder           | `683c8b8…` | 2026-05-06 | Planning artifacts                |
+| #60 | SPRINT-002C: validation layers 11.1-11.3   | `828e16e…` | 2026-05-06 | Smoked + merged                   |
 
 ## Open PRs
 
