@@ -18,6 +18,7 @@ import {
   buildRequestInfoBody,
   getDefaultSelectedQuestionIds,
   getQuestionDispatchStatusText,
+  hasNotificationError,
   isQuestionSelectable,
 } from '@/lib/adjuster/question-selection';
 import type {
@@ -213,6 +214,24 @@ describe('SPRINT-UI-001 question selection UI behavior', () => {
       'נשלחה לאחרונה',
     );
     expect(isQuestionSelectable(dispatched)).toBe(true);
+  });
+
+  it('extends dispatch state with email sent and error indicators', () => {
+    const sent = briefQuestion('q1', {
+      ...dispatch('q1'),
+      notificationSentAt: '2026-05-06T01:01:00Z',
+      notificationChannel: 'email',
+    });
+    const bounced = briefQuestion('q2', {
+      ...dispatch('q2'),
+      notificationChannel: 'email',
+      notificationLastError: 'email.bounced: mailbox_full',
+    });
+
+    expect(getQuestionDispatchStatusText(sent)).toContain('אימייל נשלח');
+    expect(getQuestionDispatchStatusText(bounced)).toContain('שגיאת אימייל');
+    expect(hasNotificationError(sent)).toBe(false);
+    expect(hasNotificationError(bounced)).toBe(true);
   });
 
   it('sends selected redispatch question ids in request-info payload', () => {

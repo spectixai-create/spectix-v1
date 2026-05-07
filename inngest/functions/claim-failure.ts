@@ -47,9 +47,9 @@ export async function handleClaimScopedFunctionFailure({
 
 export function getFailedClaimId(event: FailureEventPayload): string | null {
   const originalEvent = event.data.event as
-    | { data?: { claimId?: unknown } }
+    | { data?: { claimId?: unknown; claim_id?: unknown } }
     | undefined;
-  const claimId = originalEvent?.data?.claimId;
+  const claimId = originalEvent?.data?.claimId ?? originalEvent?.data?.claim_id;
 
   return typeof claimId === 'string' && claimId.trim() !== '' ? claimId : null;
 }

@@ -232,6 +232,42 @@ equivalent shared production limiter.
 
 **Owner:** SPRINT-PROD-BLOCK.
 
+### 11G — REMOVED: Notification Multi-Provider Failover
+
+**Original scope:** add a secondary email provider fallback behind Resend.
+
+**Status:** removed from the active MVP list by D-030. UI-002C uses email-only
+via Resend.
+
+**Trigger to revisit:** post-pilot provider reliability below 99% or insurer
+procurement requires provider redundancy.
+
+### 11H — DEFERRED Beyond UI-002C: WhatsApp Notifications
+
+**Original scope:** automate WhatsApp or other messaging-channel notification
+fallbacks.
+
+**Status:** deferred beyond UI-002C by D-030. Manual out-of-system sharing by
+the adjuster remains the MVP fallback.
+
+**Trigger to revisit:** pilot adjusters explicitly request WhatsApp/SMS
+automation after email-only operation is measured.
+
+### 11N — Resend Tier Upgrade Trigger
+
+**Current state:** UI-002C uses Resend as the single notification provider.
+
+**Trigger:** more than 2,000 claimant email dispatches per month.
+
+**Owner:** SPRINT-PROD-BLOCK.
+
+### 11P — REMOVED: Late Bounce Auto-SMS Retry
+
+**Original scope:** automatically retry by SMS after a late email bounce.
+
+**Status:** removed by D-030. UI-002C has no SMS or Twilio path. Bounce and
+complaint metadata tell the adjuster to use the existing manual fallback.
+
 - [ ] Historical archive for older spikes #00, #00b, #00c, #00d, #00e, #02, #02a, #02b. Deferred to Spike #00z-B.
 - [ ] Replace sample dashboard/claim/questions data with real Supabase data once API contracts land.
 - [ ] OpenClaw real command channel integration remains blocked in the local install because GitHub issue/PR comments are not a supported channel target. Use the local dispatcher as the operational bridge until a safe supported channel or TaskFlow import path exists.

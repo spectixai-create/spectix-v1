@@ -9,6 +9,7 @@ import {
   buildRequestInfoBody,
   getDefaultSelectedQuestionIds,
   getQuestionDispatchStatusText,
+  hasNotificationError,
   isQuestionSelectable,
 } from '@/lib/adjuster/question-selection';
 import { EMPTY_STATES } from '@/lib/ui/strings-he';
@@ -42,6 +43,9 @@ export function QuestionsList({
     claimant_phone: string | null;
     missing_both: boolean;
   } | null>(null);
+  const [notificationAttempted, setNotificationAttempted] = useState<
+    boolean | null
+  >(null);
   const initialContactStatus = useMemo(() => {
     const claimant_email = (claimContact?.claimantEmail ?? '').trim() || null;
     const claimant_phone = (claimContact?.claimantPhone ?? '').trim() || null;
@@ -91,11 +95,17 @@ export function QuestionsList({
             claimant_phone: string | null;
             missing_both: boolean;
           };
+          notification_attempted?: boolean;
         };
       };
       setMagicLinkUrl(payload.data?.magic_link_url ?? null);
       setContactStatus(payload.data?.contact_status ?? null);
-      setMessage('נוצר קישור לשיתוף ידני עם המבוטח');
+      setNotificationAttempted(payload.data?.notification_attempted ?? false);
+      setMessage(
+        payload.data?.notification_attempted
+          ? 'אימייל נשלח למבוטח והקישור זמין גם לשיתוף ידני'
+          : 'נוצר קישור לשיתוף ידני עם המבוטח',
+      );
       router.refresh();
     });
   }
@@ -160,7 +170,13 @@ export function QuestionsList({
                   />
                   <span>
                     <span className="block font-medium">{question.text}</span>
-                    <span className="text-sm text-muted-foreground">
+                    <span
+                      className={
+                        hasNotificationError(question)
+                          ? 'text-sm text-red-700'
+                          : 'text-sm text-muted-foreground'
+                      }
+                    >
                       {getQuestionDispatchStatusText(question)}
                     </span>
                   </span>
@@ -200,10 +216,11 @@ export function QuestionsList({
           >
             {displayedContactStatus.missing_both
               ? 'אין פרטי קשר בתיק. יש לשתף את הקישור ידנית בטלפון.'
-              : `התראות לא פעילות. שתף ידנית באמצעות ${
-                  displayedContactStatus.claimant_email ??
-                  displayedContactStatus.claimant_phone
-                }.`}
+              : notificationAttempted === true
+                ? `אימייל נשלח ל-${displayedContactStatus.claimant_email}. הקישור זמין גם לשיתוף ידני.`
+                : displayedContactStatus.claimant_email
+                  ? 'לאחר יצירת הקישור יישלח אימייל, והקישור יישאר זמין לשיתוף ידני.'
+                  : 'אין אימייל בתביעה. שתף את הקישור ידנית עם התובע.'}
           </div>
         ) : null}
         {magicLinkUrl ? (

@@ -30,7 +30,7 @@ export default defineConfig({
     {
       name: 'unauthenticated',
       testMatch:
-        /(auth-flow|auth-and-404|claims-api|document-upload|document-processing|document-classification|watchdog|claimant_flow_core|claimant_flow_security|claimant_flow_recycle)\.spec\.ts/,
+        /(auth-flow|auth-and-404|claims-api|document-upload|document-processing|document-classification|watchdog|claimant_flow_core|claimant_flow_security|claimant_flow_recycle|claimant_flow_email|claimant_flow_webhook)\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
     {

@@ -19,9 +19,24 @@ export function buildRequestInfoBody(questionIds: readonly string[]): {
 }
 
 export function getQuestionDispatchStatusText(question: BriefQuestion): string {
-  return question.dispatch
-    ? `נשלחה לאחרונה: ${formatDate(question.dispatch.lastDispatchedAt)}`
-    : 'טרם נשלחה';
+  if (!question.dispatch) return 'טרם נשלחה';
+
+  const base = `נשלחה לאחרונה: ${formatDate(
+    question.dispatch.lastDispatchedAt,
+  )}`;
+
+  if (hasNotificationError(question)) {
+    return `${base} (שגיאת אימייל)`;
+  }
+  if (question.dispatch.notificationSentAt) {
+    return `${base} (אימייל נשלח)`;
+  }
+
+  return base;
+}
+
+export function hasNotificationError(question: BriefQuestion): boolean {
+  return Boolean(question.dispatch?.notificationLastError?.trim());
 }
 
 function formatDate(value: string): string {
