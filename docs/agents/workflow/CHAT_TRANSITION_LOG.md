@@ -124,3 +124,33 @@ Project Knowledge has been migrated to `docs/project/` as of this PR. New chats 
    - CEO GPT approves UI-002C dispatch.
 4. If the first signed LOI from an Israeli travel insurer is reported, switch
    the next gate to SPRINT-PROD-BLOCK.
+
+## Transition Update - 2026-05-07 (post PR #73 reconcile)
+
+### State
+
+- PR #73 (`SYNC-007: Record post-PR72 UI-002B state`) merged to `main`.
+- Merge method: squash.
+- Merge commit / current main HEAD:
+  `1252ade89ddc7124d0745d2bc97f3e599ae16855`.
+- PR #72 (`UI-002B: claimant responses core flow`) remains complete and merged.
+- SYNC-008 corrected stale post-PR72 wording in the CEO handoff and current
+  state docs to the post-PR73 repo state.
+- Production project `fcqporzsihuqtfohqtxs` remains forbidden.
+- Non-production project remains `aozbgunwhafabfmuwjol`; no Supabase mutation
+  is approved by this reconcile.
+- Deploy, smoke, OpenClaw/native orchestration, cron, 24/7 operation,
+  auto-merge, and auto-deploy remain not approved.
+- Remaining open PR: #47 (`Record OpenClaw Slack routing blocker`).
+
+### Pending Action Item For New Chat
+
+1. Review SYNC-008 docs-only PR.
+2. Do not start UI-002C implementation automatically.
+3. Consider UI-002C notification sprint planning/dispatch readiness only after:
+   - vov confirms non-production Resend account readiness;
+   - vov confirms Twilio Israel number readiness;
+   - notification environment readiness is confirmed for non-production;
+   - CEO GPT approves UI-002C dispatch.
+4. If the first signed LOI from an Israeli travel insurer is reported, switch
+   the next gate to SPRINT-PROD-BLOCK by default rather than UI-002C.

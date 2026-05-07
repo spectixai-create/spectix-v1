@@ -1,10 +1,10 @@
 # Current State
 
-Updated by Codex after PR #72 / SPRINT-UI-002B merge.
+Updated by Codex after PR #73 / SYNC-007 post-PR72 state sync merge.
 
 ## Version
 
-Spectix post SPRINT-UI-002B • 2026-05-07
+Spectix post PR #73 / SYNC-007 • 2026-05-07
 
 ## Current Phase
 
@@ -14,8 +14,8 @@ adjuster-facing brief view, and the core claimant response flow without
 external notifications.
 
 Current `main` HEAD is
-`ebdb75c71ff340a3e5366672521bb74b83263d59`, the squash merge commit for PR
-#72 (`UI-002B: claimant responses core flow`).
+`1252ade89ddc7124d0745d2bc97f3e599ae16855`, the squash merge commit for PR
+#73 (`SYNC-007: Record post-PR72 UI-002B state`).
 
 ## Completed Spikes And Sprints
 
@@ -48,8 +48,21 @@ Current `main` HEAD is
 - SPRINT-UI-001 - Adjuster brief view MVP in PR #68.
 - SPRINT-UI-002A - Claimant responses pre-flight in PR #70.
 - SPRINT-UI-002B - Claimant responses core flow in PR #72.
+- SYNC-007 - Post-PR72 UI-002B state sync in PR #73.
 
 ## Current Sprint Status
+
+**SYNC-007 - Post-PR72 UI-002B State Sync** - DONE
+
+- Merged: PR #73 -> `main`
+- Merge method: squash
+- Merge commit / current main HEAD:
+  `1252ade89ddc7124d0745d2bc97f3e599ae16855`
+- Scope: docs-only post-PR72 state sync
+- Production Supabase touched: no
+- Deploy run by Codex: no
+- Smoke run by Codex: no
+- UI-002C started: no
 
 **SPRINT-UI-002B - Claimant Responses Core Flow** - DONE
 
@@ -95,20 +108,21 @@ Final-head fix-forward recorded:
 
 **SPRINT-UI-002C - Notifications** - NOT APPROVED FOR IMPLEMENTATION
 
-UI-002C is the next candidate sprint but remains gated. Notifications are still
-not implemented.
+UI-002C is the next candidate sprint but remains gated for planning/dispatch
+readiness only. Notifications are still not implemented, and UI-002C
+implementation is not approved.
 
 ## Active Gates
 
 See [ACTIVE_GATES.md](agents/workflow/ACTIVE_GATES.md).
 
-Immediate next gate after SYNC-007 is UI-002C notification sprint
-planning/dispatch, not automatic implementation. UI-002C may proceed only after:
+Immediate next gate after SYNC-008 remains UI-002C notification sprint
+planning/dispatch readiness only, not automatic implementation. UI-002C may
+proceed only after:
 
 1. vov confirms non-production Resend account readiness.
 2. vov confirms Twilio Israel number readiness.
-3. Required notification environment variables are available or declared for
-   non-production.
+3. Notification environment readiness is confirmed for non-production.
 4. CEO GPT approves UI-002C dispatch.
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
@@ -125,6 +139,7 @@ next gate becomes SPRINT-PROD-BLOCK rather than UI-002C by default.
 
 | PR  | Title                                      | Merge SHA  | Date       | Notes                             |
 | --- | ------------------------------------------ | ---------- | ---------- | --------------------------------- |
+| #73 | SYNC-007: Record post-PR72 UI-002B state   | `1252ade…` | 2026-05-07 | Docs/state sync                   |
 | #72 | UI-002B: claimant responses core flow      | `ebdb75c…` | 2026-05-07 | Final-head verified + merged      |
 | #71 | DOCS: Add UI-002B core implementation spec | `62f6b05…` | 2026-05-07 | Docs/spec ingestion               |
 | #70 | UI-002A: claimant responses pre-flight     | `760e97d…` | 2026-05-07 | Docs + checks only                |
