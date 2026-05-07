@@ -1,14 +1,14 @@
 # Active Gates
 
-Updated after PR #68 / SPRINT-UI-001 merge.
+Updated after PR #72 / SPRINT-UI-002B merge.
 
 ## Current Main
 
 - Repo: `spectixai-create/spectix-v1`
 - Current main HEAD:
-  `51d6dee22ffdd614f224582fe86b707ca6c8b345`
-- Latest merge: PR #68, `SPRINT-UI-001: Adjuster brief view MVP`
-- PR #68 branch retained: yes
+  `ebdb75c71ff340a3e5366672521bb74b83263d59`
+- Latest merge: PR #72, `UI-002B: claimant responses core flow`
+- PR #72 branch retained: yes
 
 ## Open PRs
 
@@ -16,24 +16,26 @@ Updated after PR #68 / SPRINT-UI-001 merge.
 
 ## Recently Merged
 
+- #72 - UI-002B claimant responses core flow, merge commit
+  `ebdb75c71ff340a3e5366672521bb74b83263d59`
+- #71 - UI-002B source spec ingestion, merge commit
+  `62f6b05453ab9a8cb1b2dc533f21f09355eaa6c6`
+- #70 - UI-002A claimant responses pre-flight, merge commit
+  `760e97d524822812843808aa175bd8cc57d768cc`
+- #69 - SYNC-006 post PR #68 state sync, merge commit
+  `004ff933e34d1d00e893f7952ccd0e2d664d9b40`
 - #68 - SPRINT-UI-001 Adjuster brief view MVP, merge commit
   `51d6dee22ffdd614f224582fe86b707ca6c8b345`
-- #67 - SYNC-005 UI design artifacts, merge commit
-  `21b63dc97f622fff7489c9f2228bb84956b1d1f6`
-- #66 - SPRINT-003A Synthesis MVP, merge commit
-  `d830e6e0ef56cce7be38d0d65c2aa3b4d1e02fbe`
-- #65 - SPRINT-002D errored recovery and soft cost cap, merge commit
-  `bf02185db596c33c078f38937334106d9794ea38`
 
 ## Current Approved / Not Approved
 
 Approved:
 
-- SYNC-006 post-PR68 documentation/state sync only.
+- SYNC-007 post-PR72 documentation/state sync only.
 
 Not approved:
 
-- SPRINT-UI-002 implementation.
+- UI-002C implementation.
 - Production Supabase.
 - Production smoke.
 - Deploy.
@@ -43,36 +45,48 @@ Not approved:
 - Auto-merge.
 - Auto-deploy.
 
-## SPRINT-UI-001 State
+## SPRINT-UI-002B State
 
 - Status: complete and merged.
-- PR #68 is no longer active.
-- Non-production UI smoke: PASS after fix-forward.
-- Fix-forward root cause: dispatched question checkbox was disabled.
-- Verified fix: dispatched questions can be selected and re-dispatched; one
-  `question_dispatches` row remains per `(claim_id, question_id)`;
-  `first_dispatched_at` is preserved; `last_dispatched_at` is updated.
+- PR #72 is no longer active.
+- Final-head validation: PASS.
+- Unit test suite: PASS, 23 files / 356 tests.
+- Final-head non-production verification: PASS on `aozbgunwhafabfmuwjol`.
+- Production project `fcqporzsihuqtfohqtxs` was not touched.
 
-## SPRINT-UI-002 Gate
+Shipped core scope:
 
-SPRINT-UI-002 is not approved for implementation.
+- Claimant magic links.
+- Draft responses and finalized question responses.
+- Document-to-question linking.
+- Public claimant RTL page at `/c/[claim_id]`.
+- Claimant draft/upload/finalize APIs.
+- Adjuster dispatch/regenerate-link endpoints returning manual-share URL.
+- Dispatch badges, copy-link support, and no-contact manual-share state.
+- Response recycle Path A and Path B.
+- D-029 registered.
 
-It may proceed only after:
+Notifications are still not implemented.
 
-1. User decisions on claimant response design:
-   - Decision 1: notification channel.
-   - Decision 2: claimant auth method.
-   - Decision 8: re-cycle trigger.
-2. Codex pre-flight on email/SMS infrastructure in current `main`.
-3. CEO GPT gate approval.
+## UI-002C Gate
 
-`design004.1_claimant_responses_06_05.md` exists outside the repo as a CEO
-Claude skeleton for SPRINT-UI-002 iteration 1. It is not yet repo-canonical.
+UI-002C is not approved automatically.
+
+UI-002C may proceed only after:
+
+1. vov confirms non-production Resend account readiness.
+2. vov confirms Twilio Israel number readiness.
+3. Required notification environment variables are available or declared for
+   non-production.
+4. CEO GPT approves UI-002C dispatch.
+
+UI-002C remains a notification sprint only. It must not imply production access,
+deploy, provider sends, or UI-002C implementation before explicit gate approval.
 
 ## SPRINT-PROD-BLOCK Gate
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
-next gate becomes SPRINT-PROD-BLOCK by default rather than UI-002.
+next gate becomes SPRINT-PROD-BLOCK by default rather than UI-002C.
 
 Customer discovery parallel track:
 
@@ -95,6 +109,12 @@ approved.
 ## Deployment Gate
 
 Deploy remains not approved unless explicitly approved.
+
+## OpenClaw / Automation Gate
+
+OpenClaw/native orchestration remains not approved.
+
+Cron, 24/7 operation, auto-merge, and auto-deploy remain not approved.
 
 ## Merge Rule
 

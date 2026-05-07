@@ -68,3 +68,59 @@ Project Knowledge has been migrated to `docs/project/` as of this PR. New chats 
    - CEO GPT gate approval.
 4. If the first signed LOI from an Israeli travel insurer is reported, switch
    the next gate to SPRINT-PROD-BLOCK.
+
+## Transition Update - 2026-05-07 (post PR #72 merge)
+
+### State
+
+- PR #72 (`UI-002B: claimant responses core flow`) merged to `main`.
+- Merge method: squash.
+- Merge commit / current main HEAD:
+  `ebdb75c71ff340a3e5366672521bb74b83263d59`.
+- PR head before merge: `07d02725da51f586e6e10fb685f5b5b5a2b72bbd`.
+- Branch retained: `sprint/ui-002b-claimant-responses-core`.
+- Final-head validation passed:
+  - `pnpm typecheck`
+  - `pnpm lint`
+  - `pnpm format:check`
+  - `pnpm test` with 23 files / 356 tests
+  - `pnpm build`
+  - `git diff --check`
+  - claimant security and recycle Playwright checks
+- Final-head non-production verification passed on
+  `aozbgunwhafabfmuwjol` only.
+- Verified claimant response core:
+  - magic links;
+  - draft and finalized responses;
+  - document-to-question linking;
+  - claimant public RTL page `/c/[claim_id]`;
+  - draft/upload/finalize APIs;
+  - adjuster dispatch/regenerate-link endpoints returning manual-share URL;
+  - response recycle Path A and Path B.
+- Verified fix-forward safety:
+  - non-`pending_info` finalize returns 409;
+  - no responses inserted on invalid state;
+  - draft preserved;
+  - token remains unused;
+  - no recycle event emitted on invalid state;
+  - `claimant_link_opened` and `claimant_token_invalid` audits write
+    privacy-safe metadata only.
+- Production project `fcqporzsihuqtfohqtxs` was not touched.
+- Deploy was not run.
+- Notifications were not sent.
+- Resend/Twilio were not added.
+- UI-002C was not started.
+- Remaining open PR: #47 (`Record OpenClaw Slack routing blocker`).
+
+### Pending Action Item For New Chat
+
+1. Review and merge SYNC-007 after docs-only diff verification.
+2. Do not start UI-002C automatically.
+3. Prepare UI-002C notification sprint planning/dispatch only after:
+   - vov confirms non-production Resend account readiness;
+   - vov confirms Twilio Israel number readiness;
+   - required notification environment variables are available or declared for
+     non-production;
+   - CEO GPT approves UI-002C dispatch.
+4. If the first signed LOI from an Israeli travel insurer is reported, switch
+   the next gate to SPRINT-PROD-BLOCK.
