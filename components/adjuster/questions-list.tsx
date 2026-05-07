@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
-import { Copy, Link2, RotateCcw, Send } from 'lucide-react';
+import { RotateCcw, Send } from 'lucide-react';
 
 import type { BriefQuestion } from '@/lib/adjuster/types';
 import {
@@ -14,6 +14,7 @@ import {
 import { EMPTY_STATES } from '@/lib/ui/strings-he';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ManualMagicLinkShare } from '@/components/adjuster/manual-magic-link-share';
 
 export function QuestionsList({
   claimId,
@@ -124,12 +125,6 @@ export function QuestionsList({
     });
   }
 
-  async function copyMagicLink() {
-    if (!magicLinkUrl) return;
-    await navigator.clipboard.writeText(magicLinkUrl);
-    setMessage('הקישור הועתק');
-  }
-
   return (
     <Card>
       <CardHeader>
@@ -212,28 +207,7 @@ export function QuestionsList({
           </div>
         ) : null}
         {magicLinkUrl ? (
-          <div className="rounded-md border bg-muted/40 p-3">
-            <div className="mb-2 flex items-center gap-2 text-sm font-medium">
-              <Link2 className="h-4 w-4" aria-hidden="true" />
-              קישור למבוטח
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <input
-                readOnly
-                className="ltr-isolate min-w-0 flex-1 rounded-md border bg-background px-3 py-2 text-sm"
-                value={magicLinkUrl}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                className="gap-2"
-                onClick={copyMagicLink}
-              >
-                <Copy className="h-4 w-4" aria-hidden="true" />
-                העתקה
-              </Button>
-            </div>
-          </div>
+          <ManualMagicLinkShare magicLinkUrl={magicLinkUrl} />
         ) : null}
         {message ? (
           <p className="text-sm text-muted-foreground">{message}</p>
