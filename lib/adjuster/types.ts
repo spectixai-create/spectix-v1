@@ -55,6 +55,10 @@ export type QuestionDispatchState = {
   dispatchedBy: string;
   lastDispatchedBy: string;
   editedText: string | null;
+  notificationSentAt?: string | null;
+  notificationAttempts?: number;
+  notificationLastError?: string | null;
+  notificationChannel?: 'email' | 'sms' | 'both' | null;
 };
 
 export type BriefFinding = {
@@ -119,7 +123,7 @@ export type AuditInsert = {
   actor_type: 'user';
   actor_id: string;
   action: AdjusterAuditAction;
-  target_table: 'claims' | 'question_dispatches';
+  target_table: 'claims' | 'question_dispatches' | 'claimant_magic_links';
   target_id: string;
   details: Record<string, unknown>;
 };

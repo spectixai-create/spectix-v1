@@ -15,6 +15,7 @@ import {
 } from '@/lib/validation';
 import type {
   ClaimExtractionCompletedEvent,
+  ClaimValidationRequestedEvent,
   ClaimValidationCompletedEvent,
 } from '@/lib/types';
 
@@ -60,7 +61,7 @@ type DocumentRow = {
 };
 
 type RunValidationPassArgs = {
-  event: ClaimExtractionCompletedEvent;
+  event: ClaimExtractionCompletedEvent | ClaimValidationRequestedEvent;
   step: StepLike;
   logger: LoggerLike;
   supabaseAdmin?: SupabaseLike;
@@ -346,10 +347,15 @@ export const runValidationPassFunction = inngest.createFunction(
         functionId: RUN_VALIDATION_PASS_CONFIG.id,
       }),
   },
-  { event: 'claim/extraction.completed' },
+  [
+    { event: 'claim/extraction.completed' },
+    { event: 'claim/validation.requested' },
+  ],
   async ({ event, step, logger }) =>
     runValidationPass({
-      event: event as ClaimExtractionCompletedEvent,
+      event: event as
+        | ClaimExtractionCompletedEvent
+        | ClaimValidationRequestedEvent,
       step: step as unknown as StepLike,
       logger,
     }),

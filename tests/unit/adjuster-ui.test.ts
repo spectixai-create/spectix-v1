@@ -367,6 +367,7 @@ function documentRow(): DocumentWithSignedUrl {
     ocrText: null,
     extractedData: null,
     processingStatus: 'processed',
+    responseToQuestionId: null,
     uploadedBy: null,
     createdAt: '2026-05-06T00:00:00Z',
     signedUrl: 'https://signed.example/receipt.pdf',

@@ -157,7 +157,8 @@ export type AuditActorType =
   | 'rule_engine'
   | 'llm'
   | 'gap_analyzer'
-  | 'user';
+  | 'user'
+  | 'claimant';
 
 // Section B: Core entity interfaces (mirror DB exactly)
 
@@ -238,6 +239,8 @@ export interface Document {
   extractedData: ExtractedData | null;
   /** Added in migration #0002. CHECK constraint enforces valid values. */
   processingStatus: DocumentProcessingStatus;
+  /** Added in UI-002B. Present when uploaded as a claimant response document. */
+  responseToQuestionId: string | null;
   uploadedBy: string | null;
   createdAt: string;
 }
@@ -340,6 +343,34 @@ export interface QuestionDispatch {
   dispatchedBy: string;
   lastDispatchedBy: string;
   editedText: string | null;
+  notificationSentAt: string | null;
+  notificationAttempts: number;
+  notificationLastError: string | null;
+  notificationChannel: 'email' | 'sms' | 'both' | null;
+}
+
+export interface QuestionResponseDraft {
+  questionId: string;
+  claimId: string;
+  responseValue: Record<string, unknown>;
+  savedAt: string;
+}
+
+export interface QuestionResponse {
+  questionId: string;
+  claimId: string;
+  responseValue: Record<string, unknown>;
+  respondedAt: string;
+}
+
+export interface ClaimantMagicLink {
+  tokenHash: string;
+  claimId: string;
+  expiresAt: string;
+  usedAt: string | null;
+  revokedAt: string | null;
+  createdAt: string;
+  createdBy: string;
 }
 
 export interface AuditLog {
@@ -761,6 +792,15 @@ export interface ClaimExtractionCompletedEvent {
   };
 }
 
+export interface ClaimValidationRequestedEvent {
+  name: 'claim/validation.requested';
+  data: {
+    claimId: string;
+    passNumber: number;
+    source?: 'claimant_response' | 'manual';
+  };
+}
+
 export interface ClaimValidationCompletedEvent {
   name: 'claim/validation.completed';
   data: {
@@ -777,6 +817,14 @@ export interface ClaimSynthesisCompletedEvent {
   };
 }
 
+export interface ClaimResponsesSubmittedEvent {
+  name: 'claim/responses.submitted';
+  data: {
+    claimId: string;
+    newDocumentIds?: string[];
+  };
+}
+
 export type SpectixInngestEvent =
   | DocumentUploadedEvent
   | DocumentProcessedEvent
@@ -788,5 +836,7 @@ export type SpectixInngestEvent =
   | PassStartEvent
   | PassCompletedEvent
   | ClaimExtractionCompletedEvent
+  | ClaimValidationRequestedEvent
   | ClaimValidationCompletedEvent
-  | ClaimSynthesisCompletedEvent;
+  | ClaimSynthesisCompletedEvent
+  | ClaimResponsesSubmittedEvent;

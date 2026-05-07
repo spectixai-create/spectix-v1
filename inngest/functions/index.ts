@@ -8,12 +8,14 @@
  */
 
 import { processDocument } from './process-document';
+import { claimRecycleFunction } from './claim-recycle';
 import { runValidationPassFunction } from './run-validation-pass';
 import { watchdogStuckDocuments } from './watchdog-stuck-documents';
 import { runSynthesisPassFunction } from '../synthesis/run-synthesis-pass';
 
 export const functions = [
   processDocument,
+  claimRecycleFunction,
   watchdogStuckDocuments,
   runValidationPassFunction,
   runSynthesisPassFunction,

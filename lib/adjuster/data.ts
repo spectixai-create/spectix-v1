@@ -86,6 +86,7 @@ type DbDocumentRow = {
   ocr_text: string | null;
   extracted_data: Document['extractedData'];
   processing_status: Document['processingStatus'];
+  response_to_question_id?: string | null;
   uploaded_by: string | null;
   created_at: string;
 };
@@ -117,6 +118,10 @@ type DbQuestionDispatchRow = {
   dispatched_by: string;
   last_dispatched_by: string;
   edited_text: string | null;
+  notification_sent_at?: string | null;
+  notification_attempts?: number | string | null;
+  notification_last_error?: string | null;
+  notification_channel?: 'email' | 'sms' | 'both' | null;
 };
 
 type DbAuditLogRow = {
@@ -693,6 +698,7 @@ function mapDocument(row: DbDocumentRow): Document {
     ocrText: row.ocr_text,
     extractedData: row.extracted_data,
     processingStatus: row.processing_status,
+    responseToQuestionId: row.response_to_question_id ?? null,
     uploadedBy: row.uploaded_by,
     createdAt: row.created_at,
   };
@@ -730,6 +736,10 @@ function mapQuestionDispatch(row: DbQuestionDispatchRow): QuestionDispatch {
     dispatchedBy: row.dispatched_by,
     lastDispatchedBy: row.last_dispatched_by,
     editedText: row.edited_text,
+    notificationSentAt: row.notification_sent_at ?? null,
+    notificationAttempts: Number(row.notification_attempts ?? 0),
+    notificationLastError: row.notification_last_error ?? null,
+    notificationChannel: row.notification_channel ?? null,
   };
 }
 
