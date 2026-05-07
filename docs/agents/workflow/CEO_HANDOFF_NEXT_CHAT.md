@@ -1,6 +1,6 @@
 # CEO Handoff - Next Chat
 
-Updated after PR #79 / Real-case tuning round 1 planning.
+Updated after PR #81 / Real-case tuning READY.
 
 ## Bootstrap Reading Order
 
@@ -10,23 +10,24 @@ For new CEO chats, read in this order:
 2. `docs/agents/workflow/ACTIVE_GATES.md`
 3. `docs/agents/workflow/CHAT_TRANSITION_LOG.md`
 4. `docs/management/plans/plan.2_overview_06_05.md`
-5. `docs/management/plans/real_case_tuning_round_1_07_05.md`
-6. `docs/management/sprints/sprint_ui002b.1_claimant_responses_core_06_05.md`
-7. `docs/management/sprints/sprint_ui002c.1_claimant_email_notifications_06_05.md`
-8. `docs/demo/ui002b_insurer_demo_package.md`
-9. `docs/demo/ui002b_customer_discovery_questions.md`
-10. `docs/demo/ui002b_demo_checklist.md`
+5. `docs/management/reports/real_case_tuning_round_1_report_07_05.md`
+6. `docs/demo/insurer_discovery_execution_pack_07_05.md`
+7. `docs/management/plans/real_case_tuning_round_1_07_05.md`
+8. `docs/management/sprints/sprint_ui002b.1_claimant_responses_core_06_05.md`
+9. `docs/management/sprints/sprint_ui002c.1_claimant_email_notifications_06_05.md`
+10. `docs/demo/ui002b_insurer_demo_package.md`
+11. `docs/demo/ui002b_customer_discovery_questions.md`
+12. `docs/demo/ui002b_demo_checklist.md`
 
 ## Current Date And Repo State
 
 - Date: 2026-05-07
 - Repo: `spectixai-create/spectix-v1`
 - Local path: `C:\Users\smart\spectix`
-- main HEAD: `5f428fe8a9b76b9e6c12e7885263da03bd032a03`
-- Latest merged PR: #79,
-  `SYNC-011: Record UI-002C completion and post-PR78 state`
-- Previous product PR: #78,
-  `UI-002C: claimant email notifications (Resend, email-only)`
+- main HEAD: `640f44736eb50bed02f57dec38a99fdbeeb0d4db`
+- Latest merged PR: #81, `VALIDATION: Real-case tuning round 1 report`
+- Previous planning PR: #80,
+  `PLAN: Real-case tuning round 1 pilot-readiness validation`
 - Remaining open PR: #47, `Record OpenClaw Slack routing blocker`
 
 ## Completed Sprints / Gates
@@ -41,15 +42,18 @@ For new CEO chats, read in this order:
 - DEMO-POLISH-001 - Manual link sharing polish and demo script.
 - SYNC-010 + DEMO-PACK-001 - UI-002C email-only spec and demo package.
 - SPRINT-UI-002C - Claimant email notifications via Resend, email-only.
+- PLAN - Real-case tuning round 1 pilot-readiness validation.
+- VALIDATION - Real-case tuning round 1 report, verdict READY.
 
 ## Current Active Task
 
-Docs-only planning PR:
+Docs-only execution package PR:
 
-- create the Real-case tuning round 1 / pilot-readiness validation plan;
-- update gates and CEO handoff to reference the planning document;
-- record that this planning PR does not start tuning, smoke, Supabase
-  mutation, deploy, or production work.
+- create the insurer discovery/demo execution package;
+- update gates and CEO handoff to show insurer discovery/demo execution as the
+  next manual/operator-led gate;
+- record that this PR does not send outreach, contact insurers, run product
+  operations, mutate Supabase, run smoke, deploy, or touch production.
 
 ## PR #78 Final State
 
@@ -98,13 +102,13 @@ Post-merge validation:
 
 ## Next Gate
 
-Exact next recommended action after this planning PR merge:
+Exact next recommended action after this execution-package PR merge:
 
-**CEO GPT review and decide whether to approve a separate Real-case tuning
-round 1 execution gate.**
+**Operator may manually use the insurer discovery execution package outside
+repo automation.**
 
-Do not start tuning, create fixtures, mutate Supabase, run smoke, send email,
-or deploy from this handoff.
+Do not automate outreach, contact insurers through Codex, mutate Supabase, run
+smoke, deploy, or use production from this handoff.
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
 next gate becomes SPRINT-PROD-BLOCK by default.
@@ -113,7 +117,8 @@ next gate becomes SPRINT-PROD-BLOCK by default.
 
 - Target: 5 conversations with Israeli travel insurers.
 - Trigger to PROD-BLOCK: first signed LOI.
-- Demo package docs live under `docs/demo/`.
+- Execution package:
+  `docs/demo/insurer_discovery_execution_pack_07_05.md`.
 
 ## Hard Prohibitions
 
@@ -138,5 +143,5 @@ Read:
 2. `docs/agents/workflow/ACTIVE_GATES.md`
 3. `docs/agents/workflow/CHAT_TRANSITION_LOG.md`
 
-Then review the Real-case tuning round 1 planning PR. Do not start real-case
-tuning or production-readiness work automatically.
+Then review the insurer discovery execution-package PR. Do not automate
+outreach, contact insurers, or start production-readiness work automatically.

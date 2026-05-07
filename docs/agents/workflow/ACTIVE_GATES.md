@@ -1,18 +1,21 @@
 # Active Gates
 
-Updated after PR #79 / Real-case tuning round 1 planning.
+Updated after PR #81 / Real-case tuning READY.
 
 ## Current Main
 
 - Repo: `spectixai-create/spectix-v1`
 - Current main HEAD:
-  `5f428fe8a9b76b9e6c12e7885263da03bd032a03`
-- Latest merge: PR #79,
-  `SYNC-011: Record UI-002C completion and post-PR78 state`
+  `640f44736eb50bed02f57dec38a99fdbeeb0d4db`
+- Latest merge: PR #81, `VALIDATION: Real-case tuning round 1 report`
 - Remaining open PR: #47, `Record OpenClaw Slack routing blocker`
 
 ## Recently Merged
 
+- #81 - Real-case tuning round 1 validation report, merge commit
+  `640f44736eb50bed02f57dec38a99fdbeeb0d4db`
+- #80 - Real-case tuning round 1 pilot-readiness planning, merge commit
+  `4f9993ab232495bec567b37959aafd2058669018`
 - #79 - SYNC-011 post-PR78 UI-002C state synchronization, merge commit
   `5f428fe8a9b76b9e6c12e7885263da03bd032a03`
 - #78 - SPRINT-UI-002C claimant email notifications via Resend, email-only,
@@ -53,18 +56,28 @@ Post-PR78 staging validation passed:
 - Production Supabase touched: no.
 - Secrets, raw tokens, and full magic links printed: no.
 
+Real-case tuning round 1:
+
+- PR #81 merged.
+- Verdict: READY.
+- Report:
+  `docs/management/reports/real_case_tuning_round_1_report_07_05.md`.
+- Eight synthetic non-production cases were validated.
+- Production touched: no.
+- OpenClaw used: no.
+
 ## Current Approved / Not Approved
 
 Approved:
 
-- Docs-only planning PR for Real-case tuning round 1 / pilot-readiness
-  validation.
-- Customer discovery and insurer demo preparation using non-production/demo
-  data.
+- Docs-only execution package for insurer discovery/demo operator workflow.
+- Manual customer discovery and insurer demo preparation using synthetic,
+  non-production/demo data.
 
 Not approved:
 
-- Real-case tuning execution by this planning PR.
+- Automated outreach or customer contact by this docs PR.
+- Product operations by this docs PR.
 - Production Supabase.
 - Production deploy.
 - Production smoke.
@@ -84,14 +97,14 @@ Not approved:
 
 The next operational gate is:
 
-**Real-case tuning round 1 / pilot-readiness validation planning.**
+**Insurer discovery / demo execution.**
 
-Canonical planning document:
-`docs/management/plans/real_case_tuning_round_1_07_05.md`
+Execution package:
+`docs/demo/insurer_discovery_execution_pack_07_05.md`
 
-This planning PR only records the validation plan. It does not start real-case
-tuning, create fixtures, mutate data, run smoke, send email, deploy, or approve
-production work.
+This is manual/operator-led. This docs PR does not contact insurers, send
+outreach, run smoke, mutate Supabase, deploy, approve production work, or
+execute product operations.
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
 next gate becomes SPRINT-PROD-BLOCK by default.

@@ -2,7 +2,7 @@
 
 **Date:** 06/05/2026
 
-**Updated:** 07/05/2026 after PR #79 and Real-case tuning round 1 planning
+**Updated:** 07/05/2026 after PR #81 and insurer discovery execution package
 
 **Version:** plan.2.1
 
@@ -37,9 +37,10 @@
 | 21        | SYNC-010 + DEMO-PACK-001 - demo/discovery package           | PR #77            |
 | 22        | SPRINT-UI-002C - email-only claimant notifications          | PR #78            |
 | 23        | SYNC-011 - post-PR78 UI-002C state synchronization          | PR #79            |
+| 24        | Real-case tuning round 1 / pilot-readiness validation       | PR #81            |
 
 Current main HEAD:
-`5f428fe8a9b76b9e6c12e7885263da03bd032a03`
+`640f44736eb50bed02f57dec38a99fdbeeb0d4db`
 
 ---
 
@@ -74,24 +75,22 @@ Post-PR78 staging validation passed:
 
 ## Next Phase
 
-### Real-case tuning round 1 / pilot-readiness validation planning
+### Insurer discovery / demo execution
 
-**Status:** current planning gate after PR #79.
+**Status:** next operational gate after PR #81 READY validation.
 
-Detailed planning document:
-`docs/management/plans/real_case_tuning_round_1_07_05.md`
+Execution package:
+`docs/demo/insurer_discovery_execution_pack_07_05.md`
 
-This phase should be planned before execution. It is expected to use
-non-production data and should clarify:
+Real-case tuning round 1 returned READY and is recorded in
+`docs/management/reports/real_case_tuning_round_1_report_07_05.md`.
 
-- which real or realistic claim examples are safe to use;
-- what demo/tuning success criteria are required before insurer-facing use;
-- what evidence should be collected without exposing secrets, raw tokens, full
-  magic links, or claimant-sensitive content;
-- what minimal fixes, if any, are needed before pilot-readiness review.
+The next phase is manual/operator-led insurer discovery and demo execution. It
+targets 5 Israeli travel-insurance conversations and should use synthetic,
+privacy-safe demo material only.
 
-This planning PR does not execute this phase. It only records the validation
-plan and execution gates for future CEO review.
+This docs PR does not contact insurers, send outreach, mutate Supabase, run
+smoke, deploy, or approve production work.
 
 ---
 
@@ -179,5 +178,5 @@ plan_overview - iteration 2.1 - 07/05/2026
 
 **Predecessor:** plan.2 (iteration 2), outdated after UI-002 completion.
 
-**Next iteration trigger:** real-case tuning round 1 planning completes, or
-SPRINT-PROD-BLOCK is approved after LOI.
+**Next iteration trigger:** insurer discovery produces a repeated product
+objection, or SPRINT-PROD-BLOCK is approved after LOI / written pilot intent.

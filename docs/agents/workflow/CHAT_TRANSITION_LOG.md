@@ -265,6 +265,56 @@ Project Knowledge has been migrated to `docs/project/` as of this PR. New chats 
    cron, 24/7 operation, auto-merge, and auto-deploy blocked unless explicitly
    approved.
 
+## Transition Update - 2026-05-07 (insurer discovery execution package)
+
+### State
+
+- PR #81 (`VALIDATION: Real-case tuning round 1 report`) merged to `main`.
+- Merge method: merge commit.
+- Merge commit / current main HEAD:
+  `640f44736eb50bed02f57dec38a99fdbeeb0d4db`.
+- Real-case tuning round 1 verdict: READY.
+- UI-002 cluster remains complete:
+  - UI-002A pre-flight: done.
+  - UI-002B claimant response core: done.
+  - UI-002C email-only claimant notifications via Resend: done.
+- Remaining open PR: #47 (`Record OpenClaw Slack routing blocker`).
+
+### Execution Package Scope
+
+- New docs-only execution package:
+  `docs/demo/insurer_discovery_execution_pack_07_05.md`.
+- Purpose: prepare manual/operator-led insurer discovery and demo execution.
+- Target: 5 Israeli travel-insurance conversations.
+- Trigger to SPRINT-PROD-BLOCK: first signed LOI or equivalent written pilot
+  intent.
+- No customer contact, outreach, Supabase mutation, smoke, deploy, production
+  action, or product operation is performed by this PR.
+
+### Safety
+
+- Production touched: no.
+- Supabase touched: no.
+- Smoke run: no.
+- Deploy run: no.
+- Outreach sent: no.
+- Insurers contacted: no.
+- Secrets printed: no.
+- Raw tokens printed: no.
+- Full magic links printed: no.
+- SMS/WhatsApp/Twilio used: no.
+- OpenClaw used: no.
+- PR #47 touched/merged: no.
+
+### Pending Action Item For New Chat
+
+1. Review the insurer discovery execution-package PR.
+2. Do not automate outreach or contact insurers from Codex.
+3. After merge, the operator may manually use the package outside repo
+   automation.
+4. If first signed LOI or written pilot intent arrives, open
+   SPRINT-PROD-BLOCK planning by default.
+
 ## Transition Update - 2026-05-07 (real-case tuning round 1 planning)
 
 ### State
