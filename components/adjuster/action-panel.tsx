@@ -21,6 +21,7 @@ import type { ClaimDetailSnapshot } from '@/lib/adjuster/types';
 import { ADJUSTER_ACTIONS } from '@/lib/ui/strings-he';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ManualMagicLinkShare } from '@/components/adjuster/manual-magic-link-share';
 import { Textarea } from '@/components/ui/textarea';
 
 export function ActionPanel({
@@ -71,12 +72,6 @@ export function ActionPanel({
           : 'הפעולה בוצעה',
       );
     });
-  }
-
-  async function copyMagicLink() {
-    if (!magicLinkUrl) return;
-    await navigator.clipboard.writeText(magicLinkUrl);
-    setMessage('הקישור הועתק');
   }
 
   const actionsDisabled = isPending || claim.status === 'rejected_no_coverage';
@@ -169,16 +164,10 @@ export function ActionPanel({
           </p>
         ) : null}
         {magicLinkUrl ? (
-          <div className="flex flex-col gap-2 rounded-md border bg-muted/40 p-3 sm:flex-row">
-            <input
-              readOnly
-              className="ltr-isolate min-w-0 flex-1 rounded-md border bg-background px-3 py-2 text-sm"
-              value={magicLinkUrl}
-            />
-            <Button type="button" variant="outline" onClick={copyMagicLink}>
-              העתקת קישור
-            </Button>
-          </div>
+          <ManualMagicLinkShare
+            magicLinkUrl={magicLinkUrl}
+            copyButtonLabel="העתקת קישור"
+          />
         ) : null}
       </CardContent>
     </Card>
