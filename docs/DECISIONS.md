@@ -510,3 +510,33 @@ preserves timestamps + counts only).
 
 **Trigger to revisit:** any future cycle requiring `pass_number > 3` (not
 anticipated for MVP). On revisit, `pass_kind` column becomes mandatory.
+
+---
+
+## D-030 — UI-002C notification scope: email-only via Resend
+
+Date: 06/05/2026
+Status: Active
+Decided by: CEO
+Source: vov decision after UI-002B demo-readiness.
+
+Decision:
+UI-002C notification scope is email-only via Resend. Twilio, SMS fallback,
+WhatsApp automation, and multi-provider fallback are out of scope for MVP.
+
+Rationale:
+Email-only minimizes infrastructure dependencies for the first pilot.
+SMS/Twilio adds account provisioning, Israel number rental, signature
+verification, fallback logic, and additional QA without proportional value
+before a real pilot. Manual fallback remains available: adjuster copies the
+magic link from the UI-002B dispatch response and shares it manually by email,
+WhatsApp, SMS, or phone outside the system.
+
+Supersedes:
+
+- design004.2 §7.1-§7.3 email + SMS fallback design.
+- sprint_ui002.1 Twilio/SMS fallback scope.
+
+Trigger to revisit:
+After pilot, revisit multi-channel automation if claimant email response rate is
+below 50 percent and adjusters request automation for WhatsApp/SMS.

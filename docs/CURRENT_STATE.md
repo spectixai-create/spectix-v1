@@ -1,21 +1,25 @@
 # Current State
 
-Updated by Codex after PR #74 / SYNC-008 and UI-002C deferral decision.
+Updated by Codex for SYNC-010 after PR #76.
 
 ## Version
 
-Spectix post PR #74 / UI-002C deferred • 2026-05-07
+Spectix post PR #76 / UI-002B manual demo polish complete - 2026-05-07
 
 ## Current Phase
 
-The non-production MVP pipeline now covers intake, document upload,
+The non-production MVP pipeline covers intake, document upload,
 classification, normalized extraction, validation, deterministic synthesis, the
 adjuster-facing brief view, and the core claimant response flow without
-external notifications.
+automated notifications.
 
 Current `main` HEAD is
-`4c03f9f7b63fdffab140968151a385231a6fda42`, the squash merge commit for PR
-#74 (`SYNC-008: Reconcile handoff and current state after PR73`).
+`4bdaf6dcaac0244ccfd1f0d7258ab7cfc8b5ea8a`, the merge commit for PR #76
+(`DEMO: Polish UI-002B manual link sharing and demo script`).
+
+The accepted MVP flow is manual magic-link sharing: the adjuster receives a
+`magic_link_url` from dispatch/regenerate-link and shares it manually with the
+claimant.
 
 ## Completed Spikes And Sprints
 
@@ -50,28 +54,30 @@ Current `main` HEAD is
 - SPRINT-UI-002B - Claimant responses core flow in PR #72.
 - SYNC-007 - Post-PR72 UI-002B state sync in PR #73.
 - SYNC-008 - Post-PR73 handoff/current-state reconcile in PR #74.
+- SYNC-009 - UI-002C deferral recorded in PR #75.
+- DEMO-POLISH-001 - UI-002B manual-link copy fallback and demo script in PR
+  #76.
 
 ## Current Sprint Status
 
-**SYNC-008 - Post-PR73 Handoff/Current-State Reconcile** - DONE
+**DEMO-POLISH-001 - UI-002B Manual Demo Polish** - DONE
 
-- Merged: PR #74 -> `main`
-- Merge method: squash
+- Merged: PR #76 -> `main`
+- Merge method: merge commit
 - Merge commit / current main HEAD:
-  `4c03f9f7b63fdffab140968151a385231a6fda42`
-- Scope: docs-only post-PR73 handoff/current-state reconcile
+  `4bdaf6dcaac0244ccfd1f0d7258ab7cfc8b5ea8a`
+- Scope: manual magic-link copy fallback and demo script.
 - Production Supabase touched: no
 - Deploy run by Codex: no
 - Smoke run by Codex: no
 - UI-002C started: no
 
-**SYNC-007 - Post-PR72 UI-002B State Sync** - DONE
+**SYNC-009 - UI-002C Deferral** - DONE
 
-- Merged: PR #73 -> `main`
-- Merge method: squash
-- Merge commit / current main HEAD:
-  `1252ade89ddc7124d0745d2bc97f3e599ae16855`
-- Scope: docs-only post-PR72 state sync
+- Merged: PR #75 -> `main`
+- Merge method: merge commit
+- Merge commit: `7f2fe87e6e843bf17c276de20c7a941110771c87`
+- Scope: docs-only UI-002C deferral / manual-flow state.
 - Production Supabase touched: no
 - Deploy run by Codex: no
 - Smoke run by Codex: no
@@ -80,15 +86,9 @@ Current `main` HEAD is
 **SPRINT-UI-002B - Claimant Responses Core Flow** - DONE
 
 - Merged: PR #72 -> `main`
-- Merge method: squash
-- Merge commit / current main HEAD:
-  `ebdb75c71ff340a3e5366672521bb74b83263d59`
-- PR head before merge: `07d02725da51f586e6e10fb685f5b5b5a2b72bbd`
-- Base before merge: `62f6b05453ab9a8cb1b2dc533f21f09355eaa6c6`
 - Final-head validation: PASS
-- Tests: PASS, 23 files / 356 tests
 - Non-production final-head verification: PASS on `aozbgunwhafabfmuwjol`
-  only
+  only.
 - Production Supabase touched: no
 - Deploy run by Codex: no
 - Notifications sent: no
@@ -103,79 +103,65 @@ Scope shipped:
 - Claimant public RTL page at `/c/[claim_id]`.
 - Claimant draft, upload, and finalize APIs.
 - Adjuster dispatch and regenerate-link endpoints returning a manual-share URL.
-- Dispatch badges, copy-link support, and no-contact manual-share state.
+- Dispatch badges, copy-link support, copy fallback polish, and no-contact
+  manual-share state.
 - Claimant response recycle Path A: no documents -> validation requested.
 - Claimant response recycle Path B: documents present -> document fan-out,
   extraction, validation, synthesis.
 - D-029 registered in [DECISIONS.md](DECISIONS.md).
 
-Final-head fix-forward recorded:
+## UI-002C Notification Status
 
-- `finalize_question_responses` now requires `claims.status = pending_info`
-  before inserting responses, deleting drafts, marking tokens used, auditing
-  submission, or allowing recycle event emission.
-- Claimant link opens audit `claimant_link_opened`.
-- Rejected claimant token RPC attempts audit `claimant_token_invalid`.
-- Audit details are privacy-safe and do not include tokens, magic links, answer
-  text, file contents, or response payloads.
+**SPRINT-UI-002C - Claimant Email Notifications** is deferred/skipped and is
+not approved for implementation.
 
-**SPRINT-UI-002C - Notifications** - NOT APPROVED FOR IMPLEMENTATION
+Future UI-002C scope is email-only via Resend per D-030. Twilio, SMS fallback,
+WhatsApp automation, and multi-provider fallback are out of MVP scope.
 
-UI-002C email automation is deferred/skipped for now. Notifications are still
-not implemented, and UI-002C implementation is not approved.
+UI-002C remains gated. It may be reconsidered only after:
 
-Codex does not currently have the browser/account access needed to complete
-Resend/DNS/webhook setup safely. Public DNS for `spectix.co.il` currently
-returns NXDOMAIN, and Vercel env read access exists but notification env vars
-are not configured.
+1. Resend account exists.
+2. `spectix.co.il` domain is registered.
+3. DKIM/SPF/DMARC are configured and Resend domain verification passes.
+4. Resend webhook secret is generated/configured.
+5. Vercel non-production env readiness is verified for `RESEND_API_KEY`,
+   `RESEND_WEBHOOK_SECRET`, and `APP_BASE_URL`.
+6. CEO GPT approves UI-002C dispatch.
 
-The accepted current MVP/pilot workflow remains UI-002B manual magic-link
-sharing: the adjuster dispatch/regenerate-link endpoints return a
-`magic_link_url`, and the adjuster shares it manually with the claimant.
+UI-002C must not start automatically.
 
 ## Active Gates
 
 See [ACTIVE_GATES.md](agents/workflow/ACTIVE_GATES.md).
 
-Immediate next gate is manual UI-002B end-to-end demo readiness / operational QA
-and the customer discovery/LOI track, not UI-002C implementation.
-
-UI-002C may be reconsidered only after:
-
-1. vov confirms non-production Resend account readiness.
-2. `spectix.co.il` DNS is configured and Resend domain verification can pass.
-3. Resend webhook and notification environment readiness are confirmed for
-   non-production.
-4. CEO GPT approves UI-002C dispatch.
+Immediate next gate is the manual UI-002B insurer demo package / customer
+discovery / LOI track, not UI-002C implementation.
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
-next gate becomes SPRINT-PROD-BLOCK rather than UI-002C by default.
+next gate becomes SPRINT-PROD-BLOCK by default rather than UI-002C.
 
 ## Customer Discovery Track
 
 - Target: 5 conversations with Israeli travel insurers.
+- Demo package:
+  [ui002b_insurer_demo_package.md](demo/ui002b_insurer_demo_package.md).
+- Discovery questions:
+  [ui002b_customer_discovery_questions.md](demo/ui002b_customer_discovery_questions.md).
+- Outreach email: [ui002b_outreach_email_he.md](demo/ui002b_outreach_email_he.md).
+- Demo checklist: [ui002b_demo_checklist.md](demo/ui002b_demo_checklist.md).
 - Trigger to SPRINT-PROD-BLOCK: first signed LOI.
 - Production Supabase remains forbidden unless SPRINT-PROD-BLOCK is explicitly
   approved.
 
 ## Recent Merges
 
-| PR  | Title                                      | Merge SHA  | Date       | Notes                             |
-| --- | ------------------------------------------ | ---------- | ---------- | --------------------------------- |
-| #74 | SYNC-008: Reconcile handoff/current state  | `4c03f9f…` | 2026-05-07 | Docs/state sync                   |
-| #73 | SYNC-007: Record post-PR72 UI-002B state   | `1252ade…` | 2026-05-07 | Docs/state sync                   |
-| #72 | UI-002B: claimant responses core flow      | `ebdb75c…` | 2026-05-07 | Final-head verified + merged      |
-| #71 | DOCS: Add UI-002B core implementation spec | `62f6b05…` | 2026-05-07 | Docs/spec ingestion               |
-| #70 | UI-002A: claimant responses pre-flight     | `760e97d…` | 2026-05-07 | Docs + checks only                |
-| #69 | SYNC-006: Record post-PR68 UI state        | `004ff93…` | 2026-05-06 | Docs/state sync                   |
-| #68 | SPRINT-UI-001: Adjuster brief view MVP     | `51d6dee…` | 2026-05-06 | Smoked + merged after fix-forward |
-| #67 | SYNC-005: UI design artifacts              | `21b63dc…` | 2026-05-06 | Docs/design sync                  |
-| #66 | SPRINT-003A: Synthesis MVP                 | `d830e6e…` | 2026-05-06 | Smoked + merged                   |
-| #65 | SPRINT-002D: errored + soft cost cap       | `bf02185…` | 2026-05-06 | Smoked + merged                   |
-| #63 | SYNC-001: post PR #60 docs sync            | `e6048db…` | 2026-05-06 | Docs sync                         |
-| #62 | AUDIT-001: PR #60 vs design001.6 findings  | `9bae49f…` | 2026-05-06 | Audit report                      |
-| #61 | SYNC-002: docs management folder           | `683c8b8…` | 2026-05-06 | Planning artifacts                |
-| #60 | SPRINT-002C: validation layers 11.1-11.3   | `828e16e…` | 2026-05-06 | Smoked + merged                   |
+| PR  | Title                                               | Merge SHA  | Date       | Notes             |
+| --- | --------------------------------------------------- | ---------- | ---------- | ----------------- |
+| #76 | DEMO: Polish UI-002B manual link sharing and script | `4bdaf6d…` | 2026-05-07 | Demo polish       |
+| #75 | SYNC-009: Record UI-002C deferral                   | `7f2fe87…` | 2026-05-07 | Docs/state sync   |
+| #74 | SYNC-008: Reconcile handoff/current state           | `4c03f9f…` | 2026-05-07 | Docs/state sync   |
+| #73 | SYNC-007: Record post-PR72 UI-002B state            | `1252ade…` | 2026-05-07 | Docs/state sync   |
+| #72 | UI-002B: claimant responses core flow               | `ebdb75c…` | 2026-05-07 | Product core flow |
 
 ## Open PRs
 

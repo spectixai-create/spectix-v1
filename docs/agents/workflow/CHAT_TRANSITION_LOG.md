@@ -183,3 +183,34 @@ Project Knowledge has been migrated to `docs/project/` as of this PR. New chats 
    operational QA, or customer discovery/LOI track work.
 4. If the first signed LOI from an Israeli travel insurer is reported, switch
    the next gate to SPRINT-PROD-BLOCK by default.
+
+## Transition Update - 2026-05-07 (post PR #76 demo polish)
+
+### State
+
+- PR #76 (`DEMO: Polish UI-002B manual link sharing and demo script`) merged to
+  `main`.
+- Merge method: merge commit.
+- Merge commit / current main HEAD:
+  `4bdaf6dcaac0244ccfd1f0d7258ab7cfc8b5ea8a`.
+- PR #75 (`SYNC-009: Record UI-002C deferral`) is also merged at
+  `7f2fe87e6e843bf17c276de20c7a941110771c87`.
+- UI-002B claimant response core remains the current working product flow.
+- Manual magic-link sharing remains the accepted MVP/pilot workflow.
+- PR #76 added copy fallback polish so the adjuster link remains visible and
+  auto-selectable when browser clipboard permission fails.
+- UI-002C is deferred/skipped and must not start automatically.
+- Future UI-002C scope is email-only via Resend per D-030. No Twilio, no SMS
+  fallback, and no WhatsApp automation are approved for MVP.
+- Production Supabase, non-production Supabase mutation, deploy, smoke,
+  Resend/DNS/Vercel env changes, OpenClaw/native orchestration, cron, 24/7
+  operation, auto-merge, and auto-deploy remain not approved.
+- Remaining open PR: #47 (`Record OpenClaw Slack routing blocker`).
+
+### Pending Action Item For New Chat
+
+1. Review SYNC-010 + DEMO-PACK-001 docs-only PR.
+2. Do not start UI-002C automatically.
+3. Move next to insurer demo execution / customer discovery / LOI track.
+4. If the first signed LOI from an Israeli travel insurer is reported, switch
+   the next gate to SPRINT-PROD-BLOCK by default.
