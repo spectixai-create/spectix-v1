@@ -1,53 +1,48 @@
 # Active Gates
 
-Updated after PR #74 / SYNC-008 and UI-002C deferral decision.
+Updated after PR #76 / DEMO-POLISH-001.
 
 ## Current Main
 
 - Repo: `spectixai-create/spectix-v1`
 - Current main HEAD:
-  `4c03f9f7b63fdffab140968151a385231a6fda42`
-- Latest merge: PR #74,
-  `SYNC-008: Reconcile handoff and current state after PR73`
-- PR #74 branch retained: yes
-
-## Open PRs
-
-- #47 - Record OpenClaw Slack routing blocker
+  `4bdaf6dcaac0244ccfd1f0d7258ab7cfc8b5ea8a`
+- Latest merge: PR #76,
+  `DEMO: Polish UI-002B manual link sharing and demo script`
+- Remaining open PR: #47, `Record OpenClaw Slack routing blocker`
 
 ## Recently Merged
 
+- #76 - DEMO-POLISH-001 manual magic-link copy fallback and demo script, merge
+  commit `4bdaf6dcaac0244ccfd1f0d7258ab7cfc8b5ea8a`
+- #75 - SYNC-009 UI-002C deferral, merge commit
+  `7f2fe87e6e843bf17c276de20c7a941110771c87`
 - #74 - SYNC-008 post PR #73 handoff/current-state reconcile, merge commit
   `4c03f9f7b63fdffab140968151a385231a6fda42`
 - #73 - SYNC-007 post PR #72 UI-002B state sync, merge commit
   `1252ade89ddc7124d0745d2bc97f3e599ae16855`
 - #72 - UI-002B claimant responses core flow, merge commit
   `ebdb75c71ff340a3e5366672521bb74b83263d59`
-- #71 - UI-002B source spec ingestion, merge commit
-  `62f6b05453ab9a8cb1b2dc533f21f09355eaa6c6`
-- #70 - UI-002A claimant responses pre-flight, merge commit
-  `760e97d524822812843808aa175bd8cc57d768cc`
-- #69 - SYNC-006 post PR #68 state sync, merge commit
-  `004ff933e34d1d00e893f7952ccd0e2d664d9b40`
-- #68 - SPRINT-UI-001 Adjuster brief view MVP, merge commit
-  `51d6dee22ffdd614f224582fe86b707ca6c8b345`
 
 ## Current Approved / Not Approved
 
 Approved:
 
-- No implementation, smoke, deploy, production, Supabase, notification provider,
-  or OpenClaw work is currently approved.
-- The active gate is manual UI-002B end-to-end demo readiness / operational QA
-  and customer discovery/LOI tracking. Any runtime demo, smoke, Supabase access,
-  deploy, or production activity still requires explicit gate approval.
+- Docs-only planning and customer discovery package work.
+- Manual UI-002B insurer demo preparation from existing non-production/demo
+  materials.
 
 Not approved:
 
 - UI-002C implementation.
 - Production Supabase.
+- Non-production Supabase mutation unless explicitly gated.
 - Smoke unless explicitly gated.
 - Deploy.
+- Resend integration or provider sends.
+- DNS changes.
+- Vercel environment changes.
+- Twilio, SMS automation, or WhatsApp automation.
 - OpenClaw/native orchestration.
 - Cron.
 - 24/7 operation.
@@ -57,11 +52,10 @@ Not approved:
 ## SPRINT-UI-002B State
 
 - Status: complete and merged.
-- PR #72 is no longer active.
-- Final-head validation: PASS.
-- Unit test suite: PASS, 23 files / 356 tests.
-- Final-head non-production verification: PASS on `aozbgunwhafabfmuwjol`.
-- Production project `fcqporzsihuqtfohqtxs` was not touched.
+- Manual demo polish: complete and merged via PR #76.
+- Current working MVP flow: adjuster receives `magic_link_url` and shares it
+  manually with the claimant.
+- Notifications are still not implemented.
 
 Shipped core scope:
 
@@ -71,52 +65,39 @@ Shipped core scope:
 - Public claimant RTL page at `/c/[claim_id]`.
 - Claimant draft/upload/finalize APIs.
 - Adjuster dispatch/regenerate-link endpoints returning manual-share URL.
-- Dispatch badges, copy-link support, and no-contact manual-share state.
+- Dispatch badges, copy-link support, copy fallback polish, and no-contact
+  manual-share state.
 - Response recycle Path A and Path B.
 - D-029 registered.
 
-Notifications are still not implemented.
-
 ## UI-002C Gate
 
-UI-002C is deferred/skipped for now and is not approved automatically.
+UI-002C is deferred/skipped and is not approved automatically.
 
-UI-002C readiness is deferred until Resend/DNS/webhook/env setup is manually
-configured and verifiable:
+Future UI-002C scope is email-only via Resend per D-030. No Twilio, no SMS
+fallback, no WhatsApp automation, and no multi-provider fallback are approved
+for MVP.
 
-1. vov confirms non-production Resend account readiness.
-2. `spectix.co.il` DNS is configured for Resend domain verification.
-3. Resend webhook setup is configured.
-4. Required notification environment variables are available or declared for
-   non-production.
-5. Codex/CEO GPT can verify readiness without printing secrets.
+UI-002C readiness remains deferred until:
+
+1. Resend account exists.
+2. `spectix.co.il` domain is registered.
+3. DKIM/SPF/DMARC are configured and Resend domain verification passes.
+4. Resend webhook secret is generated/configured.
+5. Vercel non-production env readiness is verified for `RESEND_API_KEY`,
+   `RESEND_WEBHOOK_SECRET`, and `APP_BASE_URL`.
 6. CEO GPT approves UI-002C dispatch.
 
-Current readiness blockers recorded by SYNC-009:
+UI-002C must not start automatically.
 
-- Codex cannot safely operate the already-open browser/account sessions for
-  Resend or DNS setup.
-- Public DNS for `spectix.co.il` currently returns NXDOMAIN.
-- Vercel env read access exists, but notification env vars are not configured.
+## Manual UI-002B Demo / Customer Discovery Gate
 
-Resend/DNS/Vercel notification setup is not blocking the current manual UI-002B
-flow.
+The active next gate is insurer demo package execution, customer discovery, and
+LOI qualification.
 
-UI-002C remains a notification sprint only. It must not imply production access,
-deploy, provider sends, or UI-002C implementation before explicit gate approval.
-
-## Manual UI-002B Demo-Readiness Gate
-
-The current working flow is manual magic-link sharing from UI-002B. Adjusters
-can use the returned `magic_link_url` from dispatch/regenerate-link responses
-and share it with claimants manually.
-
-Next operational gate:
-
-1. Prepare manual UI-002B end-to-end demo-readiness / operational QA plan.
-2. Keep the customer discovery track active.
-3. Do not run smoke, mutate Supabase, deploy, or touch production unless a
-   future prompt explicitly approves that gated action.
+Do not run smoke, mutate Supabase, deploy, touch production, configure
+notifications, or start UI-002C unless a future prompt explicitly approves that
+gated action.
 
 ## SPRINT-PROD-BLOCK Gate
 
