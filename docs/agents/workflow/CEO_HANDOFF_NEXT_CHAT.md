@@ -1,6 +1,6 @@
 # CEO Handoff - Next Chat
 
-Updated after PR #76 / DEMO-POLISH-001.
+Updated after PR #78 / SPRINT-UI-002C.
 
 ## Bootstrap Reading Order
 
@@ -9,22 +9,25 @@ For new CEO chats, read in this order:
 1. `docs/CURRENT_STATE.md`
 2. `docs/agents/workflow/ACTIVE_GATES.md`
 3. `docs/agents/workflow/CHAT_TRANSITION_LOG.md`
-4. `docs/management/sprints/sprint_ui002b.1_claimant_responses_core_06_05.md`
-5. `docs/management/sprints/sprint_ui002c.1_claimant_email_notifications_06_05.md`
-6. `docs/demo/ui002b_insurer_demo_package.md`
-7. `docs/demo/ui002b_customer_discovery_questions.md`
-8. `docs/demo/ui002b_demo_checklist.md`
+4. `docs/management/plans/plan.2_overview_06_05.md`
+5. `docs/management/sprints/sprint_ui002b.1_claimant_responses_core_06_05.md`
+6. `docs/management/sprints/sprint_ui002c.1_claimant_email_notifications_06_05.md`
+7. `docs/demo/ui002b_insurer_demo_package.md`
+8. `docs/demo/ui002b_customer_discovery_questions.md`
+9. `docs/demo/ui002b_demo_checklist.md`
 
 ## Current Date And Repo State
 
 - Date: 2026-05-07
 - Repo: `spectixai-create/spectix-v1`
 - Local path: `C:\Users\smart\spectix`
-- main HEAD: `4bdaf6dcaac0244ccfd1f0d7258ab7cfc8b5ea8a`
-- Latest merged PR: #76,
+- main HEAD: `b4b6158712a018dda3a99ad9fcf657a901f8a328`
+- Latest merged PR: #78,
+  `UI-002C: claimant email notifications (Resend, email-only)`
+- Previous state PR: #77,
+  `SYNC-010: Add UI-002C email-only spec and demo package`
+- Previous demo polish PR: #76,
   `DEMO: Polish UI-002B manual link sharing and demo script`
-- Previous state PR: #75, `SYNC-009: Record UI-002C deferral`
-- Previous product PR: #72, `UI-002B: claimant responses core flow`
 - Remaining open PR: #47, `Record OpenClaw Slack routing blocker`
 
 ## Completed Sprints / Gates
@@ -36,31 +39,45 @@ For new CEO chats, read in this order:
 - SPRINT-UI-001 - Adjuster brief view MVP.
 - SPRINT-UI-002A - Claimant responses pre-flight.
 - SPRINT-UI-002B - Claimant responses core flow.
-- SYNC-007 - Post-PR72 UI-002B state sync.
-- SYNC-008 - Post-PR73 handoff/current-state reconcile.
-- SYNC-009 - UI-002C deferral.
 - DEMO-POLISH-001 - Manual link sharing polish and demo script.
+- SYNC-010 + DEMO-PACK-001 - UI-002C email-only spec and demo package.
+- SPRINT-UI-002C - Claimant email notifications via Resend, email-only.
 
 ## Current Active Task
 
-SYNC-010 + DEMO-PACK-001 docs-only package:
+SYNC-011 docs-only state synchronization:
 
-- record UI-002C email-only spec as deferred/gated;
-- add D-030;
-- update current state and handoff after PR #76;
-- add insurer demo/customer discovery package for the UI-002B manual flow.
+- record PR #78 merge and UI-002C completion;
+- record post-merge staging validation pass;
+- update gates and CEO handoff to the post-PR78 state;
+- add the Vercel Preview/Supabase service-role root cause runbook entry;
+- update the canonical plan overview to iteration 2.1.
 
-## PR #76 Final State
+## PR #78 Final State
 
-- PR URL: <https://github.com/spectixai-create/spectix-v1/pull/76>
+- PR URL: <https://github.com/spectixai-create/spectix-v1/pull/78>
 - Merge method: merge commit.
 - Merge commit / current main HEAD:
-  `4bdaf6dcaac0244ccfd1f0d7258ab7cfc8b5ea8a`
-- Scope: manual magic-link copy fallback and demo script.
+  `b4b6158712a018dda3a99ad9fcf657a901f8a328`
+- Scope: claimant email notifications via Resend, email-only.
+- Manual magic-link fallback preserved: yes.
+- Twilio/SMS/WhatsApp added: no.
 - Production Supabase touched: no.
-- Deploy run by Codex: no.
-- Smoke run by Codex: no.
-- UI-002C started: no.
+- Manual deploy run by Codex: no.
+- Production smoke run: no.
+
+Post-merge validation:
+
+- Vercel status for `b4b6158`: success.
+- Staging health: PASS, HTTP 200, `ok:true`.
+- Non-production Supabase: `aozbgunwhafabfmuwjol`.
+- Email path: PASS.
+- No-email path: PASS.
+- Invalid Resend webhook signature: PASS.
+- Manual fallback and copy-denied fallback: PASS.
+- Generated claimant link origin matched staging.
+- Audit leakage scan: PASS.
+- Secrets, raw tokens, and full magic links printed: no.
 
 ## Current Product Surface
 
@@ -78,31 +95,20 @@ SYNC-010 + DEMO-PACK-001 docs-only package:
 - Manual-share URL generation for adjusters.
 - Manual link copy fallback: if browser clipboard permission fails, the link
   remains visible and auto-selectable for manual copy.
+- Email-only claimant notification path via Resend.
+- Resend webhook route for sent/delivered/bounced/complained events.
 
 ## Next Gate
 
-Exact next action: execute insurer demo/customer discovery package work for the
-UI-002B manual claimant response flow.
+Exact next recommended action after SYNC-011 merge:
 
-Current accepted MVP/pilot workflow: adjusters use the UI-002B returned
-`magic_link_url` and share it manually with claimants. Notifications are not
-implemented.
+**Real-case tuning round 1 / pilot-readiness validation planning.**
 
-UI-002C email automation is deferred/skipped. Future UI-002C scope is
-email-only via Resend and must not start automatically.
-
-UI-002C may be reconsidered only after:
-
-1. Resend account exists.
-2. `spectix.co.il` domain is registered.
-3. DKIM/SPF/DMARC are configured and Resend domain verification passes.
-4. Resend webhook secret is generated/configured.
-5. Vercel non-production env readiness is verified for `RESEND_API_KEY`,
-   `RESEND_WEBHOOK_SECRET`, and `APP_BASE_URL`.
-6. CEO GPT approves UI-002C dispatch.
+This is a planning gate only until explicitly dispatched. Do not start tuning,
+mutate Supabase, run smoke, or deploy from this handoff.
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
-next gate becomes SPRINT-PROD-BLOCK by default rather than UI-002C.
+next gate becomes SPRINT-PROD-BLOCK by default.
 
 ## Customer Discovery Track
 
@@ -114,14 +120,12 @@ next gate becomes SPRINT-PROD-BLOCK by default rather than UI-002C.
 
 - No production Supabase.
 - No production smoke.
-- No deploy.
-- No UI-002C implementation without gate approval.
+- No production deploy or manual production action.
 - No `.env.local` edits.
 - No secrets.
-- No notification provider sends without UI-002C approval.
-- No Resend/DNS/Vercel env changes without gate approval.
+- No raw token or full magic-link output.
 - No Twilio, SMS automation, or WhatsApp automation.
-- No native OpenClaw orchestration.
+- No native OpenClaw orchestration while PR #47 remains open.
 - No cron.
 - No 24/7 operation.
 - No auto-merge.
@@ -135,5 +139,5 @@ Read:
 2. `docs/agents/workflow/ACTIVE_GATES.md`
 3. `docs/agents/workflow/CHAT_TRANSITION_LOG.md`
 
-Then review SYNC-010 + DEMO-PACK-001. Do not start UI-002C implementation
-automatically.
+Then review SYNC-011. Do not start real-case tuning or production-readiness
+work automatically.
