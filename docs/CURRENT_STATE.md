@@ -1,10 +1,10 @@
 # Current State
 
-Updated by Codex for SYNC-011 after PR #78.
+Updated by Codex for Real-case tuning round 1 planning after PR #79.
 
 ## Version
 
-Spectix post PR #78 / UI-002C claimant email notifications complete -
+Spectix post PR #79 / UI-002C complete / Real-case tuning planning -
 2026-05-07
 
 ## Current Phase
@@ -15,8 +15,8 @@ adjuster-facing brief view, the claimant response flow, and email-only claimant
 notifications via Resend.
 
 Current `main` HEAD is
-`b4b6158712a018dda3a99ad9fcf657a901f8a328`, the merge commit for PR #78
-(`UI-002C: claimant email notifications (Resend, email-only)`).
+`5f428fe8a9b76b9e6c12e7885263da03bd032a03`, the merge commit for PR #79
+(`SYNC-011: Record UI-002C completion and post-PR78 state`).
 
 The accepted claimant contact flow is:
 
@@ -69,6 +69,8 @@ part of the approved MVP scope.
   #77.
 - SPRINT-UI-002C - Claimant email notifications via Resend, email-only, in PR
   #78.
+- SYNC-011 - Post-PR78 UI-002C completion and state synchronization in PR
+  #79.
 
 ## Current Sprint Status
 
@@ -76,8 +78,10 @@ part of the approved MVP scope.
 
 - Merged: PR #78 -> `main`
 - Merge method: merge commit
-- Merge commit / current main HEAD:
+- Merge commit:
   `b4b6158712a018dda3a99ad9fcf657a901f8a328`
+- Current main HEAD after PR #79 state sync:
+  `5f428fe8a9b76b9e6c12e7885263da03bd032a03`
 - Scope: claimant email notifications via Resend, email-only.
 - Manual fallback preserved: yes.
 - Twilio/SMS/WhatsApp added: no.
@@ -127,8 +131,9 @@ Scope shipped:
 See [ACTIVE_GATES.md](agents/workflow/ACTIVE_GATES.md).
 
 Immediate next operational gate is **Real-case tuning round 1 /
-pilot-readiness validation planning**. This SYNC PR records state only and does
-not start real-case tuning.
+pilot-readiness validation planning**. The planning document is
+[real_case_tuning_round_1_07_05.md](management/plans/real_case_tuning_round_1_07_05.md).
+This planning PR records the plan only and does not start real-case tuning.
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
 next gate becomes SPRINT-PROD-BLOCK by default.
@@ -150,6 +155,7 @@ next gate becomes SPRINT-PROD-BLOCK by default.
 
 | PR  | Title                                                      | Merge SHA  | Date       | Notes               |
 | --- | ---------------------------------------------------------- | ---------- | ---------- | ------------------- |
+| #79 | SYNC-011: Record UI-002C completion and post-PR78 state    | `5f428fe…` | 2026-05-07 | State sync          |
 | #78 | UI-002C: claimant email notifications (Resend, email-only) | `b4b6158…` | 2026-05-07 | Email notifications |
 | #77 | SYNC-010: Add UI-002C email-only spec and demo package     | `4315cf7…` | 2026-05-07 | Docs/demo package   |
 | #76 | DEMO: Polish UI-002B manual link sharing and demo script   | `4bdaf6d…` | 2026-05-07 | Demo polish         |

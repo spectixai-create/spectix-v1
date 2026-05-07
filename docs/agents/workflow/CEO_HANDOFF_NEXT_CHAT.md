@@ -1,6 +1,6 @@
 # CEO Handoff - Next Chat
 
-Updated after PR #78 / SPRINT-UI-002C.
+Updated after PR #79 / Real-case tuning round 1 planning.
 
 ## Bootstrap Reading Order
 
@@ -10,24 +10,23 @@ For new CEO chats, read in this order:
 2. `docs/agents/workflow/ACTIVE_GATES.md`
 3. `docs/agents/workflow/CHAT_TRANSITION_LOG.md`
 4. `docs/management/plans/plan.2_overview_06_05.md`
-5. `docs/management/sprints/sprint_ui002b.1_claimant_responses_core_06_05.md`
-6. `docs/management/sprints/sprint_ui002c.1_claimant_email_notifications_06_05.md`
-7. `docs/demo/ui002b_insurer_demo_package.md`
-8. `docs/demo/ui002b_customer_discovery_questions.md`
-9. `docs/demo/ui002b_demo_checklist.md`
+5. `docs/management/plans/real_case_tuning_round_1_07_05.md`
+6. `docs/management/sprints/sprint_ui002b.1_claimant_responses_core_06_05.md`
+7. `docs/management/sprints/sprint_ui002c.1_claimant_email_notifications_06_05.md`
+8. `docs/demo/ui002b_insurer_demo_package.md`
+9. `docs/demo/ui002b_customer_discovery_questions.md`
+10. `docs/demo/ui002b_demo_checklist.md`
 
 ## Current Date And Repo State
 
 - Date: 2026-05-07
 - Repo: `spectixai-create/spectix-v1`
 - Local path: `C:\Users\smart\spectix`
-- main HEAD: `b4b6158712a018dda3a99ad9fcf657a901f8a328`
-- Latest merged PR: #78,
+- main HEAD: `5f428fe8a9b76b9e6c12e7885263da03bd032a03`
+- Latest merged PR: #79,
+  `SYNC-011: Record UI-002C completion and post-PR78 state`
+- Previous product PR: #78,
   `UI-002C: claimant email notifications (Resend, email-only)`
-- Previous state PR: #77,
-  `SYNC-010: Add UI-002C email-only spec and demo package`
-- Previous demo polish PR: #76,
-  `DEMO: Polish UI-002B manual link sharing and demo script`
 - Remaining open PR: #47, `Record OpenClaw Slack routing blocker`
 
 ## Completed Sprints / Gates
@@ -45,13 +44,12 @@ For new CEO chats, read in this order:
 
 ## Current Active Task
 
-SYNC-011 docs-only state synchronization:
+Docs-only planning PR:
 
-- record PR #78 merge and UI-002C completion;
-- record post-merge staging validation pass;
-- update gates and CEO handoff to the post-PR78 state;
-- add the Vercel Preview/Supabase service-role root cause runbook entry;
-- update the canonical plan overview to iteration 2.1.
+- create the Real-case tuning round 1 / pilot-readiness validation plan;
+- update gates and CEO handoff to reference the planning document;
+- record that this planning PR does not start tuning, smoke, Supabase
+  mutation, deploy, or production work.
 
 ## PR #78 Final State
 
@@ -100,12 +98,13 @@ Post-merge validation:
 
 ## Next Gate
 
-Exact next recommended action after SYNC-011 merge:
+Exact next recommended action after this planning PR merge:
 
-**Real-case tuning round 1 / pilot-readiness validation planning.**
+**CEO GPT review and decide whether to approve a separate Real-case tuning
+round 1 execution gate.**
 
-This is a planning gate only until explicitly dispatched. Do not start tuning,
-mutate Supabase, run smoke, or deploy from this handoff.
+Do not start tuning, create fixtures, mutate Supabase, run smoke, send email,
+or deploy from this handoff.
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
 next gate becomes SPRINT-PROD-BLOCK by default.
@@ -139,5 +138,5 @@ Read:
 2. `docs/agents/workflow/ACTIVE_GATES.md`
 3. `docs/agents/workflow/CHAT_TRANSITION_LOG.md`
 
-Then review SYNC-011. Do not start real-case tuning or production-readiness
-work automatically.
+Then review the Real-case tuning round 1 planning PR. Do not start real-case
+tuning or production-readiness work automatically.

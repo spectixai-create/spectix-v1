@@ -2,7 +2,7 @@
 
 **Date:** 06/05/2026
 
-**Updated:** 07/05/2026 after PR #78
+**Updated:** 07/05/2026 after PR #79 and Real-case tuning round 1 planning
 
 **Version:** plan.2.1
 
@@ -36,9 +36,10 @@
 | 20        | DEMO-POLISH-001 - manual link copy fallback and demo script | PR #76            |
 | 21        | SYNC-010 + DEMO-PACK-001 - demo/discovery package           | PR #77            |
 | 22        | SPRINT-UI-002C - email-only claimant notifications          | PR #78            |
+| 23        | SYNC-011 - post-PR78 UI-002C state synchronization          | PR #79            |
 
 Current main HEAD:
-`b4b6158712a018dda3a99ad9fcf657a901f8a328`
+`5f428fe8a9b76b9e6c12e7885263da03bd032a03`
 
 ---
 
@@ -75,7 +76,10 @@ Post-PR78 staging validation passed:
 
 ### Real-case tuning round 1 / pilot-readiness validation planning
 
-**Status:** next operational gate after SYNC-011.
+**Status:** current planning gate after PR #79.
+
+Detailed planning document:
+`docs/management/plans/real_case_tuning_round_1_07_05.md`
 
 This phase should be planned before execution. It is expected to use
 non-production data and should clarify:
@@ -86,7 +90,8 @@ non-production data and should clarify:
   magic links, or claimant-sensitive content;
 - what minimal fixes, if any, are needed before pilot-readiness review.
 
-SYNC-011 does not start this phase. It only records the post-PR78 state.
+This planning PR does not execute this phase. It only records the validation
+plan and execution gates for future CEO review.
 
 ---
 

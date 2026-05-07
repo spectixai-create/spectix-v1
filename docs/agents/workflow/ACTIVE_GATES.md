@@ -1,18 +1,20 @@
 # Active Gates
 
-Updated after PR #78 / SPRINT-UI-002C.
+Updated after PR #79 / Real-case tuning round 1 planning.
 
 ## Current Main
 
 - Repo: `spectixai-create/spectix-v1`
 - Current main HEAD:
-  `b4b6158712a018dda3a99ad9fcf657a901f8a328`
-- Latest merge: PR #78,
-  `UI-002C: claimant email notifications (Resend, email-only)`
+  `5f428fe8a9b76b9e6c12e7885263da03bd032a03`
+- Latest merge: PR #79,
+  `SYNC-011: Record UI-002C completion and post-PR78 state`
 - Remaining open PR: #47, `Record OpenClaw Slack routing blocker`
 
 ## Recently Merged
 
+- #79 - SYNC-011 post-PR78 UI-002C state synchronization, merge commit
+  `5f428fe8a9b76b9e6c12e7885263da03bd032a03`
 - #78 - SPRINT-UI-002C claimant email notifications via Resend, email-only,
   merge commit `b4b6158712a018dda3a99ad9fcf657a901f8a328`
 - #77 - SYNC-010 UI-002C email-only spec and demo package, merge commit
@@ -55,14 +57,14 @@ Post-PR78 staging validation passed:
 
 Approved:
 
-- Docs-only state synchronization.
-- Planning for Real-case tuning round 1 / pilot-readiness validation.
+- Docs-only planning PR for Real-case tuning round 1 / pilot-readiness
+  validation.
 - Customer discovery and insurer demo preparation using non-production/demo
   data.
 
 Not approved:
 
-- Real-case tuning execution by this SYNC PR.
+- Real-case tuning execution by this planning PR.
 - Production Supabase.
 - Production deploy.
 - Production smoke.
@@ -84,8 +86,12 @@ The next operational gate is:
 
 **Real-case tuning round 1 / pilot-readiness validation planning.**
 
-This SYNC PR only records the post-PR78 state. It does not start real-case
-tuning, mutate data, run smoke, deploy, or approve production work.
+Canonical planning document:
+`docs/management/plans/real_case_tuning_round_1_07_05.md`
+
+This planning PR only records the validation plan. It does not start real-case
+tuning, create fixtures, mutate data, run smoke, send email, deploy, or approve
+production work.
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
 next gate becomes SPRINT-PROD-BLOCK by default.
