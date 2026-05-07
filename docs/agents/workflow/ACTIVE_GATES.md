@@ -1,14 +1,14 @@
 # Active Gates
 
-Updated after PR #72 / SPRINT-UI-002B merge.
+Updated after PR #73 / SYNC-007 post-PR72 state sync merge.
 
 ## Current Main
 
 - Repo: `spectixai-create/spectix-v1`
 - Current main HEAD:
-  `ebdb75c71ff340a3e5366672521bb74b83263d59`
-- Latest merge: PR #72, `UI-002B: claimant responses core flow`
-- PR #72 branch retained: yes
+  `1252ade89ddc7124d0745d2bc97f3e599ae16855`
+- Latest merge: PR #73, `SYNC-007: Record post-PR72 UI-002B state`
+- PR #73 branch retained: yes
 
 ## Open PRs
 
@@ -16,6 +16,8 @@ Updated after PR #72 / SPRINT-UI-002B merge.
 
 ## Recently Merged
 
+- #73 - SYNC-007 post PR #72 UI-002B state sync, merge commit
+  `1252ade89ddc7124d0745d2bc97f3e599ae16855`
 - #72 - UI-002B claimant responses core flow, merge commit
   `ebdb75c71ff340a3e5366672521bb74b83263d59`
 - #71 - UI-002B source spec ingestion, merge commit
@@ -31,13 +33,16 @@ Updated after PR #72 / SPRINT-UI-002B merge.
 
 Approved:
 
-- SYNC-007 post-PR72 documentation/state sync only.
+- No implementation, smoke, deploy, production, Supabase, notification provider,
+  or OpenClaw work is currently approved.
+- The active gate is UI-002C notification sprint planning/dispatch readiness
+  only, pending the explicit approvals below.
 
 Not approved:
 
 - UI-002C implementation.
 - Production Supabase.
-- Production smoke.
+- Smoke unless explicitly gated.
 - Deploy.
 - OpenClaw/native orchestration.
 - Cron.
