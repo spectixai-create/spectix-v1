@@ -1,10 +1,10 @@
-# Spectix - Plan Overview (iteration 2.1)
+# Spectix - Plan Overview (iteration 2.2)
 
 **Date:** 06/05/2026
 
-**Updated:** 08/05/2026 after PR #82 (insurer discovery execution pack merged)
+**Updated:** 08/05/2026 after PR #86 (UI-003 complete)
 
-**Version:** plan.2.1
+**Version:** plan.2.2
 
 **Canonical file:** `docs/management/plans/plan.2_overview_06_05.md`
 
@@ -39,9 +39,11 @@
 | 23        | SYNC-011 - post-PR78 UI-002C state synchronization          | PR #79            |
 | 24        | Real-case tuning round 1 / pilot-readiness validation       | PR #81            |
 | 25        | DEMO - Insurer discovery execution pack                     | PR #82            |
+| 26        | UI-003 Part 1 - pilot-readiness technical blockers          | PR #85            |
+| 27        | UI-003 Part 2 - consent, currency, trip context, homepage   | PR #86            |
 
 Current main HEAD:
-`094688ec62a5bb2b1331786125c3c15e65c6822b`
+`b1c95fc53163fc59efa4c4d2b498ae71a9970f93`
 
 ---
 
@@ -74,24 +76,100 @@ Post-PR78 staging validation passed:
 
 ---
 
+## UI-003 Cluster Complete
+
+The UI-003 pilot-readiness cluster is complete on `main`.
+
+- UI-003 Part 1: done in PR #85.
+- UI-003 Part 1 scope: `/design-system` gate, public cleanup, HEIC upload
+  support, and public `/api/health` info-disclosure reduction.
+- UI-003 Part 2: done in PR #86.
+- UI-003 Part 2 scope: draft ToS/Privacy consent, 11-currency selector, trip
+  dates, pre-trip insurance, homepage hero, migration, and rollback.
+- CAPTCHA remains blocked/deferred until Cloudflare Turnstile keys are
+  provided.
+
+Post-PR86 staging validation passed:
+
+- `/api/health` minimal public response: PASS.
+- Homepage: PASS.
+- `/terms` and `/privacy`: PASS.
+- Intake UI: PASS.
+- Currency UX: PASS.
+- Trip validation: PASS.
+- Consent modal/state preservation: PASS.
+- Missing consent API rejection: PASS, HTTP 400.
+- Synthetic non-production intake smoke: PASS.
+- Synthetic claim ID: `45bd8f76-5a42-46e7-b9b6-1f8653bb255e`.
+- `consent_log` minimal row: PASS.
+- Pending clarification question: PASS.
+- Pending question ID: `1160f3b5-ff22-4f62-81bc-94b309eeeec8`.
+- Production touched: no.
+- Production Supabase touched: no.
+- Deploy run: no.
+- OpenClaw used: no.
+- PR #47 touched: no.
+- Real claimant data used: no.
+
+Post-Architect UX audit correction:
+
+- System is functionally validated.
+- Functional validation passed.
+- Commercial insurer-demo readiness is not yet approved.
+- A new Architect UX audit found 6 P0 commercial-impact issues on
+  authenticated/demo-exposed UI.
+- Outreach remains blocked until UI-003 Part 3 is merged and verified.
+
+P0 issues for UI-003 Part 3:
+
+- P0.1 `/design-system` link still visible for authenticated users.
+- P0.2 Authenticated footer still exposes internal Spike/build text.
+- P0.3 User email visible in header; replace with initials/avatar dropdown.
+- P0.4 Hebrew plural grammar issue: `1 ימים`.
+- P0.5 Dashboard claim type values still shown in English.
+- P0.6 Dashboard missing Risk Band column.
+
+Selected P1 scope for UI-003 Part 3:
+
+- Dashboard KPI cards.
+- Tags vs status badge separation.
+- Question cards primary action `פתח תיק`.
+- Tabs counters.
+- Leading finding severity color coding.
+- RTL primary/secondary button order.
+
+Decisions to register in UI-003 Part 3 or a follow-up sync:
+
+- D-038 - Authenticated UI treated as demo-exposed.
+- D-039 - Risk Bands canonical visualization.
+- D-040 - User identity rendering uses initials avatar pattern.
+- D-041 - UI-003 Part 3 scope.
+
+---
+
 ## Next Phase
 
-### Insurer discovery / demo execution
+### UI-003 Part 3 - pre-insurer-outreach demo-readiness fixes
 
-**Status:** next operational gate after PR #81 READY validation.
+**Status:** next operational gate after the post-Architect UX audit.
 
-Execution package:
-`docs/demo/insurer_discovery_execution_pack_07_05.md`
+The system is functionally validated, but not yet insurer-demo-ready. UI-003
+Part 3 must close the commercial-impact authenticated/demo-exposed UI issues
+before outreach or live insurer demos.
 
 Real-case tuning round 1 returned READY and is recorded in
 `docs/management/reports/real_case_tuning_round_1_report_07_05.md`.
 
-The next phase is manual/operator-led insurer discovery and demo execution. It
-targets 5 Israeli travel-insurance conversations and should use synthetic,
-privacy-safe demo material only.
+The insurer discovery execution package remains prepared at
+`docs/demo/insurer_discovery_execution_pack_07_05.md`, but use of that package
+for real insurer contact/demo is blocked until UI-003 Part 3 is merged and
+verified.
 
-This docs PR does not contact insurers, send outreach, mutate Supabase, run
-smoke, deploy, or approve production work.
+Round 2 case sourcing and outreach material drafting may proceed in parallel,
+but no insurer contact or demo is approved yet.
+
+The current SYNC docs PR does not contact insurers, send outreach, mutate
+Supabase, run smoke, deploy, or approve production work.
 
 ---
 
@@ -173,11 +251,11 @@ while PR #47 is open.
 
 ## Version
 
-plan_overview - iteration 2.1 - 07/05/2026
+plan_overview - iteration 2.2 - 08/05/2026
 
 **Filename:** `plan.2_overview_06_05.md`
 
-**Predecessor:** plan.2 (iteration 2), outdated after UI-002 completion.
+**Predecessor:** plan.2.1, outdated after UI-003 completion.
 
 **Next iteration trigger:** insurer discovery produces a repeated product
 objection, or SPRINT-PROD-BLOCK is approved after LOI / written pilot intent.

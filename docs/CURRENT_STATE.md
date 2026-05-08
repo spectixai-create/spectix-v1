@@ -1,22 +1,22 @@
 # Current State
 
-Updated for QA-001 followup after PR #82 / Insurer discovery execution pack.
+Updated after PR #86 / UI-003 completion and post-PR86 staging verification.
 
 ## Version
 
-Spectix post PR #82 / UI-002C complete / Real-case tuning round 1 READY /
-Insurer discovery execution pack merged - 2026-05-08
+Spectix post PR #86 / UI-003 complete / Post-PR86 staging verification PASS -
+2026-05-08
 
 ## Current Phase
 
 The non-production MVP pipeline covers intake, document upload,
 classification, normalized extraction, validation, deterministic synthesis, the
-adjuster-facing brief view, the claimant response flow, and email-only claimant
-notifications via Resend.
+adjuster-facing brief view, the claimant response flow, email-only claimant
+notifications via Resend, and UI-003 pilot-readiness hardening.
 
 Current `main` HEAD is
-`094688ec62a5bb2b1331786125c3c15e65c6822b`, the merge commit for PR #82
-(`DEMO: Insurer discovery execution pack`).
+`b1c95fc53163fc59efa4c4d2b498ae71a9970f93`, the merge commit for PR #86
+(`UI-003 Part 2: ToS/Privacy + currency + trip dates + homepage`).
 
 The accepted claimant contact flow is:
 
@@ -75,6 +75,12 @@ part of the approved MVP scope.
   #80.
 - VALIDATION - Real-case tuning round 1 report, verdict READY, in PR #81.
 - DEMO - Insurer discovery execution pack in PR #82.
+- QA-001 - Pilot-readiness audit and docs drift fixes in PR #83.
+- REPORT - Architect Track A P3 verification in PR #84.
+- SPRINT-UI-003 Part 1 - Design-system gate, public cleanup, HEIC, and health
+  gate in PR #85.
+- SPRINT-UI-003 Part 2 - ToS/Privacy, currency, trip dates, pre-trip
+  insurance, and homepage in PR #86.
 
 ## Current Sprint Status
 
@@ -93,7 +99,84 @@ part of the approved MVP scope.
 - Manual deploy run by Codex: no.
 - Production smoke run: no.
 
-Post-merge staging validation:
+**SPRINT-UI-003 - Pilot Readiness** - DONE
+
+- Part 1 merged: PR #85, `UI-003 Part 1: hide design-system + public cleanup
+  - HEIC + health gate`.
+- Part 1 scope: `/design-system` gate, public cleanup, HEIC upload support,
+  and minimal public `/api/health`.
+- Part 2 merged: PR #86, `UI-003 Part 2: ToS/Privacy + currency + trip dates
+  - homepage`.
+- Part 2 scope: ToS/Privacy draft consent flow, currency selector, trip dates,
+  pre-trip insurance, homepage hero, and supporting migration/rollback.
+- Current main HEAD after PR #86:
+  `b1c95fc53163fc59efa4c4d2b498ae71a9970f93`.
+- CAPTCHA status: blocked/deferred until Cloudflare Turnstile keys are
+  provided.
+- Twilio/SMS/WhatsApp added: no.
+- Production Supabase touched: no.
+- Manual deploy run by Codex: no.
+
+Post-PR86 staging verification:
+
+- Vercel status for `b1c95fc`: success.
+- Staging URL: `https://staging.spectix.co.il`.
+- `/api/health` minimal public response: PASS.
+- Homepage: PASS.
+- `/terms` and `/privacy`: PASS.
+- Intake UI: PASS.
+- Currency UX: PASS.
+- Trip validation: PASS.
+- Consent modal/state preservation: PASS.
+- Missing consent API rejection: PASS, HTTP 400.
+- Synthetic non-production intake smoke: PASS.
+- Synthetic claim ID: `45bd8f76-5a42-46e7-b9b6-1f8653bb255e`.
+- `consent_log` minimal row: PASS.
+- Pending clarification question: PASS.
+- Pending question ID: `1160f3b5-ff22-4f62-81bc-94b309eeeec8`.
+- Production touched: no.
+- Production Supabase touched: no.
+- Deploy run: no.
+- OpenClaw used: no.
+- PR #47 touched: no.
+- Real claimant data used: no.
+
+Post-Architect UX audit correction:
+
+- System is functionally validated.
+- Functional readiness passed, including post-PR86 staging verification.
+- Commercial insurer-demo readiness is not yet approved.
+- New Architect UX audit found 6 P0 commercial-impact issues on
+  authenticated/demo-exposed UI.
+- Outreach and insurer demos remain blocked until UI-003 Part 3 is merged and
+  verified.
+
+UI-003 Part 3 P0 issues:
+
+- P0.1 `/design-system` link still visible for authenticated users.
+- P0.2 Authenticated footer still exposes internal Spike/build text.
+- P0.3 User email visible in header; replace with initials/avatar dropdown.
+- P0.4 Hebrew plural grammar issue: `1 ימים`.
+- P0.5 Dashboard claim type values still shown in English.
+- P0.6 Dashboard missing Risk Band column.
+
+Selected UI-003 Part 3 P1 scope:
+
+- Dashboard KPI cards.
+- Tags vs status badge separation.
+- Question cards primary action `פתח תיק`.
+- Tabs counters.
+- Leading finding severity color coding.
+- RTL primary/secondary button order.
+
+Decisions to register in UI-003 Part 3 or a follow-up sync:
+
+- D-038 - Authenticated UI treated as demo-exposed.
+- D-039 - Risk Bands canonical visualization.
+- D-040 - User identity rendering uses initials avatar pattern.
+- D-041 - UI-003 Part 3 scope.
+
+PR #78 post-merge staging validation:
 
 - Vercel status for `b4b6158`: success.
 - Staging URL: `https://staging.spectix.co.il`.
@@ -134,10 +217,12 @@ Scope shipped:
 
 See [ACTIVE_GATES.md](agents/workflow/ACTIVE_GATES.md).
 
-Immediate next operational gate is **Real-case tuning round 1 /
-pilot-readiness validation planning**. The planning document is
-[real_case_tuning_round_1_07_05.md](management/plans/real_case_tuning_round_1_07_05.md).
-This planning PR records the plan only and does not start real-case tuning.
+Immediate next operational gate is **UI-003 Part 3 - pre-insurer-outreach
+demo-readiness fixes**.
+
+Round 2 case sourcing and outreach material drafting may proceed in parallel,
+but no insurer contact or demo is approved until UI-003 Part 3 is merged and
+verified.
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
 next gate becomes SPRINT-PROD-BLOCK by default.
@@ -145,6 +230,10 @@ next gate becomes SPRINT-PROD-BLOCK by default.
 ## Customer Discovery Track
 
 - Target: 5 conversations with Israeli travel insurers.
+- Execution package:
+  [insurer_discovery_execution_pack_07_05.md](demo/insurer_discovery_execution_pack_07_05.md).
+- Status: prepared but blocked from use for real insurer contact/demo until
+  UI-003 Part 3 is merged and verified.
 - Demo package:
   [ui002b_insurer_demo_package.md](demo/ui002b_insurer_demo_package.md).
 - Discovery questions:
@@ -159,6 +248,10 @@ next gate becomes SPRINT-PROD-BLOCK by default.
 
 | PR  | Title                                                      | Merge SHA  | Date       | Notes               |
 | --- | ---------------------------------------------------------- | ---------- | ---------- | ------------------- |
+| #86 | UI-003 Part 2: ToS/Privacy + currency + trip dates         | `b1c95fc…` | 2026-05-08 | UI-003 complete     |
+| #85 | UI-003 Part 1: design-system, cleanup, HEIC, health gate   | `072e0d0…` | 2026-05-08 | UI hardening        |
+| #84 | REPORT: Architect Track A P3 verification                  | `9d67615…` | 2026-05-08 | UX report           |
+| #83 | QA-001: Pilot-readiness audit + docs drift fixes           | `93ad93a…` | 2026-05-08 | QA report           |
 | #82 | DEMO: Insurer discovery execution pack                     | `094688e…` | 2026-05-07 | Demo package        |
 | #81 | VALIDATION: Real-case tuning round 1 report                | `640f447…` | 2026-05-07 | Validation report   |
 | #80 | PLAN: Real-case tuning round 1 pilot-readiness validation  | `4f9993a…` | 2026-05-07 | Planning            |

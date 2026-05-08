@@ -364,3 +364,88 @@ Project Knowledge has been migrated to `docs/project/` as of this PR. New chats 
 4. Keep production Supabase, production deploy, production smoke, OpenClaw,
    cron, 24/7 operation, auto-merge, and auto-deploy blocked unless explicitly
    approved.
+
+## Transition Update - 2026-05-08 (UI-003 complete)
+
+### State
+
+- PR #85 (`UI-003 Part 1: hide design-system + public cleanup + HEIC + health
+gate`) merged to `main`.
+- PR #86 (`UI-003 Part 2: ToS/Privacy + currency + trip dates + homepage`)
+  merged to `main`.
+- Merge commit / current main HEAD:
+  `b1c95fc53163fc59efa4c4d2b498ae71a9970f93`.
+- UI-003 cluster is complete:
+  - Part 1: `/design-system` gate, public cleanup, HEIC upload support, and
+    `/api/health` info-disclosure gate.
+  - Part 2: draft ToS/Privacy consent, currency selector, trip dates,
+    pre-trip insurance, homepage hero, migration, and rollback.
+- CAPTCHA remains blocked/deferred until Cloudflare Turnstile keys are
+  provided.
+- Remaining open PR: #47 (`Record OpenClaw Slack routing blocker`).
+
+### Post-PR86 Staging Verification
+
+- Vercel status for `b1c95fc`: success.
+- Staging target: `https://staging.spectix.co.il`.
+- `/api/health` minimal public response: PASS.
+- Homepage: PASS.
+- `/terms` and `/privacy`: PASS.
+- Intake UI: PASS.
+- Currency UX: PASS.
+- Trip validation: PASS.
+- Consent modal/state preservation: PASS.
+- Missing consent API rejection: PASS, HTTP 400.
+- Synthetic non-production intake smoke: PASS.
+- Synthetic claim ID: `45bd8f76-5a42-46e7-b9b6-1f8653bb255e`.
+- `consent_log` minimal row: PASS.
+- Pending clarification question: PASS.
+- Pending question ID: `1160f3b5-ff22-4f62-81bc-94b309eeeec8`.
+
+### Safety
+
+- Production touched: no.
+- Production Supabase touched: no.
+- Deploy run: no.
+- OpenClaw used: no.
+- PR #47 touched/merged: no.
+- Real claimant data used: no.
+- Secrets printed: no.
+- Raw tokens printed: no.
+- Full magic links printed: no.
+
+### Architect UX Audit Correction
+
+- The system is functionally validated, but commercial insurer-demo readiness is
+  not yet approved.
+- New Architect UX audit found 6 P0 commercial-impact issues on
+  authenticated/demo-exposed UI:
+  - P0.1 `/design-system` link still visible for authenticated users.
+  - P0.2 Authenticated footer still exposes internal Spike/build text.
+  - P0.3 User email visible in header; replace with initials/avatar dropdown.
+  - P0.4 Hebrew plural grammar issue: `1 ימים`.
+  - P0.5 Dashboard claim type values still shown in English.
+  - P0.6 Dashboard missing Risk Band column.
+- Selected P1 scope for UI-003 Part 3:
+  - Dashboard KPI cards.
+  - Tags vs status badge separation.
+  - Question cards primary action `פתח תיק`.
+  - Tabs counters.
+  - Leading finding severity color coding.
+  - RTL primary/secondary button order.
+- Decisions to register in UI-003 Part 3 or a follow-up sync:
+  - D-038 - Authenticated UI treated as demo-exposed.
+  - D-039 - Risk Bands canonical visualization.
+  - D-040 - User identity rendering uses initials avatar pattern.
+  - D-041 - UI-003 Part 3 scope.
+
+### Pending Action Item For New Chat
+
+1. Review the UI-003 completion sync PR.
+2. After merge, the next gate is UI-003 Part 3 pre-insurer-outreach
+   demo-readiness fixes.
+3. Round 2 case sourcing and outreach material drafting may proceed in
+   parallel, but no insurer contact/demo is approved yet.
+4. Do not automate outreach or contact insurers from Codex.
+5. Keep production blocked until signed LOI / SPRINT-PROD-BLOCK.
+6. Keep OpenClaw/native orchestration blocked while PR #47 remains open.
