@@ -1,18 +1,22 @@
 # Active Gates
 
-Updated after PR #86 / UI-003 completion and post-PR86 staging verification.
+Updated after PR #88 / UI-003 Part 3 completion and post-PR88 staging
+verification.
 
 ## Current Main
 
 - Repo: `spectixai-create/spectix-v1`
 - Current main HEAD:
-  `b1c95fc53163fc59efa4c4d2b498ae71a9970f93`
-- Latest merge: PR #86,
-  `UI-003 Part 2: ToS/Privacy + currency + trip dates + homepage`
+  `23936677014e32f01517f1ff0b6ffa5645acb282`
+- Latest merge: PR #88, `UI-003 Part 3 demo-readiness fixes`
 - Remaining open PR: #47, `Record OpenClaw Slack routing blocker`
 
 ## Recently Merged
 
+- #88 - UI-003 Part 3 demo-readiness fixes, merge commit
+  `23936677014e32f01517f1ff0b6ffa5645acb282`
+- #87 - SYNC: correct UI-003 next gate after UX audit, merge commit
+  `c78d6d2f995333422e73769f3d03d69b9b26035f`
 - #86 - UI-003 Part 2: ToS/Privacy, currency, trip dates/pre-trip insurance,
   and homepage, merge commit
   `b1c95fc53163fc59efa4c4d2b498ae71a9970f93`
@@ -88,6 +92,10 @@ SPRINT-UI-003 is complete on `main`.
 - UI-003 Part 2: complete in PR #86.
 - UI-003 Part 2 scope: ToS/Privacy draft consent, currency selector, trip
   dates, pre-trip insurance, homepage hero, migration, and rollback.
+- UI-003 Part 3: complete in PR #88.
+- UI-003 Part 3 scope: authenticated UI demo-readiness fixes for navigation,
+  footer, identity, Hebrew text, dashboard triage signals, question cards, tab
+  counters, leading finding severity, and RTL action order.
 - CAPTCHA remains blocked/deferred until Cloudflare Turnstile keys are
   provided.
 
@@ -113,17 +121,48 @@ Post-PR86 staging verification passed:
 - PR #47 touched: no.
 - Real claimant data used: no.
 
+Post-PR88 staging verification passed:
+
+- Vercel status for `2393667`: success / Ready.
+- `/api/health` minimal public response: PASS.
+- Public `/`, `/new`, `/terms`, and `/privacy`: PASS.
+- Anonymous `/design-system` blocked: PASS.
+- Authenticated dashboard: PASS.
+- Authenticated questions queue: PASS.
+- Authenticated claim page: PASS.
+- Authenticated `/design-system` direct access: PASS.
+- No raw email in header by default: PASS.
+- Initials/avatar dropdown visible: PASS.
+- No design-system nav link: PASS.
+- Clean footer: `Spectix • 2026`.
+- KPI cards visible: PASS.
+- Risk Band column visible: PASS.
+- Claim types localized to Hebrew: PASS.
+- Tab counters visible: PASS.
+- Question cards include `פתח תיק`: PASS.
+- Bad Hebrew plural `1 ימים` absent: PASS.
+- RTL primary action order verified: PASS.
+- Production touched: no.
+- Production Supabase touched: no.
+- Supabase mutation after merge: no.
+- Deploy run manually: no.
+- Vercel environment changed: no.
+- Secrets, raw tokens, and full magic links printed: no.
+- OpenClaw used: no.
+- PR #47 touched: no.
+- Outreach/contact triggered: no.
+
 ## Post-Architect UX Audit Correction
 
-The system is functionally validated, but commercial insurer-demo readiness is
-not yet approved. A new Architect UX audit found 6 P0 commercial-impact issues
-on authenticated/demo-exposed UI.
+The system is functionally validated. The commercial insurer-demo readiness
+blockers found by the Architect UX audit are closed by PR #88 and post-PR88
+staging verification.
 
 The next gate is now:
 
-**UI-003 Part 3 - pre-insurer-outreach demo-readiness fixes.**
+**Insurer outreach/demo execution decision.**
 
-P0 issues for UI-003 Part 3:
+Closed UI-003 Part 3 P0 issues:
 
 - P0.1 `/design-system` link still visible for authenticated users.
 - P0.2 Authenticated footer still exposes internal Spike/build text.
@@ -132,7 +171,7 @@ P0 issues for UI-003 Part 3:
 - P0.5 Dashboard claim type values still shown in English.
 - P0.6 Dashboard missing Risk Band column.
 
-Selected P1 scope for UI-003 Part 3:
+Completed selected UI-003 Part 3 P1 scope:
 
 - Dashboard KPI cards.
 - Tags vs status badge separation.
@@ -141,7 +180,7 @@ Selected P1 scope for UI-003 Part 3:
 - Leading finding severity color coding.
 - RTL primary/secondary button order.
 
-Decisions to register in UI-003 Part 3 or a follow-up sync:
+Decisions registered in UI-003 Part 3:
 
 - D-038 - Authenticated UI treated as demo-exposed.
 - D-039 - Risk Bands canonical visualization.
@@ -152,13 +191,12 @@ Decisions to register in UI-003 Part 3 or a follow-up sync:
 
 Approved:
 
-- UI-003 Part 3 planning/dispatch preparation.
 - Round 2 case sourcing and outreach material drafting without insurer contact.
+- Business decision on whether to begin insurer outreach/demo execution.
 
 Not approved:
 
-- Insurer contact or demo execution before UI-003 Part 3 is merged and
-  verified.
+- Insurer contact or demo execution unless explicitly approved.
 - Automated outreach or customer contact by this docs PR.
 - Product operations by this docs PR.
 - Production Supabase.
@@ -180,10 +218,10 @@ Not approved:
 
 The next operational gate is:
 
-**UI-003 Part 3 - pre-insurer-outreach demo-readiness fixes.**
+**Insurer outreach/demo execution decision.**
 
-Functional validation passed, but commercial demo-readiness requires Part 3
-before outreach. This docs PR does not contact insurers, send outreach, run
+Functional validation passed and the UI-003 Part 3 commercial demo-readiness
+blockers are closed. This docs PR does not contact insurers, send outreach, run
 smoke, mutate Supabase, deploy, approve production work, or execute product
 operations.
 

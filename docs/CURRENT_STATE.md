@@ -1,10 +1,11 @@
 # Current State
 
-Updated after PR #86 / UI-003 completion and post-PR86 staging verification.
+Updated after PR #88 / UI-003 Part 3 completion and post-PR88 staging
+verification.
 
 ## Version
 
-Spectix post PR #86 / UI-003 complete / Post-PR86 staging verification PASS -
+Spectix post PR #88 / UI-003 Part 3 complete / Post-PR88 staging verification PASS -
 2026-05-08
 
 ## Current Phase
@@ -15,8 +16,8 @@ adjuster-facing brief view, the claimant response flow, email-only claimant
 notifications via Resend, and UI-003 pilot-readiness hardening.
 
 Current `main` HEAD is
-`b1c95fc53163fc59efa4c4d2b498ae71a9970f93`, the merge commit for PR #86
-(`UI-003 Part 2: ToS/Privacy + currency + trip dates + homepage`).
+`23936677014e32f01517f1ff0b6ffa5645acb282`, the merge commit for PR #88
+(`UI-003 Part 3 demo-readiness fixes`).
 
 The accepted claimant contact flow is:
 
@@ -81,6 +82,8 @@ part of the approved MVP scope.
   gate in PR #85.
 - SPRINT-UI-003 Part 2 - ToS/Privacy, currency, trip dates, pre-trip
   insurance, and homepage in PR #86.
+- SYNC - Correct UI-003 next gate after Architect UX audit in PR #87.
+- SPRINT-UI-003 Part 3 - Authenticated demo-readiness fixes in PR #88.
 
 ## Current Sprint Status
 
@@ -109,8 +112,16 @@ part of the approved MVP scope.
   - homepage`.
 - Part 2 scope: ToS/Privacy draft consent flow, currency selector, trip dates,
   pre-trip insurance, homepage hero, and supporting migration/rollback.
+- Part 3 merged: PR #88, `UI-003 Part 3 demo-readiness fixes`.
+- Part 3 scope: authenticated UI demo-readiness fixes: design-system nav
+  removal, clean authenticated footer, initials/avatar identity, Hebrew
+  grammar, Hebrew claim types, Risk Band dashboard column, KPI cards, tab
+  counters, question card action clarity, leading-finding severity color, and
+  RTL action order.
 - Current main HEAD after PR #86:
   `b1c95fc53163fc59efa4c4d2b498ae71a9970f93`.
+- Current main HEAD after PR #88:
+  `23936677014e32f01517f1ff0b6ffa5645acb282`.
 - CAPTCHA status: blocked/deferred until Cloudflare Turnstile keys are
   provided.
 - Twilio/SMS/WhatsApp added: no.
@@ -141,17 +152,51 @@ Post-PR86 staging verification:
 - PR #47 touched: no.
 - Real claimant data used: no.
 
+Post-PR88 staging verification:
+
+- Vercel status for `2393667`: success / Ready.
+- Staging URL: `https://staging.spectix.co.il`.
+- `/api/health` minimal public response: PASS.
+- Public `/`, `/new`, `/terms`, and `/privacy`: PASS.
+- Anonymous `/design-system` blocked: PASS.
+- Authenticated dashboard: PASS.
+- Authenticated questions queue: PASS.
+- Authenticated claim page: PASS.
+- Authenticated `/design-system` direct access: PASS.
+- No raw email in header by default: PASS.
+- Initials/avatar dropdown visible: PASS.
+- No design-system nav link: PASS.
+- Clean footer: `Spectix • 2026`.
+- KPI cards visible: PASS.
+- Risk Band column visible: PASS.
+- Claim types localized to Hebrew: PASS.
+- Tab counters visible: PASS.
+- Question cards include `פתח תיק`: PASS.
+- Bad Hebrew plural `1 ימים` absent: PASS.
+- RTL primary action order verified: PASS.
+- Production touched: no.
+- Production Supabase touched: no.
+- Supabase mutation after merge: no.
+- Deploy run manually: no.
+- Vercel environment changed: no.
+- Secrets, raw tokens, and full magic links printed: no.
+- OpenClaw used: no.
+- PR #47 touched: no.
+- Outreach/contact triggered: no.
+
 Post-Architect UX audit correction:
 
 - System is functionally validated.
-- Functional readiness passed, including post-PR86 staging verification.
-- Commercial insurer-demo readiness is not yet approved.
+- Functional readiness passed, including post-PR86 and post-PR88 staging
+  verification.
+- Commercial insurer-demo readiness blockers identified by the audit are closed
+  by PR #88 and post-PR88 staging verification.
 - New Architect UX audit found 6 P0 commercial-impact issues on
   authenticated/demo-exposed UI.
-- Outreach and insurer demos remain blocked until UI-003 Part 3 is merged and
-  verified.
+- Outreach and insurer demos remain blocked until explicitly approved as a
+  business/customer-discovery action.
 
-UI-003 Part 3 P0 issues:
+Closed UI-003 Part 3 P0 issues:
 
 - P0.1 `/design-system` link still visible for authenticated users.
 - P0.2 Authenticated footer still exposes internal Spike/build text.
@@ -160,7 +205,7 @@ UI-003 Part 3 P0 issues:
 - P0.5 Dashboard claim type values still shown in English.
 - P0.6 Dashboard missing Risk Band column.
 
-Selected UI-003 Part 3 P1 scope:
+Completed selected UI-003 Part 3 P1 scope:
 
 - Dashboard KPI cards.
 - Tags vs status badge separation.
@@ -169,7 +214,7 @@ Selected UI-003 Part 3 P1 scope:
 - Leading finding severity color coding.
 - RTL primary/secondary button order.
 
-Decisions to register in UI-003 Part 3 or a follow-up sync:
+Decisions registered in UI-003 Part 3:
 
 - D-038 - Authenticated UI treated as demo-exposed.
 - D-039 - Risk Bands canonical visualization.
@@ -217,12 +262,10 @@ Scope shipped:
 
 See [ACTIVE_GATES.md](agents/workflow/ACTIVE_GATES.md).
 
-Immediate next operational gate is **UI-003 Part 3 - pre-insurer-outreach
-demo-readiness fixes**.
+Immediate next operational gate is **insurer outreach/demo execution decision**.
 
-Round 2 case sourcing and outreach material drafting may proceed in parallel,
-but no insurer contact or demo is approved until UI-003 Part 3 is merged and
-verified.
+Round 2 case sourcing and outreach material drafting may proceed, but no
+insurer contact or demo is approved until explicitly authorized.
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
 next gate becomes SPRINT-PROD-BLOCK by default.
@@ -232,8 +275,8 @@ next gate becomes SPRINT-PROD-BLOCK by default.
 - Target: 5 conversations with Israeli travel insurers.
 - Execution package:
   [insurer_discovery_execution_pack_07_05.md](demo/insurer_discovery_execution_pack_07_05.md).
-- Status: prepared but blocked from use for real insurer contact/demo until
-  UI-003 Part 3 is merged and verified.
+- Status: prepared; UI-003 Part 3 technical/commercial demo-readiness blockers
+  are closed, but real insurer contact/demo still requires explicit approval.
 - Demo package:
   [ui002b_insurer_demo_package.md](demo/ui002b_insurer_demo_package.md).
 - Discovery questions:
@@ -246,23 +289,25 @@ next gate becomes SPRINT-PROD-BLOCK by default.
 
 ## Recent Merges
 
-| PR  | Title                                                      | Merge SHA  | Date       | Notes               |
-| --- | ---------------------------------------------------------- | ---------- | ---------- | ------------------- |
-| #86 | UI-003 Part 2: ToS/Privacy + currency + trip dates         | `b1c95fc…` | 2026-05-08 | UI-003 complete     |
-| #85 | UI-003 Part 1: design-system, cleanup, HEIC, health gate   | `072e0d0…` | 2026-05-08 | UI hardening        |
-| #84 | REPORT: Architect Track A P3 verification                  | `9d67615…` | 2026-05-08 | UX report           |
-| #83 | QA-001: Pilot-readiness audit + docs drift fixes           | `93ad93a…` | 2026-05-08 | QA report           |
-| #82 | DEMO: Insurer discovery execution pack                     | `094688e…` | 2026-05-07 | Demo package        |
-| #81 | VALIDATION: Real-case tuning round 1 report                | `640f447…` | 2026-05-07 | Validation report   |
-| #80 | PLAN: Real-case tuning round 1 pilot-readiness validation  | `4f9993a…` | 2026-05-07 | Planning            |
-| #79 | SYNC-011: Record UI-002C completion and post-PR78 state    | `5f428fe…` | 2026-05-07 | State sync          |
-| #78 | UI-002C: claimant email notifications (Resend, email-only) | `b4b6158…` | 2026-05-07 | Email notifications |
-| #77 | SYNC-010: Add UI-002C email-only spec and demo package     | `4315cf7…` | 2026-05-07 | Docs/demo package   |
-| #76 | DEMO: Polish UI-002B manual link sharing and demo script   | `4bdaf6d…` | 2026-05-07 | Demo polish         |
-| #75 | SYNC-009: Record UI-002C deferral                          | `7f2fe87…` | 2026-05-07 | Docs/state sync     |
-| #74 | SYNC-008: Reconcile handoff/current state                  | `4c03f9f…` | 2026-05-07 | Docs/state sync     |
-| #73 | SYNC-007: Record post-PR72 UI-002B state                   | `1252ade…` | 2026-05-07 | Docs/state sync     |
-| #72 | UI-002B: claimant responses core flow                      | `ebdb75c…` | 2026-05-07 | Product core flow   |
+| PR  | Title                                                      | Merge SHA  | Date       | Notes                |
+| --- | ---------------------------------------------------------- | ---------- | ---------- | -------------------- |
+| #88 | UI-003 Part 3 demo-readiness fixes                         | `2393667…` | 2026-05-08 | Demo blockers closed |
+| #87 | SYNC: correct UI-003 next gate after UX audit              | `c78d6d2…` | 2026-05-08 | Docs/state sync      |
+| #86 | UI-003 Part 2: ToS/Privacy + currency + trip dates         | `b1c95fc…` | 2026-05-08 | Public readiness     |
+| #85 | UI-003 Part 1: design-system, cleanup, HEIC, health gate   | `072e0d0…` | 2026-05-08 | UI hardening         |
+| #84 | REPORT: Architect Track A P3 verification                  | `9d67615…` | 2026-05-08 | UX report            |
+| #83 | QA-001: Pilot-readiness audit + docs drift fixes           | `93ad93a…` | 2026-05-08 | QA report            |
+| #82 | DEMO: Insurer discovery execution pack                     | `094688e…` | 2026-05-07 | Demo package         |
+| #81 | VALIDATION: Real-case tuning round 1 report                | `640f447…` | 2026-05-07 | Validation report    |
+| #80 | PLAN: Real-case tuning round 1 pilot-readiness validation  | `4f9993a…` | 2026-05-07 | Planning             |
+| #79 | SYNC-011: Record UI-002C completion and post-PR78 state    | `5f428fe…` | 2026-05-07 | State sync           |
+| #78 | UI-002C: claimant email notifications (Resend, email-only) | `b4b6158…` | 2026-05-07 | Email notifications  |
+| #77 | SYNC-010: Add UI-002C email-only spec and demo package     | `4315cf7…` | 2026-05-07 | Docs/demo package    |
+| #76 | DEMO: Polish UI-002B manual link sharing and demo script   | `4bdaf6d…` | 2026-05-07 | Demo polish          |
+| #75 | SYNC-009: Record UI-002C deferral                          | `7f2fe87…` | 2026-05-07 | Docs/state sync      |
+| #74 | SYNC-008: Reconcile handoff/current state                  | `4c03f9f…` | 2026-05-07 | Docs/state sync      |
+| #73 | SYNC-007: Record post-PR72 UI-002B state                   | `1252ade…` | 2026-05-07 | Docs/state sync      |
+| #72 | UI-002B: claimant responses core flow                      | `ebdb75c…` | 2026-05-07 | Product core flow    |
 
 ## Open PRs
 

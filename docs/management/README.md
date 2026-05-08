@@ -73,6 +73,7 @@ docs/management/
 - `sync001.1_post_pr60_06_05.md` — Documentation sync package after PR #60. **Status: applied in PR #63.**
 - `sync003.1_artifacts_handoff_06_05.md` — SYNC-003 management artifact handoff. **Status: merged in PR #64.**
 - `sync005.2_ui_artifacts_handoff_06_05.md` — SYNC-005 UI design artifact handoff. **Status: this PR.**
+- `sync012.1_post_pr88_ui003_part3_pass_08_05.md` — SYNC-012 post-PR88 UI-003 Part 3 completion and staging PASS. **Status: this PR.**
 
 ### archive/
 
