@@ -6,6 +6,7 @@ import type {
   Document,
   FindingSeverity,
   Pass,
+  RiskBand,
   SynthesisResult,
 } from '@/lib/types';
 
@@ -30,11 +31,21 @@ export type ClaimListItem = {
   amountClaimed: number | null;
   currency: string;
   readinessScore: number | null;
+  riskBand: RiskBand | null;
+  riskScore: number | null;
   topFindingCategory: string | null;
+  topFindingSeverity: FindingSeverity | null;
   daysOpen: number;
   escalatedToInvestigator: boolean;
   createdAt: string;
   updatedAt: string;
+};
+
+export type ClaimListSummary = {
+  totalOpen: number;
+  ready: number;
+  pendingInfo: number;
+  highRisk: number;
 };
 
 export type ClaimListResponse = {
@@ -42,6 +53,7 @@ export type ClaimListResponse = {
   page: number;
   pageSize: number;
   total: number;
+  summary: ClaimListSummary;
 };
 
 export type DocumentWithSignedUrl = Document & {

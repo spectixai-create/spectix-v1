@@ -57,6 +57,17 @@ export function QuestionsView({ view }: Readonly<{ view: QuestionsViewKey }>) {
       })),
     [statusOverrides],
   );
+  const tabCounts = React.useMemo(
+    () =>
+      (Object.keys(tabLabels) as QuestionsViewKey[]).reduce(
+        (counts, key) => ({
+          ...counts,
+          [key]: questions.filter((question) => question.status === key).length,
+        }),
+        {} as Record<QuestionsViewKey, number>,
+      ),
+    [questions],
+  );
 
   const selectedQuestion =
     questions.find((question) => question.id === selectedQuestionId) ?? null;
@@ -123,7 +134,8 @@ export function QuestionsView({ view }: Readonly<{ view: QuestionsViewKey }>) {
           <TabsList aria-label="סטטוס שאלות">
             {(Object.keys(tabLabels) as QuestionsViewKey[]).map((key) => (
               <TabsTrigger key={key} value={key}>
-                {tabLabels[key]}
+                {tabLabels[key]}{' '}
+                <span className="font-latin">({tabCounts[key]})</span>
               </TabsTrigger>
             ))}
           </TabsList>

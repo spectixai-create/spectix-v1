@@ -26,7 +26,7 @@ export default function QuestionsPage({
         />
         <QuestionsSummaryStats />
         <QuestionsView view={view} />
-        <VersionFooter internal />
+        <VersionFooter />
       </div>
     </AdjusterShell>
   );

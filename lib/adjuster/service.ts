@@ -79,6 +79,7 @@ export function composeClaimListResponse({
       composeClaimListItem(claim, resultsByClaim.get(claim.id) ?? [], now),
     )
     .sort((a, b) => compareClaimListItems(a, b, normalized.sort));
+  const summary = composeClaimListSummary(filtered);
 
   const start = (normalized.page - 1) * normalized.pageSize;
   const items = filtered.slice(start, start + normalized.pageSize);
@@ -88,6 +89,7 @@ export function composeClaimListResponse({
     page: normalized.page,
     pageSize: normalized.pageSize,
     total: filtered.length,
+    summary,
   };
 }
 
@@ -285,11 +287,27 @@ function composeClaimListItem(
     amountClaimed: claim.amountClaimed,
     currency: claim.currency,
     readinessScore: readinessScore?.score ?? null,
+    riskBand: claim.riskBand,
+    riskScore: claim.riskScore,
     topFindingCategory: topFinding?.category ?? null,
+    topFindingSeverity: topFinding?.severity ?? null,
     daysOpen: calculateDaysOpen(claim.createdAt, now),
     escalatedToInvestigator: claim.escalatedToInvestigator,
     createdAt: claim.createdAt,
     updatedAt: claim.updatedAt,
+  };
+}
+
+function composeClaimListSummary(items: ClaimListItem[]) {
+  return {
+    totalOpen: items.filter(
+      (item) => !['reviewed', 'rejected_no_coverage'].includes(item.status),
+    ).length,
+    ready: items.filter((item) => item.status === 'ready').length,
+    pendingInfo: items.filter((item) => item.status === 'pending_info').length,
+    highRisk: items.filter(
+      (item) => item.riskBand === 'red' || item.riskBand === 'orange',
+    ).length,
   };
 }
 

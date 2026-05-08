@@ -147,7 +147,7 @@ export default function DesignSystemPage() {
             </Card>
           </div>
         </section>
-        <VersionFooter internal />
+        <VersionFooter />
       </div>
     </AdjusterShell>
   );

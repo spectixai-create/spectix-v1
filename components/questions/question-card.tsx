@@ -2,10 +2,21 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Check, MessageSquarePlus, RotateCcw, Send } from 'lucide-react';
+import {
+  Check,
+  ExternalLink,
+  MessageSquarePlus,
+  RotateCcw,
+  Send,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
+import {
+  formatRelativeDaysAgo,
+  formatRelativeHoursAgo,
+} from '@/lib/ui/hebrew-time';
 import { cn } from '@/lib/utils';
+import { Tag } from '@/components/data-display/tag';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -101,17 +112,11 @@ export function QuestionCard({
             onClick={(event) => event.stopPropagation()}
             prefetch={false}
           >
-            <Badge variant="outline" className="num font-latin">
-              {question.claimId}
-            </Badge>
+            <Tag className="num font-latin">{question.claimId}</Tag>
           </Link>
-          <Badge
-            variant={
-              question.urgency === 'urgent' ? 'destructive' : 'secondary'
-            }
-          >
+          <Tag tone={question.urgency === 'urgent' ? 'warning' : 'neutral'}>
             {question.urgency === 'urgent' ? 'דחוף' : 'רגיל'}
-          </Badge>
+          </Tag>
           <Badge variant={statusVariant[question.status]}>
             {statusLabel[question.status]}
           </Badge>
@@ -123,7 +128,7 @@ export function QuestionCard({
           </p>
           {question.status === 'pending' ? (
             <p className="text-xs text-muted-foreground">
-              נשלח {relativeDays(question.sentAt)}
+              נשלח {formatRelativeDaysAgo(question.sentAt, referenceNow)}
             </p>
           ) : null}
           {question.status === 'answered' ? (
@@ -132,7 +137,11 @@ export function QuestionCard({
                 {question.answerText}
               </p>
               <p className="text-xs text-muted-foreground">
-                נענה {relativeHours(question.answeredAt ?? question.sentAt)}
+                נענה{' '}
+                {formatRelativeHoursAgo(
+                  question.answeredAt ?? question.sentAt,
+                  referenceNow,
+                )}
               </p>
             </div>
           ) : null}
@@ -150,10 +159,20 @@ export function QuestionCard({
 
         <div
           className={cn(
-            'flex flex-col gap-2 sm:flex-row sm:flex-wrap',
+            'flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end',
             question.status === 'answered' && 'sm:items-center',
           )}
         >
+          <Button asChild size="sm" className="gap-2">
+            <Link
+              href={`/claim/${question.claimId}`}
+              onClick={(event) => event.stopPropagation()}
+              prefetch={false}
+            >
+              <ExternalLink className="h-4 w-4" aria-hidden="true" />
+              פתח תיק
+            </Link>
+          </Button>
           {question.status === 'pending' ? (
             <Button
               type="button"
@@ -230,20 +249,4 @@ export function QuestionCard({
       </div>
     </Card>
   );
-}
-
-function relativeDays(value: string) {
-  const days = Math.max(
-    1,
-    Math.round((referenceNow - new Date(value).getTime()) / 86400000),
-  );
-  return `לפני ${days} ימים`;
-}
-
-function relativeHours(value: string) {
-  const hours = Math.max(
-    1,
-    Math.round((referenceNow - new Date(value).getTime()) / 3600000),
-  );
-  return `לפני ${hours} שעות`;
 }

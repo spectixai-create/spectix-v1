@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { HelpCircle, LayoutDashboard, LogOut, Menu } from 'lucide-react';
 
 import { signOut } from '@/lib/auth/actions';
+import { getUserInitials } from '@/lib/ui/user-identity';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -114,17 +115,20 @@ export function AdjusterShellClient({
 }
 
 function UserMenu({ email }: Readonly<{ email: string }>) {
+  const initials = getUserInitials(email);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           type="button"
           variant="ghost"
-          size="sm"
-          className="max-w-[14rem] justify-start font-latin"
-          title={email}
+          size="icon"
+          className="h-9 w-9 rounded-full border bg-background font-latin text-sm font-semibold"
+          aria-label="תפריט משתמש"
+          title="תפריט משתמש"
         >
-          <span className="truncate">{email}</span>
+          <span aria-hidden="true">{initials}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">

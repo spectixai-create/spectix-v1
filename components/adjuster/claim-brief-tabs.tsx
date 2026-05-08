@@ -14,13 +14,31 @@ export function ClaimBriefTabs({
 }: Readonly<{
   snapshot: ClaimDetailSnapshot;
 }>) {
+  const tabCounts = {
+    findings: snapshot.findings.length,
+    documents: snapshot.documents.length,
+    validation: snapshot.validations.length,
+    audit: snapshot.auditLog.length,
+  } as const;
+
   return (
     <Tabs defaultValue="findings" dir="rtl" className="space-y-4">
       <TabsList className="grid h-auto w-full grid-cols-2 md:w-auto md:grid-cols-4">
-        <TabsTrigger value="findings">{BRIEF_TABS.findings}</TabsTrigger>
-        <TabsTrigger value="documents">{BRIEF_TABS.documents}</TabsTrigger>
-        <TabsTrigger value="validation">{BRIEF_TABS.validation}</TabsTrigger>
-        <TabsTrigger value="audit">{BRIEF_TABS.audit}</TabsTrigger>
+        <TabsTrigger value="findings">
+          <TabLabel label={BRIEF_TABS.findings} count={tabCounts.findings} />
+        </TabsTrigger>
+        <TabsTrigger value="documents">
+          <TabLabel label={BRIEF_TABS.documents} count={tabCounts.documents} />
+        </TabsTrigger>
+        <TabsTrigger value="validation">
+          <TabLabel
+            label={BRIEF_TABS.validation}
+            count={tabCounts.validation}
+          />
+        </TabsTrigger>
+        <TabsTrigger value="audit">
+          <TabLabel label={BRIEF_TABS.audit} count={tabCounts.audit} />
+        </TabsTrigger>
       </TabsList>
       <TabsContent value="findings" className="space-y-4">
         <FindingsTab findings={snapshot.findings} />
@@ -43,5 +61,22 @@ export function ClaimBriefTabs({
         <AuditTab auditLog={snapshot.auditLog} />
       </TabsContent>
     </Tabs>
+  );
+}
+
+function TabLabel({
+  label,
+  count,
+}: Readonly<{
+  label: string;
+  count: number;
+}>) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      {label}
+      <span className="font-latin text-xs text-muted-foreground">
+        ({count})
+      </span>
+    </span>
   );
 }

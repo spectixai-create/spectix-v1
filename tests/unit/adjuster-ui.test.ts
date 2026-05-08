@@ -88,6 +88,34 @@ describe('SPRINT-UI-001 claim list composition', () => {
 
     expect(response.items.map((item) => item.id)).toEqual(['c2']);
   });
+
+  it('passes risk band and summary KPI data to the dashboard DTO', () => {
+    const response = composeClaimListResponse({
+      claims: [
+        claim({ id: 'c1', status: 'ready', riskBand: 'red', riskScore: 91 }),
+        claim({ id: 'c2', status: 'pending_info', riskBand: 'orange' }),
+        claim({ id: 'c3', status: 'reviewed', riskBand: 'green' }),
+      ],
+      synthesisResults: [
+        finding('c1', 'gap', 'high'),
+        finding('c2', 'anomaly', 'medium'),
+      ],
+      query: {},
+      now: new Date('2026-05-06T00:00:00Z'),
+    });
+
+    expect(response.summary).toEqual({
+      totalOpen: 2,
+      ready: 1,
+      pendingInfo: 1,
+      highRisk: 2,
+    });
+    expect(response.items[0]).toMatchObject({
+      riskBand: 'red',
+      riskScore: 91,
+      topFindingSeverity: 'high',
+    });
+  });
 });
 
 describe('SPRINT-UI-001 detail snapshot composition', () => {

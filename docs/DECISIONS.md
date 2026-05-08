@@ -731,3 +731,100 @@ Guardrails:
 - Keep the homepage to the approved static hero for UI-003 Part 2.
 - Do not add extra marketing sections before the insurer discovery package is
   exercised.
+
+---
+
+## D-038 — Authenticated UI treated as demo-exposed
+
+Date: 07/05/2026
+Status: Active
+Decided by: CEO
+Source: post-UI-003 Architect UX audit and UI-003 Part 3 dispatch.
+
+Decision:
+Authenticated adjuster pages are treated as insurer-demo-exposed surfaces during
+the pilot-readiness phase.
+
+Rationale:
+The first insurer conversations will include authenticated workflows, not only
+public pages. Internal labels, build markers, raw identities, and QA navigation
+can reduce commercial confidence even when functionality is correct.
+
+Guardrails:
+
+- Keep production, Supabase, and outreach gates unchanged.
+- Internal QA routes may remain accessible directly when auth-gated, but they
+  should not appear in normal demo navigation.
+
+---
+
+## D-039 — Risk Bands canonical visualization
+
+Date: 07/05/2026
+Status: Active
+Decided by: CEO
+Source: post-UI-003 Architect UX audit and UI-003 Part 3 dispatch.
+
+Decision:
+Risk Band display uses the existing canonical risk badge/meter palette and must
+surface on the dashboard when `claims.risk_band` is available.
+
+Rationale:
+Risk Band is a core scanning signal for adjusters and insurer demo viewers. The
+dashboard should expose it explicitly instead of relying only on readiness score
+or status.
+
+Guardrails:
+
+- Do not add a migration for Risk Band.
+- If `risk_band` is null, show a neutral fallback instead of deriving an
+  unsupported value.
+
+---
+
+## D-040 — User identity rendering uses initials avatar pattern
+
+Date: 07/05/2026
+Status: Active
+Decided by: CEO
+Source: post-UI-003 Architect UX audit and UI-003 Part 3 dispatch.
+
+Decision:
+Authenticated headers render user identity as an initials/avatar control by
+default, not as a visible raw email address.
+
+Rationale:
+Raw email addresses in the demo header distract from the workflow and can leak
+operator identity in screenshots or recordings.
+
+Guardrails:
+
+- Do not expose full emails in default header chrome or passive title text.
+- Sign-out remains available from the user dropdown.
+
+---
+
+## D-041 — UI-003 Part 3 scope
+
+Date: 07/05/2026
+Status: Active
+Decided by: CEO
+Source: post-UI-003 Architect UX audit, continuation plan, and CEO GPT approval.
+
+Decision:
+UI-003 Part 3 is limited to pre-insurer-outreach demo-readiness fixes for
+authenticated UI: nav/footer cleanup, header identity, Hebrew grammar,
+dashboard localization and Risk Band, KPI cards, question-card action clarity,
+tab counters, leading-finding severity, and RTL action order.
+
+Rationale:
+Functional validation already passed, but commercial demo-readiness remains
+blocked until the authenticated UI avoids internal signals and exposes key
+triage information clearly.
+
+Guardrails:
+
+- No migrations, production actions, Supabase mutation, deploy, OpenClaw, or
+  outreach are part of UI-003 Part 3.
+- CAPTCHA, production hardening, and broader design-token overhaul remain out of
+  this part.

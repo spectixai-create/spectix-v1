@@ -89,7 +89,7 @@ export function ActionPanel({
         <CardTitle className="text-lg">פעולות מתאם</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3" dir="rtl">
           <Button
             type="button"
             className="gap-2"
@@ -150,18 +150,20 @@ export function ActionPanel({
             placeholder="נימוק דחייה"
             aria-label="נימוק דחייה"
           />
-          <Button
-            type="button"
-            variant="destructive"
-            className="gap-2"
-            disabled={
-              actionsDisabled || !canReject(claim.status) || !reason.trim()
-            }
-            onClick={() => runAction('reject', { reason })}
-          >
-            <XCircle className="h-4 w-4" aria-hidden="true" />
-            {ADJUSTER_ACTIONS.reject}
-          </Button>
+          <div className="flex justify-end" dir="rtl">
+            <Button
+              type="button"
+              variant="destructive"
+              className="gap-2"
+              disabled={
+                actionsDisabled || !canReject(claim.status) || !reason.trim()
+              }
+              onClick={() => runAction('reject', { reason })}
+            >
+              <XCircle className="h-4 w-4" aria-hidden="true" />
+              {ADJUSTER_ACTIONS.reject}
+            </Button>
+          </div>
         </div>
 
         {message ? (
