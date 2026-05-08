@@ -331,117 +331,111 @@ before returning to Israel.
 
 ### 11AB — Authenticated `/design-system` Navigation Leak
 
-**Current state:** the route is no longer anonymous-public, but the link can
-still appear in authenticated/demo-exposed navigation.
+**Status:** resolved in UI-003 Part 3.
 
-**Future requirement:** remove the link from demo-facing authenticated
-navigation while preserving direct internal access for authorized users.
+**Resolution:** authenticated product navigation no longer exposes a
+`/design-system` entry. Direct route access remains auth-gated for internal QA.
 
-**Owner:** UI-003 Part 3.
+**Owner:** UI.
 
 ### 11AC — Authenticated Footer Internal Build Text
 
-**Current state:** authenticated/demo-exposed surfaces can still show internal
-Spike/build wording.
+**Status:** resolved in UI-003 Part 3.
 
-**Future requirement:** remove internal build labels from demo-exposed UI and
-keep internal version information in developer-only contexts.
+**Resolution:** demo-exposed authenticated pages use the clean public footer
+label by default: `Spectix • 2026`.
 
-**Owner:** UI-003 Part 3.
+**Owner:** UI.
 
 ### 11AD — Header Identity Initials Avatar Pattern
 
-**Current state:** the authenticated header can expose the full user email.
+**Status:** resolved in UI-003 Part 3.
 
-**Future requirement:** replace visible email text with an initials/avatar
-dropdown pattern.
+**Resolution:** the authenticated header uses an initials/avatar dropdown and no
+longer shows the raw email in default header chrome.
 
-**Owner:** UI-003 Part 3.
+**Owner:** UI.
 
 ### 11AE — Hebrew Day Pluralization
 
-**Current state:** at least one Hebrew day-count label can render `1 ימים`.
+**Status:** resolved in UI-003 Part 3.
 
-**Future requirement:** normalize singular/plural day labels across
-authenticated/demo-exposed UI.
+**Resolution:** shared Hebrew relative-time helpers cover `היום`, `לפני יום`,
+`לפני יומיים`, and plural day/hour forms.
 
-**Owner:** UI-003 Part 3.
+**Owner:** UI.
 
 ### 11AF — Dashboard Claim Type Localization
 
-**Current state:** dashboard claim type values can still render in English.
+**Status:** resolved in UI-003 Part 3.
 
-**Future requirement:** render claim type labels in Hebrew on demo-exposed
-dashboard surfaces.
+**Resolution:** dashboard and claim header claim-type values use canonical
+Hebrew labels.
 
-**Owner:** UI-003 Part 3.
+**Owner:** UI.
 
 ### 11AG — Dashboard Risk Band Column
 
-**Current state:** the dashboard table does not expose a Risk Band column.
+**Status:** resolved in UI-003 Part 3.
 
-**Future requirement:** add canonical Risk Band display to the dashboard table.
+**Resolution:** the dashboard DTO passes `riskBand`/`riskScore`, and the table
+renders a canonical Risk Band column with neutral fallback.
 
-**Owner:** UI-003 Part 3.
+**Owner:** UI.
 
 ### 11AH — Dashboard KPI Cards
 
-**Current state:** dashboard KPI cards are not yet aligned with the
-demo-readiness expectations from the Architect UX audit.
+**Status:** resolved in UI-003 Part 3.
 
-**Future requirement:** add or align KPI cards for insurer-demo scanning.
+**Resolution:** the dashboard renders KPI cards from real filtered claim-list
+summary data.
 
-**Owner:** UI-003 Part 3.
+**Owner:** UI.
 
 ### 11AI — Tags Versus Status Badge Separation
 
-**Current state:** tags and status badges can be visually conflated on
-demo-exposed claim surfaces.
+**Status:** resolved in UI-003 Part 3.
 
-**Future requirement:** separate status and descriptive tags with distinct
-visual treatment.
+**Resolution:** question-card and dashboard metadata now use muted/outlined tag
+treatment while status and risk remain semantic badges.
 
-**Owner:** UI-003 Part 3.
+**Owner:** UI.
 
 ### 11AJ — Question Card Primary Action Copy
 
-**Current state:** question cards need a clearer primary action for opening the
-claim.
+**Status:** resolved in UI-003 Part 3.
 
-**Future requirement:** use `פתח תיק` as the primary action where the card
-navigates to a claim.
+**Resolution:** question cards include the primary `פתח תיק` action linking to
+the related claim.
 
-**Owner:** UI-003 Part 3.
+**Owner:** UI.
 
 ### 11AK — Tab Counters
 
-**Current state:** tab labels do not consistently show counters for contained
-items.
+**Status:** resolved in UI-003 Part 3.
 
-**Future requirement:** add counters to relevant tabs where they improve
-demo-time scanning.
+**Resolution:** question queue and claim brief tabs include counters where data
+is available.
 
-**Owner:** UI-003 Part 3.
+**Owner:** UI.
 
 ### 11AL — Leading Finding Severity Color Coding
 
-**Current state:** leading findings need clearer severity color coding for
-demo-time triage.
+**Status:** resolved in UI-003 Part 3.
 
-**Future requirement:** apply canonical severity color treatment to leading
-findings.
+**Resolution:** dashboard leading findings carry severity badges, and the first
+claim finding is highlighted with severity color treatment.
 
-**Owner:** UI-003 Part 3.
+**Owner:** UI.
 
 ### 11AM — RTL Primary/Secondary Button Order
 
-**Current state:** primary and secondary action order is not fully normalized
-for RTL demo surfaces.
+**Status:** resolved in UI-003 Part 3.
 
-**Future requirement:** align RTL button ordering with the approved UI-003 Part
-3 pattern.
+**Resolution:** affected action rows keep primary actions visually right in RTL
+and secondary/destructive actions to the left.
 
-**Owner:** UI-003 Part 3.
+**Owner:** UI.
 
 ### 16.1 — RESOLVED: HEIC To JPEG Frontend Conversion
 

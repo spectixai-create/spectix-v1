@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import type { ClaimDetailSnapshot } from '@/lib/adjuster/types';
 import { getScoreBandClass } from '@/lib/ui/status-badges';
+import { getClaimTypeLabel } from '@/lib/ui/strings-he';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ClaimStatusBadge } from '@/components/adjuster/claim-status-badge';
@@ -29,7 +30,8 @@ export function ClaimHeader({
               {claim.insuredName ?? claim.claimantName ?? 'מבוטח לא ידוע'}
             </h2>
             <p className="text-sm text-muted-foreground">
-              תיק {claim.claimNumber} · {claim.claimType ?? 'סוג תביעה לא סווג'}
+              תיק {claim.claimNumber} ·{' '}
+              {getClaimTypeLabel(claim.claimType, 'סוג תביעה לא סווג')}
             </p>
           </div>
         </div>

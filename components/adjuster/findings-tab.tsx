@@ -2,6 +2,7 @@
 
 import type { BriefFinding } from '@/lib/adjuster/types';
 import { EMPTY_STATES, FINDING_CATEGORY_LABELS } from '@/lib/ui/strings-he';
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -9,6 +10,12 @@ const severityLabel = {
   high: 'גבוה',
   medium: 'בינוני',
   low: 'נמוך',
+} as const;
+
+const leadingFindingClass = {
+  high: 'border-risk-red bg-risk-red-bg',
+  medium: 'border-risk-orange bg-risk-orange-bg',
+  low: 'border-risk-yellow bg-risk-yellow-bg',
 } as const;
 
 export function FindingsTab({
@@ -22,15 +29,22 @@ export function FindingsTab({
 
   return (
     <div className="space-y-3">
-      {findings.map((finding) => (
+      {findings.map((finding, index) => (
         <details
           key={finding.id}
-          className="rounded-md border bg-card p-4 open:shadow-sm"
+          className={cn(
+            'rounded-md border bg-card p-4 open:shadow-sm',
+            index === 0 && leadingFindingClass[finding.severity],
+          )}
+          data-leading-finding={index === 0 ? 'true' : undefined}
         >
           <summary className="cursor-pointer list-none space-y-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="font-medium">{finding.title}</h3>
               <div className="flex gap-2">
+                {index === 0 ? (
+                  <Badge variant="outline">ממצא מוביל</Badge>
+                ) : null}
                 <Badge variant="outline">
                   {FINDING_CATEGORY_LABELS[finding.category] ??
                     finding.category}

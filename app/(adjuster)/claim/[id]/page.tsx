@@ -42,7 +42,7 @@ export default async function ClaimPage({
             <PassTimeline passes={snapshot.passes} />
           </div>
         </div>
-        <VersionFooter internal />
+        <VersionFooter />
       </div>
     </AdjusterShell>
   );

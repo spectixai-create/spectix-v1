@@ -1,6 +1,7 @@
 import { fetchClaimsList } from '@/lib/adjuster/data';
 import type { ClaimListQuery } from '@/lib/adjuster/types';
 import { requireUser } from '@/lib/auth/server';
+import { DashboardKpiRow } from '@/components/adjuster/dashboard-kpi-row';
 import { ClaimsListTable } from '@/components/adjuster/claims-list-table';
 import { RefreshButton } from '@/components/adjuster/refresh-button';
 import { AdjusterShell } from '@/components/layout/adjuster-shell';
@@ -39,8 +40,9 @@ export default async function DashboardPage({
           description="תיקים מוכנים לעיון מתאם, בקשות מידע והחלטות כיסוי"
           actions={<RefreshButton />}
         />
+        <DashboardKpiRow summary={claims.summary} />
         <ClaimsListTable data={claims} />
-        <VersionFooter internal />
+        <VersionFooter />
       </div>
     </AdjusterShell>
   );

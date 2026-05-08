@@ -5,7 +5,14 @@ import { ArrowUpDown, Search } from 'lucide-react';
 
 import type { ClaimListResponse } from '@/lib/adjuster/types';
 import { getScoreBandClass } from '@/lib/ui/status-badges';
-import { EMPTY_STATES, FINDING_CATEGORY_LABELS } from '@/lib/ui/strings-he';
+import {
+  EMPTY_STATES,
+  FINDING_CATEGORY_LABELS,
+  getClaimTypeLabel,
+} from '@/lib/ui/strings-he';
+import type { RiskBand } from '@/lib/types';
+import { Tag } from '@/components/data-display/tag';
+import { RiskBadge } from '@/components/risk/risk-band';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
@@ -31,10 +38,23 @@ const headers = [
   'סוג',
   'סכום',
   'ציון',
+  'רמת סיכון',
   'ממצא מוביל',
   'ימים פתוח',
   'סטטוס',
 ] as const;
+
+const severityLabel = {
+  high: 'גבוה',
+  medium: 'בינוני',
+  low: 'נמוך',
+} as const;
+
+const severityVariant = {
+  high: 'destructive',
+  medium: 'risk-orange',
+  low: 'secondary',
+} as const;
 
 export function ClaimsListTable({
   data,
@@ -159,10 +179,12 @@ export function ClaimsListTable({
                       {claim.insuredName ?? claim.claimantName ?? 'לא ידוע'}
                     </span>
                     {claim.escalatedToInvestigator ? (
-                      <span className="text-xs text-risk-red">הועבר לחוקר</span>
+                      <Tag tone="warning" className="mt-1">
+                        הועבר לחוקר
+                      </Tag>
                     ) : null}
                   </TableCell>
-                  <TableCell>{claim.claimType ?? 'לא סווג'}</TableCell>
+                  <TableCell>{getClaimTypeLabel(claim.claimType)}</TableCell>
                   <TableCell className="font-latin">
                     {formatCurrency(claim.amountClaimed, claim.currency)}
                   </TableCell>
@@ -175,10 +197,35 @@ export function ClaimsListTable({
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {claim.topFindingCategory
-                      ? (FINDING_CATEGORY_LABELS[claim.topFindingCategory] ??
-                        claim.topFindingCategory)
-                      : 'אין'}
+                    {isRiskBand(claim.riskBand) ? (
+                      <RiskBadge band={claim.riskBand} />
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        className="text-muted-foreground"
+                      >
+                        לא נקבע
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {claim.topFindingCategory ? (
+                      <div className="flex flex-wrap gap-2">
+                        <Tag>
+                          {FINDING_CATEGORY_LABELS[claim.topFindingCategory] ??
+                            claim.topFindingCategory}
+                        </Tag>
+                        {claim.topFindingSeverity ? (
+                          <Badge
+                            variant={severityVariant[claim.topFindingSeverity]}
+                          >
+                            {severityLabel[claim.topFindingSeverity]}
+                          </Badge>
+                        ) : null}
+                      </div>
+                    ) : (
+                      'אין'
+                    )}
                   </TableCell>
                   <TableCell className="font-latin">{claim.daysOpen}</TableCell>
                   <TableCell>
@@ -205,4 +252,13 @@ function formatCurrency(amount: number | null, currency: string): string {
     currency,
     maximumFractionDigits: 0,
   }).format(amount);
+}
+
+function isRiskBand(value: string | null): value is RiskBand {
+  return (
+    value === 'green' ||
+    value === 'yellow' ||
+    value === 'orange' ||
+    value === 'red'
+  );
 }

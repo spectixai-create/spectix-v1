@@ -1,4 +1,5 @@
 import type {
+  ClaimType,
   ClaimStatus,
   DocumentProcessingStatus,
   PassStatus,
@@ -98,3 +99,25 @@ export const DOCUMENT_LABELS: Record<string, string> = {
   witnesses: 'עדות',
   other: 'אחר',
 };
+
+export const CLAIM_TYPE_LABELS: Record<ClaimType, string> = {
+  theft: 'גניבה',
+  baggage: 'כבודה',
+  medical: 'רפואי',
+  flight_delay: 'עיכוב טיסה',
+  flight_cancellation: 'ביטול טיסה',
+  loss: 'אובדן',
+  liability: 'אחריות צד ג׳',
+  emergency: 'חירום',
+  misrepresentation: 'אי-התאמה / הצהרה שגויה',
+  other: 'אחר',
+};
+
+export function getClaimTypeLabel(
+  claimType: string | null | undefined,
+  fallback = 'לא סווג',
+): string {
+  if (!claimType) return fallback;
+
+  return CLAIM_TYPE_LABELS[claimType as ClaimType] ?? fallback;
+}
