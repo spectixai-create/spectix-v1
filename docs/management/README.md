@@ -62,6 +62,7 @@ docs/management/
 - `sprint002d.2_errored_costcap_06_05.md` — SPRINT-002D spec for errored recovery and soft cost cap. **Status: shipped in PR #65.**
 - `sprint003a.3_synthesis_implementation_06_05.md` — SPRINT-003A synthesis MVP implementation spec. **Status: shipped in PR #66.**
 - `sprint_ui001.2_brief_view_implementation_06_05.md` — SPRINT-UI-001 brief view implementation spec. **Status: ready for dispatch after SYNC-005.**
+- `sprint_ui004_1_claimant_flow_polish_08_05_v1_0.md` — SPRINT-UI-004.1 claimant flow polish spec.
 
 ### audits/
 
