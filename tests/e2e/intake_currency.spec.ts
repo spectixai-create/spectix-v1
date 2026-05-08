@@ -32,7 +32,7 @@ test.describe('intake currency selection', () => {
     await expect(page.getByText('המטבע הנפוץ במדינה זו: THB.')).toHaveCount(0);
 
     await page.getByRole('combobox', { name: 'מדינה' }).click();
-    await page.getByRole('option', { name: 'ארצות הברית' }).click();
-    await expect(page.getByText('המטבע הנפוץ במדינה זו: USD.')).toBeVisible();
+    await page.getByRole('option', { name: 'יפן' }).click();
+    await expect(page.getByText('המטבע הנפוץ במדינה זו: JPY.')).toBeVisible();
   });
 });
