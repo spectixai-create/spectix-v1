@@ -2,13 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  FileText,
-  HelpCircle,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-} from 'lucide-react';
+import { HelpCircle, LayoutDashboard, LogOut, Menu } from 'lucide-react';
 
 import { signOut } from '@/lib/auth/actions';
 import { cn } from '@/lib/utils';
@@ -31,7 +25,6 @@ import {
 const navItems = [
   { href: '/dashboard', label: 'תור עבודה', icon: LayoutDashboard },
   { href: '/questions', label: 'תור שאלות', icon: HelpCircle },
-  { href: '/design-system', label: 'Design system', icon: FileText },
 ];
 
 export function AdjusterShellClient({

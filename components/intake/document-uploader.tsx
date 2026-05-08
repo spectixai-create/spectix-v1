@@ -9,8 +9,19 @@ import type {
   DocumentProcessingStatus,
   DocumentType,
 } from '@/lib/types';
+import {
+  convertHeicToJpeg,
+  DOCUMENT_UPLOAD_ACCEPT,
+  isHeicFile,
+} from '@/lib/upload/heic';
 
-type UploadStatus = 'queued' | 'uploading' | 'processing' | 'success' | 'error';
+type UploadStatus =
+  | 'queued'
+  | 'converting'
+  | 'uploading'
+  | 'processing'
+  | 'success'
+  | 'error';
 
 type UploadEntry = {
   id: string;
@@ -28,6 +39,7 @@ const ALLOWED_MIME_TYPES = new Set([
 
 const STATUS_LABELS: Record<UploadStatus, string> = {
   queued: 'ממתין להעלאה',
+  converting: 'ממיר תמונה...',
   uploading: 'מעלה...',
   processing: 'מעבד...',
   success: 'מוכן',
@@ -132,7 +144,7 @@ export function DocumentUploader({
         <div>
           <p className="font-medium">גרור לכאן מסמכים או בחר קבצים</p>
           <p className="text-sm text-muted-foreground">
-            PDF, JPEG, PNG עד 4 MB לקובץ
+            PDF, JPEG, PNG, HEIC עד 4 MB לקובץ
           </p>
         </div>
         <Button type="button" variant="secondary" size="sm">
@@ -142,7 +154,7 @@ export function DocumentUploader({
           ref={inputRef}
           type="file"
           className="sr-only"
-          accept="application/pdf,image/jpeg,image/png"
+          accept={DOCUMENT_UPLOAD_ACCEPT}
           multiple
           onChange={(event) => {
             handleFiles(event.target.files);
@@ -180,7 +192,20 @@ async function uploadSingleFile(
   claimId: string,
   update: (entry: Partial<UploadEntry>) => void,
 ): Promise<Document | null> {
-  const clientError = getClientValidationError(file);
+  let uploadFile = file;
+
+  if (isHeicFile(file)) {
+    update({ status: 'converting' });
+    try {
+      uploadFile = await convertHeicToJpeg(file);
+      update({ fileName: uploadFile.name });
+    } catch {
+      update({ status: 'error', error: 'המרת התמונה נכשלה' });
+      return null;
+    }
+  }
+
+  const clientError = getClientValidationError(uploadFile);
 
   if (clientError) {
     update({ status: 'error', error: clientError });
@@ -191,7 +216,7 @@ async function uploadSingleFile(
 
   try {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', uploadFile);
 
     const response = await fetch(`/api/claims/${claimId}/documents`, {
       method: 'POST',

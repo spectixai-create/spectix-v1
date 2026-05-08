@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-const versionTextPattern = /^Spectix Spike #\d+ • \d{4}-\d{2}-\d{2}$/;
+const publicFooterText = 'Spectix • 2026';
 
 function collectConsoleErrors(page: Page) {
   const errors: string[] = [];
@@ -32,8 +32,7 @@ async function expectVersionFooter(page: Page) {
   const footer = page.getByLabel('גרסת מערכת');
 
   await expect(footer).toBeVisible();
-  await expect(footer).toHaveText(versionTextPattern);
-  await expect(footer).toHaveAttribute('title', /.+/);
+  await expect(footer).toHaveText(publicFooterText);
 }
 
 test('login page handles visible states and version footer', async ({
@@ -141,16 +140,13 @@ test('version footer is visible on public pages without session', async ({
 }) => {
   const errors = collectConsoleErrors(page);
 
-  for (const path of [
-    '/',
-    '/new',
-    '/login',
-    '/design-system',
-    '/thispagedoesnotexist',
-  ]) {
+  for (const path of ['/', '/new', '/login', '/thispagedoesnotexist']) {
     await page.goto(path);
     await expectVersionFooter(page);
   }
+
+  await page.goto('/design-system');
+  await expect(page).toHaveURL((url) => url.pathname === '/login');
 
   expect(errors).toEqual([]);
 });

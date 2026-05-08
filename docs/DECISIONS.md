@@ -540,3 +540,95 @@ Supersedes:
 Trigger to revisit:
 After pilot, revisit multi-channel automation if claimant email response rate is
 below 50 percent and adjusters request automation for WhatsApp/SMS.
+
+---
+
+## D-031 — UI-003 sprint scope and methodology
+
+Date: 07/05/2026
+Status: Active
+Decided by: CEO
+Source: Pre-pilot review package and QA-001 triage.
+
+Decision:
+UI-003 is the pre-pilot readiness sprint for technical and UX blockers that
+could embarrass or materially weaken the first insurer demo. UI-003 is split
+into:
+
+1. Part 1 technical blockers that do not require Designer decisions.
+2. Part 2 design-dependent intake changes after Designer decisions land.
+
+Part 1 includes public/internal surface cleanup, `/design-system` route
+disposition, HEIC upload handling, `/api/health` information-disclosure
+mitigation, and conditional CAPTCHA only when Turnstile keys are available.
+
+Rationale:
+Splitting the sprint lets Codex close technical blockers while Architect Track A
+and Designer decisions run in parallel. It prevents design-dependent fields
+from being implemented prematurely.
+
+Guardrails:
+
+- Part 1 must not implement ToS/Privacy consent, currency selection, trip
+  dates, or pre-trip insurance.
+- Public pages use a clean `Spectix • 2026` footer. Internal authenticated
+  pages may keep the full build/version footer; this supersedes D-013 for
+  public surfaces.
+- Production Supabase, production deploys, production smoke, OpenClaw,
+  Twilio/SMS/WhatsApp, and insurer outreach remain out of scope.
+- CAPTCHA is skipped rather than partially implemented if Turnstile keys are
+  not available by variable name.
+
+Trigger to revisit:
+After UI-003 Part 1 and Part 2 merge, consolidate Architect Track A findings
+and update the plan overview.
+
+---
+
+## D-032 — `/design-system` route disposition
+
+Date: 07/05/2026
+Status: Active
+Decided by: CEO
+Source: Architect UX/UI live preview review and QA-001 duplicate finding F-005.
+
+Decision:
+Keep `/design-system` in the repository as an authenticated internal QA page,
+but remove public access and remove it from the main adjuster navigation.
+
+Rationale:
+The page remains useful for internal component checks, but public exposure
+signals prototype status and can confuse insurer viewers. Hiding and auth-gating
+the route is lower-risk than deleting the page before the first pilot.
+
+Trigger to revisit:
+Delete or replace the route if a formal internal design review tool supersedes
+it.
+
+---
+
+## D-033 — Demo URL canonical
+
+Date: 07/05/2026
+Status: Active
+Decided by: CEO
+Source: CEO GPT operational review and pre-pilot review package.
+
+Decision:
+The canonical demo URL for insurer-facing manual demos is
+`https://staging.spectix.co.il`.
+
+Rationale:
+PR preview URLs are commit-specific, expire or drift operationally, and can
+generate claimant links with the wrong origin if environment variables are not
+aligned. A single staging URL reduces demo risk and keeps generated claimant
+links predictable.
+
+Guardrails:
+
+- Do not use production for demos unless a separate production-readiness gate
+  explicitly approves it.
+- Do not show raw tokens, full magic links, secrets, or real claimant data in
+  screenshots or recordings.
+- If the first signed LOI or written pilot intent arrives, switch to
+  SPRINT-PROD-BLOCK planning by default.

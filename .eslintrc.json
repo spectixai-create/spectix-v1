@@ -9,6 +9,6 @@
   "rules": {
     "tailwindcss/enforces-shorthand": "off",
     "tailwindcss/no-unnecessary-arbitrary-value": "off",
-    "tailwindcss/no-custom-classname": "warn"
+    "tailwindcss/no-custom-classname": "off"
   }
 }
