@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { isCurrencyCode } from '@/lib/intake/currencies';
+import { currencyOptions } from '@/lib/intake/currencies';
 import {
   TRIP_DATE_MESSAGES,
   validateTripDateContext,
@@ -34,6 +35,24 @@ describe('UI-003 Part 2 intake validation', () => {
     expect(isCurrencyCode('THB')).toBe(true);
     expect(isCurrencyCode('usd')).toBe(false);
     expect(isCurrencyCode('USDT')).toBe(false);
+  });
+
+  it('uses approved currency display labels while storing code values', () => {
+    expect(currencyOptions).toEqual(
+      expect.arrayContaining([
+        { value: 'ILS', label: '₪ ILS — שקל' },
+        { value: 'USD', label: '$ USD — דולר אמריקאי' },
+        { value: 'EUR', label: '€ EUR — יורו' },
+        { value: 'GBP', label: '£ GBP — לירה שטרלינג' },
+        { value: 'JPY', label: '¥ JPY — יין יפני' },
+        { value: 'THB', label: '฿ THB — באט תאילנדי' },
+        { value: 'AUD', label: 'A$ AUD — דולר אוסטרלי' },
+        { value: 'CAD', label: 'C$ CAD — דולר קנדי' },
+        { value: 'CHF', label: 'CHF — פרנק שוויצרי' },
+        { value: 'TRY', label: '₺ TRY — לירה טורקית' },
+        { value: 'EGP', label: 'E£ EGP — לירה מצרית' },
+      ]),
+    );
   });
 
   it('requires ToS and Privacy acceptance', () => {

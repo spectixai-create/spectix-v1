@@ -21,4 +21,18 @@ test.describe('intake trip dates and pre-trip insurance', () => {
       ),
     ).toBeVisible();
   });
+
+  test('unknown pre-trip insurance shows helper without blocking error', async ({
+    page,
+  }) => {
+    await page.goto('/new');
+
+    await page.getByLabel('לא בטוח').check();
+    await expect(
+      page.getByText(
+        'אם אינך זוכר את התאריך המדויק, נשלח לך שאלת השלמה לאחר העיבוד הראשוני.',
+      ),
+    ).toBeVisible();
+    await expect(page.getByText('שדה חובה')).toHaveCount(0);
+  });
 });

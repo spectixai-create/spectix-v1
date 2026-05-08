@@ -1,3 +1,6 @@
+'use client';
+
+import * as React from 'react';
 import type { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 
 import { FieldLabel } from '@/components/intake/field-label';
@@ -43,6 +46,21 @@ export function SectionIncident({
   const tripStartDate = watch('tripStartDate');
   const tripEndDate = watch('tripEndDate');
   const currencyHint = countryCurrencyHints[country];
+  const [hintSuppressedForCountry, setHintSuppressedForCountry] =
+    React.useState<string | null>(null);
+  const previousCountryRef = React.useRef(country);
+
+  React.useEffect(() => {
+    if (previousCountryRef.current !== country) {
+      previousCountryRef.current = country;
+      setHintSuppressedForCountry(null);
+    }
+  }, [country]);
+
+  const showCurrencyHint =
+    Boolean(currencyHint) &&
+    currencyHint !== currencyCode &&
+    hintSuppressedForCountry !== country;
 
   return (
     <section className="space-y-4" aria-label="פרטי האירוע">
@@ -181,7 +199,12 @@ export function SectionIncident({
                     <FormItem>
                       <Select
                         dir="ltr"
-                        onValueChange={currencyField.onChange}
+                        onValueChange={(value) => {
+                          currencyField.onChange(value);
+                          if (country) {
+                            setHintSuppressedForCountry(country);
+                          }
+                        }}
                         value={currencyField.value}
                       >
                         <FormControl>
@@ -201,7 +224,7 @@ export function SectionIncident({
                   )}
                 />
               </div>
-              {currencyHint && currencyHint !== currencyCode ? (
+              {showCurrencyHint ? (
                 <p className="text-xs text-muted-foreground">
                   המטבע הנפוץ במדינה זו: {currencyHint}.{' '}
                   <button

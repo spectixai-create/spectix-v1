@@ -175,7 +175,24 @@ async function createClaim(input: CreateClaimInput): Promise<NextResponse> {
 
   if (consentError) {
     console.error('[consent-log-failure]', consentError);
-    warnings.push('consent_log_failed');
+
+    const { error: deleteError } = await supabase
+      .from('claims')
+      .delete()
+      .eq('id', claim.id);
+
+    if (deleteError) {
+      console.error('[consent-log-claim-cleanup-failure]', {
+        claimId: claim.id,
+        error: deleteError.message,
+      });
+    }
+
+    return jsonError(
+      'consent_log_failed',
+      'Failed to record consent audit trail',
+      500,
+    );
   }
 
   const { error: auditError } = await supabase.from('audit_log').insert({

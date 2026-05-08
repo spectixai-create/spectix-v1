@@ -12,17 +12,17 @@ export type CurrencyCode =
   | 'EGP';
 
 export const currencyOptions: Array<{ value: CurrencyCode; label: string }> = [
-  { value: 'ILS', label: 'ILS' },
-  { value: 'USD', label: 'USD' },
-  { value: 'EUR', label: 'EUR' },
-  { value: 'GBP', label: 'GBP' },
-  { value: 'JPY', label: 'JPY' },
-  { value: 'THB', label: 'THB' },
-  { value: 'AUD', label: 'AUD' },
-  { value: 'CAD', label: 'CAD' },
-  { value: 'CHF', label: 'CHF' },
-  { value: 'TRY', label: 'TRY' },
-  { value: 'EGP', label: 'EGP' },
+  { value: 'ILS', label: '₪ ILS — שקל' },
+  { value: 'USD', label: '$ USD — דולר אמריקאי' },
+  { value: 'EUR', label: '€ EUR — יורו' },
+  { value: 'GBP', label: '£ GBP — לירה שטרלינג' },
+  { value: 'JPY', label: '¥ JPY — יין יפני' },
+  { value: 'THB', label: '฿ THB — באט תאילנדי' },
+  { value: 'AUD', label: 'A$ AUD — דולר אוסטרלי' },
+  { value: 'CAD', label: 'C$ CAD — דולר קנדי' },
+  { value: 'CHF', label: 'CHF — פרנק שוויצרי' },
+  { value: 'TRY', label: '₺ TRY — לירה טורקית' },
+  { value: 'EGP', label: 'E£ EGP — לירה מצרית' },
 ];
 
 export const countryCurrencyHints: Record<string, CurrencyCode> = {

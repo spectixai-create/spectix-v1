@@ -139,6 +139,12 @@ export function SectionTripContext({
                   שהאירוע יידרש בחינה נוספת להתאמה.
                 </p>
               ) : null}
+              {preTripInsurance === 'unknown' ? (
+                <p className="text-sm text-muted-foreground">
+                  אם אינך זוכר את התאריך המדויק, נשלח לך שאלת השלמה לאחר העיבוד
+                  הראשוני.
+                </p>
+              ) : null}
               <FormMessage />
             </FormItem>
           )}
