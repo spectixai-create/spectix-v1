@@ -15,7 +15,7 @@ export default defineConfig({
     {
       command:
         "powershell -NoProfile -Command \"$env:INNGEST_DEV='1'; $env:INNGEST_BASE_URL='http://localhost:8288'; $env:SPECTIX_FAKE_CLAUDE_CLASSIFIER='true'; pnpm dev\"",
-      url: 'http://localhost:3000/design-system',
+      url: 'http://localhost:3000/api/health',
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },

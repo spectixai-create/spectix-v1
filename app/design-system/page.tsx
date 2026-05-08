@@ -19,15 +19,16 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+export const dynamic = 'force-dynamic';
+
 export default function DesignSystemPage() {
   return (
-    // Public for POC. Removed before customer demo per #00c.
-    <AdjusterShell publicAccess>
+    <AdjusterShell>
       <div className="space-y-8">
         <PageHeader
-          eyebrow="Spike #00c"
+          eyebrow="בדיקת רכיבים"
           title="ספריית רכיבי UI"
-          description="דף הדגמה ציבורי ל-POC. יש להסיר אותו לפני הדגמת לקוח ראשונה."
+          description="דף פנימי לבדיקת רכיבי ממשק לפני שילוב במסכי המוצר."
           actions={
             <>
               <Button variant="outline">פעולה משנית</Button>
@@ -70,8 +71,8 @@ export default function DesignSystemPage() {
         </section>
 
         <SectionDivider
-          title="Risk bands"
-          description="מבוסס על tokens מ-Spike #00b"
+          title="רמות סיכון"
+          description="בדיקת תצוגה של צבעים, תגים ומדדי סיכון."
         />
 
         <section className="space-y-4" aria-label="רמות סיכון">
@@ -146,7 +147,7 @@ export default function DesignSystemPage() {
             </Card>
           </div>
         </section>
-        <VersionFooter />
+        <VersionFooter internal />
       </div>
     </AdjusterShell>
   );

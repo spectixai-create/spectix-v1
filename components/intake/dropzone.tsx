@@ -4,6 +4,7 @@ import * as React from 'react';
 import { UploadCloud } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { DOCUMENT_UPLOAD_ACCEPT } from '@/lib/upload/heic';
 
 export function Dropzone({
   onAdd,
@@ -73,7 +74,7 @@ export function Dropzone({
         type="file"
         className="sr-only"
         multiple
-        accept=".pdf,.jpg,.jpeg,.png,.webp"
+        accept={`${DOCUMENT_UPLOAD_ACCEPT},.webp`}
         suppressHydrationWarning
         onChange={(event) => addFiles(event.target.files)}
       />

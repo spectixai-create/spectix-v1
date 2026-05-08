@@ -1,8 +1,10 @@
 # Tech Debt
 
 - [ ] Rotate Supabase `service_role` key. It was exposed in chat before repository documentation became canonical.
-- [ ] Remove or gate `/api/health` before public launch.
-- [ ] Remove `/design-system` before first customer demo.
+- [x] Gate `/api/health` before public launch. UI-003 Part 1 keeps anonymous
+      health minimal and moves table counts to authenticated `/api/health/detailed`.
+- [x] Hide/auth-gate `/design-system` before first customer demo. UI-003 Part 1
+      keeps the page internal and removes it from navigation.
 - [ ] Sample-data refactor: import types from [lib/types.ts](../lib/types.ts) in `sample-claim.ts`, `sample-questions.ts`, `sample-rows.ts`, and `intake-options.ts`.
 - [x] Migration #0002: support question `closed` state, urgency, `resolvedBy`, `resolutionNote`, and `closedAt`.
 - [x] Migration #0002: add reliable document processing status.
@@ -14,7 +16,9 @@
 - [ ] `AuditAction` strings are open-ended in DB. No central registry. Acceptable while fewer than 5 actions exist; centralize when audit dashboard or query patterns require it.
 - [ ] Virus scanning on uploads: current upload flow has no malware scanning. Required before real customer data.
 - [ ] Storage cleanup on claim delete: document rows cascade-delete, but Storage files can become orphans. Add scheduled cleanup once Inngest cron is wired.
-- [ ] Expand allowed upload file types: currently PDF, JPEG, PNG. Consider HEIC/HEIF conversion, WebP, and TIFF after real-user feedback.
+- [ ] Expand allowed upload file types beyond current PDF, JPEG, PNG, and
+      frontend HEIC/HEIF-to-JPEG conversion. Consider native WebP/TIFF handling
+      after real-user feedback.
 - [ ] Refine minimum file size validation: current 100-byte minimum is broad. Revisit once OCR rejects trivial files.
 - [ ] Resumable uploads: current upload retries from byte 0 after network drops.
 - [ ] Signed URL uploads for files larger than 4 MB: bucket supports 32 MB, but Vercel body limits force the API cap.
@@ -231,6 +235,94 @@ equivalent shared production limiter.
 **Trigger:** pre-production scale.
 
 **Owner:** SPRINT-PROD-BLOCK.
+
+### 11U — Real-Time Autosave Indicator
+
+**Current state:** claimant and intake flows save or submit data, but the UI
+does not provide a fully consistent real-time autosave state across every form
+surface.
+
+**Future requirement:** add a shared autosave indicator pattern for draft,
+dirty, saving, saved, and failed states.
+
+**Trigger:** repeated demo or pilot feedback that users cannot tell whether a
+draft or form change was saved.
+
+**Owner:** UI follow-up.
+
+### 11V — Dynamic Required-Documents Checklist Per Claim Type
+
+**Current state:** document requirements are shown through generated findings
+and questions rather than a dedicated dynamic checklist by claim type.
+
+**Future requirement:** show claim-type-specific required and optional
+documents, with state derived from uploaded documents and validation findings.
+
+**Trigger:** first pilot workflow where adjusters need to compare a claim
+against a visible required-document checklist.
+
+**Owner:** Product + UI.
+
+### 11W — Step Indicator On Intake Form
+
+**Current state:** `/new` is a single long form without a step/progress
+indicator.
+
+**Future requirement:** add an intake step indicator once the form grows beyond
+the current MVP fields.
+
+**Trigger:** UI-003 Part 2 or later intake expansion makes the form harder to
+scan on mobile.
+
+**Owner:** UI follow-up.
+
+### 11X — Language Consistency In Public-Facing UI
+
+**Current state:** some internal-era English labels and mixed phrasing can still
+appear in non-core surfaces or docs-derived UI.
+
+**Future requirement:** run a dedicated Hebrew/English copy pass over public and
+insurer-facing screens.
+
+**Trigger:** before first live insurer demo session or when Designer provides a
+copy deck.
+
+**Owner:** Product + Designer.
+
+### 11Y — Worktree-Only ESLint Conflict
+
+**Current state:** QA-001 observed a local worktree layout where ESLint found
+duplicate `eslint-plugin-tailwindcss` installs from both the worktree and parent
+repo.
+
+**Future requirement:** document or script a clean worktree lint invocation if
+the nested worktree pattern continues.
+
+**Trigger:** second occurrence of the same local lint conflict.
+
+**Owner:** Dev hygiene.
+
+### 11Z — Live Webhook Signature Rejection Probe
+
+**Current state:** Resend webhook invalid-signature behavior is covered by tests
+and previous non-prod validation, but QA-001 did not re-run a live staging POST.
+
+**Future requirement:** add an explicit live non-prod webhook rejection probe to
+future smoke checklists when mutation approval is granted.
+
+**Trigger:** next CEO-approved non-prod smoke cycle that includes webhook
+security checks.
+
+**Owner:** QA.
+
+### 16.1 — RESOLVED: HEIC To JPEG Frontend Conversion
+
+**Status:** resolved in UI-003 Part 1.
+
+**Resolution:** HEIC/HEIF files can be selected in upload controls and are
+converted client-side to JPEG before the existing upload API receives them.
+Server-side storage and Claude processing continue to see supported JPEG files,
+preserving D-017's server-side MIME constraints.
 
 ### 11G — REMOVED: Notification Multi-Provider Failover
 

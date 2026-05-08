@@ -13,7 +13,7 @@ import { createMiddlewareClient } from '@/lib/supabase/middleware';
  * If session looks valid, downstream pages call getUser() to validate.
  */
 
-const ADJUSTER_PATHS = ['/dashboard', '/claim', '/questions'];
+const ADJUSTER_PATHS = ['/dashboard', '/claim', '/questions', '/design-system'];
 const CLAIMANT_RATE_LIMIT_WINDOW_MS = 60_000;
 const CLAIMANT_RATE_LIMIT_MAX = 90;
 const claimantRateLimit = new Map<string, { count: number; resetAt: number }>();

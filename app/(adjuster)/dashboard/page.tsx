@@ -40,7 +40,7 @@ export default async function DashboardPage({
           actions={<RefreshButton />}
         />
         <ClaimsListTable data={claims} />
-        <VersionFooter />
+        <VersionFooter internal />
       </div>
     </AdjusterShell>
   );

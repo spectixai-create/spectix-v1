@@ -49,7 +49,12 @@ test.describe('login flow', () => {
 });
 
 test.describe('protected and public route boundaries', () => {
-  for (const path of ['/dashboard', '/claim/2024-001', '/questions']) {
+  for (const path of [
+    '/dashboard',
+    '/claim/2024-001',
+    '/questions',
+    '/design-system',
+  ]) {
     test(`${path} redirects anonymous users to login with safe next`, async ({
       page,
     }) => {
@@ -63,7 +68,7 @@ test.describe('protected and public route boundaries', () => {
     });
   }
 
-  for (const path of ['/', '/new', '/login', '/design-system']) {
+  for (const path of ['/', '/new', '/login']) {
     test(`${path} is public without session`, async ({ page }) => {
       const response = await page.goto(path);
 

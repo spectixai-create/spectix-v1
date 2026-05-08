@@ -8,6 +8,11 @@ import type {
   ClaimantPortalSnapshot,
   ClaimantQuestion,
 } from '@/lib/claimant/types';
+import {
+  convertHeicToJpeg,
+  DOCUMENT_UPLOAD_ACCEPT,
+  isHeicFile,
+} from '@/lib/upload/heic';
 
 type AnswerState = Record<string, Record<string, unknown>>;
 
@@ -32,6 +37,9 @@ export function ClaimantResponseForm({
   const [uploadingQuestionId, setUploadingQuestionId] = useState<string | null>(
     null,
   );
+  const [convertingQuestionId, setConvertingQuestionId] = useState<
+    string | null
+  >(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -79,14 +87,24 @@ export function ClaimantResponseForm({
 
   async function uploadDocument(question: ClaimantQuestion, file: File) {
     setUploadingQuestionId(question.id);
+    setConvertingQuestionId(null);
     setMessage(null);
 
-    const body = new FormData();
-    body.set('token', token);
-    body.set('question_id', question.id);
-    body.set('file', file);
-
     try {
+      let uploadFile = file;
+
+      if (isHeicFile(file)) {
+        setConvertingQuestionId(question.id);
+        uploadFile = await convertHeicToJpeg(file);
+      }
+
+      setConvertingQuestionId(null);
+
+      const body = new FormData();
+      body.set('token', token);
+      body.set('question_id', question.id);
+      body.set('file', uploadFile);
+
       const response = await fetch(`/api/c/${snapshot.claimId}/upload`, {
         method: 'POST',
         body,
@@ -105,13 +123,15 @@ export function ClaimantResponseForm({
         [question.id]: {
           type: 'document',
           document_id: document?.id,
-          file_name: document?.fileName ?? document?.file_name ?? file.name,
+          file_name:
+            document?.fileName ?? document?.file_name ?? uploadFile.name,
         },
       }));
       setMessage('המסמך נשמר');
     } catch {
       setMessage('שמירת המסמך נכשלה');
     } finally {
+      setConvertingQuestionId(null);
       setUploadingQuestionId(null);
     }
   }
@@ -179,6 +199,7 @@ export function ClaimantResponseForm({
                   })),
                 onUpload: uploadDocument,
                 uploadingQuestionId,
+                convertingQuestionId,
               })}
             </div>
           </article>
@@ -218,12 +239,14 @@ function renderQuestionControl({
   setValue,
   onUpload,
   uploadingQuestionId,
+  convertingQuestionId,
 }: {
   question: ClaimantQuestion;
   value: Record<string, unknown> | undefined;
   setValue: (value: Record<string, unknown>) => void;
   onUpload: (question: ClaimantQuestion, file: File) => Promise<void>;
   uploadingQuestionId: string | null;
+  convertingQuestionId: string | null;
 }) {
   if (question.expectedAnswerType === 'confirmation') {
     const current = typeof value?.value === 'string' ? value.value : '';
@@ -260,18 +283,20 @@ function renderQuestionControl({
       <div className="space-y-3">
         <input
           type="file"
-          accept="application/pdf,image/jpeg,image/png"
+          accept={DOCUMENT_UPLOAD_ACCEPT}
           onChange={(event) => {
             const file = event.target.files?.[0];
             if (file) void onUpload(question, file);
           }}
         />
         <p className="text-sm text-slate-600">
-          {uploadingQuestionId === question.id
-            ? 'מעלה מסמך...'
-            : fileName
-              ? `מסמך נשמר: ${fileName}`
-              : 'ניתן להעלות PDF או תמונה עד 4MB'}
+          {convertingQuestionId === question.id
+            ? 'ממיר תמונה...'
+            : uploadingQuestionId === question.id
+              ? 'מעלה מסמך...'
+              : fileName
+                ? `מסמך נשמר: ${fileName}`
+                : 'ניתן להעלות PDF או תמונה עד 4MB'}
         </p>
       </div>
     );

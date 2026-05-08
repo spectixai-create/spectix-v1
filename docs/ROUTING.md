@@ -8,7 +8,7 @@
 | `/dashboard`     | `(adjuster)` | Required             | Protected by middleware                      |
 | `/claim/[id]`    | `(adjuster)` | Required             | Protected by middleware                      |
 | `/questions`     | `(adjuster)` | Required             | Protected by middleware                      |
-| `/design-system` | root         | Public               | Public for POC; remove before customer demo  |
+| `/design-system` | root         | Required             | Internal QA page, hidden from main nav       |
 | `/api/*`         | API          | No cookie middleware | Inngest and future webhooks use signing keys |
 | `not-found`      | root         | Public               | Next.js 404                                  |
 

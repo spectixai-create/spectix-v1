@@ -18,7 +18,7 @@ export function SectionDocuments({
       <div className="space-y-2">
         <SectionDivider title="העלאת מסמכים" />
         <p className="text-sm leading-6 text-muted-foreground">
-          ניתן להעלות עד 20 קבצים. PDF, JPG, PNG, WEBP. עד 32MB לקובץ.
+          ניתן להעלות עד 20 קבצים. PDF, JPG, PNG, WEBP, HEIC. עד 32MB לקובץ.
         </p>
       </div>
       <Dropzone onAdd={onAdd} />

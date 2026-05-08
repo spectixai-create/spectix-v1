@@ -8,10 +8,7 @@ test('design system page renders core component groups', async ({ page }) => {
   await expect(
     page.getByRole('heading', { name: 'ספריית רכיבי UI' }),
   ).toBeVisible();
-  await expect(
-    page.getByRole('link', { name: /Design system/i }),
-  ).toBeVisible();
-  await expect(page.getByText('Risk bands')).toBeVisible();
+  await expect(page.getByText('רמות סיכון')).toBeVisible();
   await expect(page.getByText('פרטי תיק לדוגמה')).toBeVisible();
   await expect(page).toHaveScreenshot('design-system-1280.png', {
     fullPage: true,
