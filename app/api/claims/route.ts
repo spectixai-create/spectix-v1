@@ -25,9 +25,13 @@ type DbClaimRow = {
   insured_name: string | null;
   claimant_name: string | null;
   incident_date: string | null;
+  trip_start_date: string | null;
+  trip_end_date: string | null;
+  pre_trip_insurance: 'yes' | 'no' | 'unknown' | null;
   incident_location: string | null;
   amount_claimed: number | string | null;
   currency: string;
+  currency_code: string | null;
   summary: string | null;
   metadata: Claim['metadata'];
   claimant_email: string | null;
@@ -101,6 +105,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 async function createClaim(input: CreateClaimInput): Promise<NextResponse> {
   const supabase = createAdminClient();
   let claimNumber: string;
+  const currencyCode = input.currencyCode ?? input.currency;
 
   try {
     claimNumber = await generateClaimNumber();
@@ -125,9 +130,13 @@ async function createClaim(input: CreateClaimInput): Promise<NextResponse> {
       policy_number: input.policyNumber,
       claim_type: input.claimType,
       incident_date: input.incidentDate,
+      trip_start_date: input.tripStartDate,
+      trip_end_date: input.tripEndDate,
+      pre_trip_insurance: input.preTripInsurance,
       incident_location: input.incidentLocation,
       amount_claimed: input.amountClaimed,
-      currency: input.currency,
+      currency: currencyCode,
+      currency_code: currencyCode,
       summary: input.summary,
       metadata: input.metadata ?? {},
     })
@@ -156,6 +165,19 @@ async function createClaim(input: CreateClaimInput): Promise<NextResponse> {
 
   const claim = mapDbRowToClaim(data as DbClaimRow);
   const warnings: string[] = [];
+  const acceptedAt = new Date().toISOString();
+  const { error: consentError } = await supabase.from('consent_log').insert({
+    claim_id: claim.id,
+    tos_version: '0.1-draft',
+    privacy_version: '0.1-draft',
+    accepted_at: acceptedAt,
+  });
+
+  if (consentError) {
+    console.error('[consent-log-failure]', consentError);
+    warnings.push('consent_log_failed');
+  }
+
   const { error: auditError } = await supabase.from('audit_log').insert({
     claim_id: claim.id,
     actor_type: 'system',
@@ -169,6 +191,42 @@ async function createClaim(input: CreateClaimInput): Promise<NextResponse> {
   if (auditError) {
     console.error('[audit-failure]', auditError);
     warnings.push('audit_log_failed');
+  }
+
+  if (input.preTripInsurance === 'unknown') {
+    const { data: question, error: questionError } = await supabase
+      .from('clarification_questions')
+      .insert({
+        claim_id: claim.id,
+        question: 'מתי נרכש ביטוח הנסיעה? לפני יציאתך לחו״ל או אחרי?',
+        context: 'pre_trip_insurance_unknown',
+        status: 'pending',
+        urgency: 'normal',
+      })
+      .select('id')
+      .single();
+
+    if (questionError) {
+      console.error('[pre-trip-question-failure]', questionError);
+      warnings.push('pre_trip_question_failed');
+    } else if (question?.id) {
+      const { error: questionAuditError } = await supabase
+        .from('audit_log')
+        .insert({
+          claim_id: claim.id,
+          actor_type: 'system',
+          actor_id: null,
+          action: 'pre_trip_insurance_clarification_requested',
+          target_table: 'clarification_questions',
+          target_id: question.id,
+          details: { reason: 'unknown_pre_trip_insurance' },
+        });
+
+      if (questionAuditError) {
+        console.error('[pre-trip-question-audit-failure]', questionAuditError);
+        warnings.push('pre_trip_question_audit_failed');
+      }
+    }
   }
 
   return NextResponse.json(
@@ -205,9 +263,13 @@ function mapDbRowToClaim(row: DbClaimRow): Claim {
     insuredName: row.insured_name,
     claimantName: row.claimant_name,
     incidentDate: row.incident_date,
+    tripStartDate: row.trip_start_date,
+    tripEndDate: row.trip_end_date,
+    preTripInsurance: row.pre_trip_insurance,
     incidentLocation: row.incident_location,
     amountClaimed: toNullableNumber(row.amount_claimed),
     currency: row.currency,
+    currencyCode: row.currency_code ?? row.currency,
     summary: row.summary,
     metadata: row.metadata ?? null,
     claimantEmail: row.claimant_email,

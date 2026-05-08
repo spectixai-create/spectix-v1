@@ -10,17 +10,22 @@ const baseValues: IntakeFormValues = {
   phone: '0501234567',
   policyNumber: 'POL-001',
   occupation: 'מנהלת שיווק',
+  tripStartDate: '2025-04-10',
+  tripEndDate: '2025-04-20',
+  preTripInsurance: 'yes',
   claimType: 'theft',
   incidentDate: '2025-04-15',
   country: 'TH',
   otherCountry: '',
   city: 'בנגקוק',
   amountClaimed: '5000',
+  currencyCode: 'THB',
   incidentDescription: 'התיק נגנב בזמן מעבר בין המלון למרכז הקניות.',
   tripPurpose: 'tourism',
   localConnections: 'אין',
   previousTripsCount: '2',
   previousClaimsCount: '1',
+  tosAccepted: true,
 };
 
 describe('buildClaimPayload', () => {
@@ -33,10 +38,16 @@ describe('buildClaimPayload', () => {
       policyNumber: 'POL-001',
       claimType: 'theft',
       incidentDate: '2025-04-15',
+      tripStartDate: '2025-04-10',
+      tripEndDate: '2025-04-20',
+      preTripInsurance: 'yes',
       incidentLocation: 'בנגקוק, תאילנד',
       amountClaimed: 5000,
-      currency: 'ILS',
+      currency: 'THB',
+      currencyCode: 'THB',
       summary: 'התיק נגנב בזמן מעבר בין המלון למרכז הקניות.',
+      tosAccepted: true,
+      privacyAccepted: true,
       metadata: {
         tripPurpose: 'tourism',
         localConnections: 'אין',
@@ -76,6 +87,13 @@ describe('buildClaimPayload', () => {
 
   it('parses amountClaimed as a number', () => {
     expect(buildClaimPayload(baseValues).amountClaimed).toBe(5000);
+  });
+
+  it('keeps selected currency code in both API currency fields', () => {
+    const payload = buildClaimPayload({ ...baseValues, currencyCode: 'USD' });
+
+    expect(payload.currency).toBe('USD');
+    expect(payload.currencyCode).toBe('USD');
   });
 
   it('builds location from city and custom country', () => {

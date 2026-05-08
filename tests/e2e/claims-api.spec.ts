@@ -169,10 +169,16 @@ function validPayload() {
     policyNumber: `POL-${Date.now()}`,
     claimType: 'theft',
     incidentDate: '2025-04-15',
+    tripStartDate: '2025-04-10',
+    tripEndDate: '2025-04-20',
+    preTripInsurance: 'yes',
     incidentLocation: 'Tel Aviv, Israel',
     amountClaimed: 5000,
     currency: 'ILS',
+    currencyCode: 'ILS',
     summary: 'Test claim summary, sufficient length to pass validation.',
+    tosAccepted: true,
+    privacyAccepted: true,
     metadata: { tripPurpose: 'tourism' },
   };
 }
@@ -183,6 +189,14 @@ async function fillValidForm(page: Page) {
   await page.getByLabel('טלפון *').fill('0501234567');
   await page.getByLabel('מספר פוליסה *').fill(`POL-${Date.now()}`);
   await page.getByLabel('עיסוק *').fill('מנהלת שיווק');
+  await page.getByLabel('תאריך עזיבה *').fill('2025-04-10');
+  await page.getByLabel('תאריך חזרה *').fill('2025-04-20');
+  await page.getByLabel('כן, לפני יציאה לחו״ל').check();
+  await page.getByRole('combobox', { name: 'מטרת הנסיעה' }).click();
+  await page.getByRole('option', { name: 'תיירות' }).click();
+  await page.getByLabel('קשרים מקומיים').fill('אין');
+  await page.getByLabel('מספר נסיעות למדינה זו ב-24 חודשים אחרונים').fill('1');
+  await page.getByLabel('מתוכן עם תביעות ביטוח').fill('0');
   await page.getByRole('combobox', { name: 'סוג התביעה' }).click();
   await page.getByRole('option', { name: 'גניבה' }).click();
   await page.getByLabel('תאריך האירוע *').fill('2025-04-15');
@@ -193,9 +207,7 @@ async function fillValidForm(page: Page) {
   await page
     .getByLabel('תיאור האירוע *')
     .fill('התיק נגנב בזמן מעבר בין המלון למרכז הקניות.');
-  await page.getByRole('combobox', { name: 'מטרת הנסיעה' }).click();
-  await page.getByRole('option', { name: 'תיירות' }).click();
-  await page.getByLabel('קשרים מקומיים').fill('אין');
-  await page.getByLabel('מספר נסיעות למדינה זו ב-24 חודשים אחרונים').fill('1');
-  await page.getByLabel('מתוכן עם תביעות ביטוח').fill('0');
+  await page
+    .getByLabel('קראתי ואני מסכים לתנאי השימוש ולמדיניות הפרטיות')
+    .check();
 }

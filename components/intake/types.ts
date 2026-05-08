@@ -8,17 +8,22 @@ export type IntakeFormValues = {
   phone: string;
   policyNumber: string;
   occupation: string;
+  tripStartDate: string;
+  tripEndDate: string;
+  preTripInsurance: '' | 'yes' | 'no' | 'unknown';
   claimType: string;
   incidentDate: string;
   country: string;
   otherCountry: string;
   city: string;
   amountClaimed: string;
+  currencyCode: string;
   incidentDescription: string;
   tripPurpose: string;
   localConnections: string;
   previousTripsCount: number | string;
   previousClaimsCount: number | string;
+  tosAccepted: boolean;
 };
 
 export type MockUploadedFile = {
@@ -34,15 +39,20 @@ export const defaultIntakeValues: IntakeFormValues = {
   phone: '',
   policyNumber: '',
   occupation: '',
+  tripStartDate: '',
+  tripEndDate: '',
+  preTripInsurance: '',
   claimType: '',
   incidentDate: '',
   country: '',
   otherCountry: '',
   city: '',
   amountClaimed: '',
+  currencyCode: 'ILS',
   incidentDescription: '',
   tripPurpose: '',
   localConnections: '',
   previousTripsCount: '',
   previousClaimsCount: '',
+  tosAccepted: false,
 };

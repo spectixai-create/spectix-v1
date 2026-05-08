@@ -315,6 +315,20 @@ security checks.
 
 **Owner:** QA.
 
+### 11AA — "טרם חזרתי" Checkbox For In-Trip Claim Filing
+
+**Current state:** UI-003 Part 2 requires a concrete trip end date and does not
+support claimants who are still abroad.
+
+**Future requirement:** add a `טרם חזרתי` checkbox or equivalent in-trip filing
+state, with validation rules that allow open-ended trip windows without
+weakening incident-date checks.
+
+**Trigger:** first pilot or demo feedback where a claimant reports an incident
+before returning to Israel.
+
+**Owner:** Product + UI.
+
 ### 16.1 — RESOLVED: HEIC To JPEG Frontend Conversion
 
 **Status:** resolved in UI-003 Part 1.
