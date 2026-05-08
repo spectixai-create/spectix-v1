@@ -329,6 +329,120 @@ before returning to Israel.
 
 **Owner:** Product + UI.
 
+### 11AB — Authenticated `/design-system` Navigation Leak
+
+**Current state:** the route is no longer anonymous-public, but the link can
+still appear in authenticated/demo-exposed navigation.
+
+**Future requirement:** remove the link from demo-facing authenticated
+navigation while preserving direct internal access for authorized users.
+
+**Owner:** UI-003 Part 3.
+
+### 11AC — Authenticated Footer Internal Build Text
+
+**Current state:** authenticated/demo-exposed surfaces can still show internal
+Spike/build wording.
+
+**Future requirement:** remove internal build labels from demo-exposed UI and
+keep internal version information in developer-only contexts.
+
+**Owner:** UI-003 Part 3.
+
+### 11AD — Header Identity Initials Avatar Pattern
+
+**Current state:** the authenticated header can expose the full user email.
+
+**Future requirement:** replace visible email text with an initials/avatar
+dropdown pattern.
+
+**Owner:** UI-003 Part 3.
+
+### 11AE — Hebrew Day Pluralization
+
+**Current state:** at least one Hebrew day-count label can render `1 ימים`.
+
+**Future requirement:** normalize singular/plural day labels across
+authenticated/demo-exposed UI.
+
+**Owner:** UI-003 Part 3.
+
+### 11AF — Dashboard Claim Type Localization
+
+**Current state:** dashboard claim type values can still render in English.
+
+**Future requirement:** render claim type labels in Hebrew on demo-exposed
+dashboard surfaces.
+
+**Owner:** UI-003 Part 3.
+
+### 11AG — Dashboard Risk Band Column
+
+**Current state:** the dashboard table does not expose a Risk Band column.
+
+**Future requirement:** add canonical Risk Band display to the dashboard table.
+
+**Owner:** UI-003 Part 3.
+
+### 11AH — Dashboard KPI Cards
+
+**Current state:** dashboard KPI cards are not yet aligned with the
+demo-readiness expectations from the Architect UX audit.
+
+**Future requirement:** add or align KPI cards for insurer-demo scanning.
+
+**Owner:** UI-003 Part 3.
+
+### 11AI — Tags Versus Status Badge Separation
+
+**Current state:** tags and status badges can be visually conflated on
+demo-exposed claim surfaces.
+
+**Future requirement:** separate status and descriptive tags with distinct
+visual treatment.
+
+**Owner:** UI-003 Part 3.
+
+### 11AJ — Question Card Primary Action Copy
+
+**Current state:** question cards need a clearer primary action for opening the
+claim.
+
+**Future requirement:** use `פתח תיק` as the primary action where the card
+navigates to a claim.
+
+**Owner:** UI-003 Part 3.
+
+### 11AK — Tab Counters
+
+**Current state:** tab labels do not consistently show counters for contained
+items.
+
+**Future requirement:** add counters to relevant tabs where they improve
+demo-time scanning.
+
+**Owner:** UI-003 Part 3.
+
+### 11AL — Leading Finding Severity Color Coding
+
+**Current state:** leading findings need clearer severity color coding for
+demo-time triage.
+
+**Future requirement:** apply canonical severity color treatment to leading
+findings.
+
+**Owner:** UI-003 Part 3.
+
+### 11AM — RTL Primary/Secondary Button Order
+
+**Current state:** primary and secondary action order is not fully normalized
+for RTL demo surfaces.
+
+**Future requirement:** align RTL button ordering with the approved UI-003 Part
+3 pattern.
+
+**Owner:** UI-003 Part 3.
+
 ### 16.1 — RESOLVED: HEIC To JPEG Frontend Conversion
 
 **Status:** resolved in UI-003 Part 1.

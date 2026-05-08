@@ -111,24 +111,62 @@ Post-PR86 staging validation passed:
 - PR #47 touched: no.
 - Real claimant data used: no.
 
+Post-Architect UX audit correction:
+
+- System is functionally validated.
+- Functional validation passed.
+- Commercial insurer-demo readiness is not yet approved.
+- A new Architect UX audit found 6 P0 commercial-impact issues on
+  authenticated/demo-exposed UI.
+- Outreach remains blocked until UI-003 Part 3 is merged and verified.
+
+P0 issues for UI-003 Part 3:
+
+- P0.1 `/design-system` link still visible for authenticated users.
+- P0.2 Authenticated footer still exposes internal Spike/build text.
+- P0.3 User email visible in header; replace with initials/avatar dropdown.
+- P0.4 Hebrew plural grammar issue: `1 ימים`.
+- P0.5 Dashboard claim type values still shown in English.
+- P0.6 Dashboard missing Risk Band column.
+
+Selected P1 scope for UI-003 Part 3:
+
+- Dashboard KPI cards.
+- Tags vs status badge separation.
+- Question cards primary action `פתח תיק`.
+- Tabs counters.
+- Leading finding severity color coding.
+- RTL primary/secondary button order.
+
+Decisions to register in UI-003 Part 3 or a follow-up sync:
+
+- D-038 - Authenticated UI treated as demo-exposed.
+- D-039 - Risk Bands canonical visualization.
+- D-040 - User identity rendering uses initials avatar pattern.
+- D-041 - UI-003 Part 3 scope.
+
 ---
 
 ## Next Phase
 
-### Insurer discovery / demo execution
+### UI-003 Part 3 - pre-insurer-outreach demo-readiness fixes
 
-**Status:** next operational gate after UI-003 completion and post-PR86
-staging verification.
+**Status:** next operational gate after the post-Architect UX audit.
 
-Execution package:
-`docs/demo/insurer_discovery_execution_pack_07_05.md`
+The system is functionally validated, but not yet insurer-demo-ready. UI-003
+Part 3 must close the commercial-impact authenticated/demo-exposed UI issues
+before outreach or live insurer demos.
 
 Real-case tuning round 1 returned READY and is recorded in
 `docs/management/reports/real_case_tuning_round_1_report_07_05.md`.
 
-The next phase is manual/operator-led insurer discovery and demo execution. It
-targets 5 Israeli travel-insurance conversations and should use synthetic,
-privacy-safe demo material only.
+The insurer discovery execution package remains prepared at
+`docs/demo/insurer_discovery_execution_pack_07_05.md`, but use of that package
+for real insurer contact/demo is blocked until UI-003 Part 3 is merged and
+verified.
+
+Round 2 case sourcing and outreach material drafting may proceed in parallel,
+but no insurer contact or demo is approved yet.
 
 The current SYNC docs PR does not contact insurers, send outreach, mutate
 Supabase, run smoke, deploy, or approve production work.

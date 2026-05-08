@@ -113,15 +113,52 @@ Post-PR86 staging verification passed:
 - PR #47 touched: no.
 - Real claimant data used: no.
 
+## Post-Architect UX Audit Correction
+
+The system is functionally validated, but commercial insurer-demo readiness is
+not yet approved. A new Architect UX audit found 6 P0 commercial-impact issues
+on authenticated/demo-exposed UI.
+
+The next gate is now:
+
+**UI-003 Part 3 - pre-insurer-outreach demo-readiness fixes.**
+
+P0 issues for UI-003 Part 3:
+
+- P0.1 `/design-system` link still visible for authenticated users.
+- P0.2 Authenticated footer still exposes internal Spike/build text.
+- P0.3 User email visible in header; replace with initials/avatar dropdown.
+- P0.4 Hebrew plural grammar issue: `1 ימים`.
+- P0.5 Dashboard claim type values still shown in English.
+- P0.6 Dashboard missing Risk Band column.
+
+Selected P1 scope for UI-003 Part 3:
+
+- Dashboard KPI cards.
+- Tags vs status badge separation.
+- Question cards primary action `פתח תיק`.
+- Tabs counters.
+- Leading finding severity color coding.
+- RTL primary/secondary button order.
+
+Decisions to register in UI-003 Part 3 or a follow-up sync:
+
+- D-038 - Authenticated UI treated as demo-exposed.
+- D-039 - Risk Bands canonical visualization.
+- D-040 - User identity rendering uses initials avatar pattern.
+- D-041 - UI-003 Part 3 scope.
+
 ## Current Approved / Not Approved
 
 Approved:
 
-- Manual customer discovery and insurer demo preparation using synthetic,
-  non-production/demo data.
+- UI-003 Part 3 planning/dispatch preparation.
+- Round 2 case sourcing and outreach material drafting without insurer contact.
 
 Not approved:
 
+- Insurer contact or demo execution before UI-003 Part 3 is merged and
+  verified.
 - Automated outreach or customer contact by this docs PR.
 - Product operations by this docs PR.
 - Production Supabase.
@@ -143,14 +180,12 @@ Not approved:
 
 The next operational gate is:
 
-**Insurer discovery / demo execution.**
+**UI-003 Part 3 - pre-insurer-outreach demo-readiness fixes.**
 
-Execution package:
-`docs/demo/insurer_discovery_execution_pack_07_05.md`
-
-This is manual/operator-led. This docs PR does not contact insurers, send
-outreach, run smoke, mutate Supabase, deploy, approve production work, or
-execute product operations.
+Functional validation passed, but commercial demo-readiness requires Part 3
+before outreach. This docs PR does not contact insurers, send outreach, run
+smoke, mutate Supabase, deploy, approve production work, or execute product
+operations.
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
 next gate becomes SPRINT-PROD-BLOCK by default.

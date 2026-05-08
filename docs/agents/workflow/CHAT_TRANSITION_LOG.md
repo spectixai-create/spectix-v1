@@ -414,11 +414,38 @@ gate`) merged to `main`.
 - Raw tokens printed: no.
 - Full magic links printed: no.
 
+### Architect UX Audit Correction
+
+- The system is functionally validated, but commercial insurer-demo readiness is
+  not yet approved.
+- New Architect UX audit found 6 P0 commercial-impact issues on
+  authenticated/demo-exposed UI:
+  - P0.1 `/design-system` link still visible for authenticated users.
+  - P0.2 Authenticated footer still exposes internal Spike/build text.
+  - P0.3 User email visible in header; replace with initials/avatar dropdown.
+  - P0.4 Hebrew plural grammar issue: `1 ימים`.
+  - P0.5 Dashboard claim type values still shown in English.
+  - P0.6 Dashboard missing Risk Band column.
+- Selected P1 scope for UI-003 Part 3:
+  - Dashboard KPI cards.
+  - Tags vs status badge separation.
+  - Question cards primary action `פתח תיק`.
+  - Tabs counters.
+  - Leading finding severity color coding.
+  - RTL primary/secondary button order.
+- Decisions to register in UI-003 Part 3 or a follow-up sync:
+  - D-038 - Authenticated UI treated as demo-exposed.
+  - D-039 - Risk Bands canonical visualization.
+  - D-040 - User identity rendering uses initials avatar pattern.
+  - D-041 - UI-003 Part 3 scope.
+
 ### Pending Action Item For New Chat
 
 1. Review the UI-003 completion sync PR.
-2. After merge, the next gate is manual insurer discovery/demo execution using
-   `docs/demo/insurer_discovery_execution_pack_07_05.md`.
-3. Do not automate outreach or contact insurers from Codex.
-4. Keep production blocked until signed LOI / SPRINT-PROD-BLOCK.
-5. Keep OpenClaw/native orchestration blocked while PR #47 remains open.
+2. After merge, the next gate is UI-003 Part 3 pre-insurer-outreach
+   demo-readiness fixes.
+3. Round 2 case sourcing and outreach material drafting may proceed in
+   parallel, but no insurer contact/demo is approved yet.
+4. Do not automate outreach or contact insurers from Codex.
+5. Keep production blocked until signed LOI / SPRINT-PROD-BLOCK.
+6. Keep OpenClaw/native orchestration blocked while PR #47 remains open.

@@ -141,6 +141,41 @@ Post-PR86 staging verification:
 - PR #47 touched: no.
 - Real claimant data used: no.
 
+Post-Architect UX audit correction:
+
+- System is functionally validated.
+- Functional readiness passed, including post-PR86 staging verification.
+- Commercial insurer-demo readiness is not yet approved.
+- New Architect UX audit found 6 P0 commercial-impact issues on
+  authenticated/demo-exposed UI.
+- Outreach and insurer demos remain blocked until UI-003 Part 3 is merged and
+  verified.
+
+UI-003 Part 3 P0 issues:
+
+- P0.1 `/design-system` link still visible for authenticated users.
+- P0.2 Authenticated footer still exposes internal Spike/build text.
+- P0.3 User email visible in header; replace with initials/avatar dropdown.
+- P0.4 Hebrew plural grammar issue: `1 ימים`.
+- P0.5 Dashboard claim type values still shown in English.
+- P0.6 Dashboard missing Risk Band column.
+
+Selected UI-003 Part 3 P1 scope:
+
+- Dashboard KPI cards.
+- Tags vs status badge separation.
+- Question cards primary action `פתח תיק`.
+- Tabs counters.
+- Leading finding severity color coding.
+- RTL primary/secondary button order.
+
+Decisions to register in UI-003 Part 3 or a follow-up sync:
+
+- D-038 - Authenticated UI treated as demo-exposed.
+- D-039 - Risk Bands canonical visualization.
+- D-040 - User identity rendering uses initials avatar pattern.
+- D-041 - UI-003 Part 3 scope.
+
 PR #78 post-merge staging validation:
 
 - Vercel status for `b4b6158`: success.
@@ -182,11 +217,12 @@ Scope shipped:
 
 See [ACTIVE_GATES.md](agents/workflow/ACTIVE_GATES.md).
 
-Immediate next operational gate is **manual insurer discovery/demo execution**
-using
-[insurer_discovery_execution_pack_07_05.md](demo/insurer_discovery_execution_pack_07_05.md).
-This is operator-led and does not authorize Codex to contact insurers, trigger
-outreach, run smoke, mutate Supabase, deploy, or use production.
+Immediate next operational gate is **UI-003 Part 3 - pre-insurer-outreach
+demo-readiness fixes**.
+
+Round 2 case sourcing and outreach material drafting may proceed in parallel,
+but no insurer contact or demo is approved until UI-003 Part 3 is merged and
+verified.
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
 next gate becomes SPRINT-PROD-BLOCK by default.
@@ -196,6 +232,8 @@ next gate becomes SPRINT-PROD-BLOCK by default.
 - Target: 5 conversations with Israeli travel insurers.
 - Execution package:
   [insurer_discovery_execution_pack_07_05.md](demo/insurer_discovery_execution_pack_07_05.md).
+- Status: prepared but blocked from use for real insurer contact/demo until
+  UI-003 Part 3 is merged and verified.
 - Demo package:
   [ui002b_insurer_demo_package.md](demo/ui002b_insurer_demo_package.md).
 - Discovery questions:

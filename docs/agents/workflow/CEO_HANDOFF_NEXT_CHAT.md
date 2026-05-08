@@ -65,8 +65,8 @@ Docs-only UI-003 completion sync PR:
 - record PR #85 and PR #86 as merged;
 - record UI-003 complete;
 - record post-PR86 staging verification PASS;
-- update gates and plan overview to point to manual insurer discovery/demo
-  execution as the next gate;
+- correct gates and plan overview after the new Architect UX audit so the next
+  gate is UI-003 Part 3, not insurer discovery/demo execution;
 - record that this PR does not send outreach, contact insurers, run product
   operations, mutate Supabase, run smoke, deploy, or touch production.
 
@@ -160,15 +160,46 @@ Post-merge staging verification:
 - Secrets, raw tokens, and full magic links printed: no.
 - Real claimant data used: no.
 
+## Post-Architect UX Audit Correction
+
+The system is functionally validated, but commercial insurer-demo readiness is
+not yet approved. A new Architect UX audit found 6 P0 commercial-impact issues
+on authenticated/demo-exposed UI.
+
+UI-003 Part 3 P0 issues:
+
+- P0.1 `/design-system` link still visible for authenticated users.
+- P0.2 Authenticated footer still exposes internal Spike/build text.
+- P0.3 User email visible in header; replace with initials/avatar dropdown.
+- P0.4 Hebrew plural grammar issue: `1 ימים`.
+- P0.5 Dashboard claim type values still shown in English.
+- P0.6 Dashboard missing Risk Band column.
+
+Selected UI-003 Part 3 P1 scope:
+
+- Dashboard KPI cards.
+- Tags vs status badge separation.
+- Question cards primary action `פתח תיק`.
+- Tabs counters.
+- Leading finding severity color coding.
+- RTL primary/secondary button order.
+
+Decisions to register in UI-003 Part 3 or a follow-up sync:
+
+- D-038 - Authenticated UI treated as demo-exposed.
+- D-039 - Risk Bands canonical visualization.
+- D-040 - User identity rendering uses initials avatar pattern.
+- D-041 - UI-003 Part 3 scope.
+
 ## Next Gate
 
 Exact next recommended action after this UI-003 completion sync PR merge:
 
-**Operator may manually use the insurer discovery execution package outside
-repo automation.**
+**UI-003 Part 3 - pre-insurer-outreach demo-readiness fixes.**
 
-Do not automate outreach, contact insurers through Codex, mutate Supabase, run
-smoke, deploy, or use production from this handoff.
+Round 2 case sourcing and outreach material drafting may proceed in parallel,
+but no insurer contact or demo is approved until UI-003 Part 3 is merged and
+verified.
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
 next gate becomes SPRINT-PROD-BLOCK by default.
@@ -203,7 +234,6 @@ Read:
 2. `docs/agents/workflow/ACTIVE_GATES.md`
 3. `docs/agents/workflow/CHAT_TRANSITION_LOG.md`
 
-Then review the UI-003 completion sync PR. After merge, the next gate is manual
-insurer discovery/demo execution using
-`docs/demo/insurer_discovery_execution_pack_07_05.md`. Do not automate
+Then review the UI-003 completion sync PR. After merge, the next gate is
+UI-003 Part 3 pre-insurer-outreach demo-readiness fixes. Do not automate
 outreach, contact insurers, or start production-readiness work automatically.
