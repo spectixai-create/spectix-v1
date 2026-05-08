@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import { FormActions } from '@/components/intake/form-actions';
 import { SectionClaimant } from '@/components/intake/section-claimant';
+import { SectionConsent } from '@/components/intake/section-consent';
 import { SectionDocuments } from '@/components/intake/section-documents';
 import { SectionIncident } from '@/components/intake/section-incident';
 import { SectionTripContext } from '@/components/intake/section-trip-context';
@@ -31,7 +32,8 @@ export function IntakeForm({
   const router = useRouter();
   const form = useForm<IntakeFormValues>({
     defaultValues: defaultIntakeValues,
-    mode: 'onSubmit',
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
   });
   const [status, setStatus] = React.useState<IntakeFormStatus>('idle');
   const [files, setFiles] = React.useState<MockUploadedFile[]>([]);
@@ -39,6 +41,7 @@ export function IntakeForm({
   const [errorMessage, setErrorMessage] = React.useState<string | undefined>();
   const [showSlowSubmitHelper, setShowSlowSubmitHelper] = React.useState(false);
   const submittingRef = React.useRef(false);
+  const tosAccepted = form.watch('tosAccepted');
 
   React.useEffect(() => {
     setStatus(initialDemoState ?? 'idle');
@@ -129,14 +132,22 @@ export function IntakeForm({
               onSubmit={form.handleSubmit(handleSubmit)}
             >
               <SectionClaimant control={form.control} />
-              <SectionIncident control={form.control} watch={form.watch} />
-              <SectionTripContext control={form.control} />
+              <SectionTripContext control={form.control} watch={form.watch} />
+              <SectionIncident
+                control={form.control}
+                watch={form.watch}
+                setValue={form.setValue}
+              />
               <SectionDocuments
                 files={files}
                 onAdd={handleAddFiles}
                 onRemove={handleRemoveFile}
               />
-              <FormActions submitting={status === 'submitting'} />
+              <SectionConsent control={form.control} />
+              <FormActions
+                submitting={status === 'submitting'}
+                canSubmit={tosAccepted}
+              />
               {status === 'submitting' && showSlowSubmitHelper ? (
                 <p className="text-sm text-muted-foreground">
                   ההגשה ממשיכה — אנא המתן

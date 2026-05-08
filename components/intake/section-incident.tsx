@@ -1,4 +1,7 @@
-import type { Control, UseFormWatch } from 'react-hook-form';
+'use client';
+
+import * as React from 'react';
+import type { Control, UseFormSetValue, UseFormWatch } from 'react-hook-form';
 
 import { FieldLabel } from '@/components/intake/field-label';
 import type { IntakeFormValues } from '@/components/intake/types';
@@ -7,6 +10,11 @@ import {
   claimTypeOptions,
   countryOptions,
 } from '@/lib/sample-data/intake-options';
+import { countryCurrencyHints, currencyOptions } from '@/lib/intake/currencies';
+import {
+  TRIP_DATE_MESSAGES,
+  todayInIsrael,
+} from '@/lib/intake/trip-validation';
 import {
   FormControl,
   FormField,
@@ -26,12 +34,33 @@ import { Textarea } from '@/components/ui/textarea';
 export function SectionIncident({
   control,
   watch,
+  setValue,
 }: Readonly<{
   control: Control<IntakeFormValues>;
   watch: UseFormWatch<IntakeFormValues>;
+  setValue: UseFormSetValue<IntakeFormValues>;
 }>) {
   const description = watch('incidentDescription') ?? '';
   const country = watch('country');
+  const currencyCode = watch('currencyCode') || 'ILS';
+  const tripStartDate = watch('tripStartDate');
+  const tripEndDate = watch('tripEndDate');
+  const currencyHint = countryCurrencyHints[country];
+  const [hintSuppressedForCountry, setHintSuppressedForCountry] =
+    React.useState<string | null>(null);
+  const previousCountryRef = React.useRef(country);
+
+  React.useEffect(() => {
+    if (previousCountryRef.current !== country) {
+      previousCountryRef.current = country;
+      setHintSuppressedForCountry(null);
+    }
+  }, [country]);
+
+  const showCurrencyHint =
+    Boolean(currencyHint) &&
+    currencyHint !== currencyCode &&
+    hintSuppressedForCountry !== country;
 
   return (
     <section className="space-y-4" aria-label="פרטי האירוע">
@@ -68,6 +97,26 @@ export function SectionIncident({
         <FormField
           control={control}
           name="incidentDate"
+          rules={{
+            required: 'שדה חובה',
+            validate: (value) => {
+              const today = todayInIsrael();
+
+              if (value > today) {
+                return TRIP_DATE_MESSAGES.futureIncident;
+              }
+
+              if (
+                tripStartDate &&
+                tripEndDate &&
+                (value < tripStartDate || value > tripEndDate)
+              ) {
+                return TRIP_DATE_MESSAGES.incidentOutsideTrip;
+              }
+
+              return true;
+            },
+          }}
           render={({ field }) => (
             <FormItem>
               <FieldLabel required>תאריך האירוע</FieldLabel>
@@ -130,18 +179,68 @@ export function SectionIncident({
           render={({ field }) => (
             <FormItem>
               <FieldLabel required>סכום התביעה</FieldLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  min={1}
-                  max={10000000}
-                  step={1}
-                  inputMode="decimal"
-                  className="font-latin"
-                  suppressHydrationWarning
-                  {...field}
+              <div className="grid grid-cols-[minmax(0,1fr)_7rem] gap-2">
+                <FormControl>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={10000000}
+                    step={1}
+                    inputMode="decimal"
+                    className="font-latin"
+                    suppressHydrationWarning
+                    {...field}
+                  />
+                </FormControl>
+                <FormField
+                  control={control}
+                  name="currencyCode"
+                  render={({ field: currencyField }) => (
+                    <FormItem>
+                      <Select
+                        dir="ltr"
+                        onValueChange={(value) => {
+                          currencyField.onChange(value);
+                          if (country) {
+                            setHintSuppressedForCountry(country);
+                          }
+                        }}
+                        value={currencyField.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger aria-label="מטבע">
+                            <SelectValue placeholder="ILS" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {currencyOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
                 />
-              </FormControl>
+              </div>
+              {showCurrencyHint ? (
+                <p className="text-xs text-muted-foreground">
+                  המטבע הנפוץ במדינה זו: {currencyHint}.{' '}
+                  <button
+                    type="button"
+                    className="font-medium text-primary underline-offset-4 hover:underline"
+                    onClick={() =>
+                      setValue('currencyCode', currencyHint, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                  >
+                    החלף
+                  </button>
+                </p>
+              ) : null}
               <FormMessage />
             </FormItem>
           )}

@@ -1,9 +1,13 @@
-import type { Control } from 'react-hook-form';
+import type { Control, UseFormWatch } from 'react-hook-form';
 
 import { FieldLabel } from '@/components/intake/field-label';
 import type { IntakeFormValues } from '@/components/intake/types';
 import { SectionDivider } from '@/components/layout/section-divider';
 import { tripPurposeOptions } from '@/lib/sample-data/intake-options';
+import {
+  TRIP_DATE_MESSAGES,
+  todayInIsrael,
+} from '@/lib/intake/trip-validation';
 import {
   FormControl,
   FormDescription,
@@ -23,18 +27,128 @@ import { Textarea } from '@/components/ui/textarea';
 
 export function SectionTripContext({
   control,
+  watch,
 }: Readonly<{
   control: Control<IntakeFormValues>;
+  watch: UseFormWatch<IntakeFormValues>;
 }>) {
+  const tripStartDate = watch('tripStartDate');
+  const claimType = watch('claimType');
+  const preTripInsurance = watch('preTripInsurance');
+
   return (
-    <section className="space-y-4" aria-label="הקשר הנסיעה">
+    <section className="space-y-4" aria-label="פרטי הנסיעה">
       <div className="space-y-2">
-        <SectionDivider title="הקשר הנסיעה" />
+        <SectionDivider title="פרטי הנסיעה" />
         <p className="text-sm leading-6 text-muted-foreground">
           מידע זה עוזר לנו להעריך את התיק במהירות וללא שאלות מיותרות
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
+        <FormField
+          control={control}
+          name="tripStartDate"
+          rules={{
+            required: 'שדה חובה',
+            validate: (value) =>
+              value <= todayInIsrael() || TRIP_DATE_MESSAGES.futureTripStart,
+          }}
+          render={({ field }) => (
+            <FormItem>
+              <FieldLabel required>תאריך עזיבה</FieldLabel>
+              <FormControl>
+                <Input
+                  type="date"
+                  className="font-latin"
+                  suppressHydrationWarning
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="tripEndDate"
+          rules={{
+            required: 'שדה חובה',
+            validate: (value) =>
+              !tripStartDate ||
+              value >= tripStartDate ||
+              TRIP_DATE_MESSAGES.tripEndBeforeStart,
+          }}
+          render={({ field }) => (
+            <FormItem>
+              <FieldLabel required>תאריך חזרה</FieldLabel>
+              <FormControl>
+                <Input
+                  type="date"
+                  className="font-latin"
+                  suppressHydrationWarning
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={control}
+          name="preTripInsurance"
+          rules={{ required: 'שדה חובה' }}
+          render={({ field }) => (
+            <FormItem className="md:col-span-2">
+              <FieldLabel required>מועד רכישת הביטוח</FieldLabel>
+              <FormControl>
+                <div
+                  className="grid gap-2 rounded-md border bg-card p-3"
+                  role="radiogroup"
+                  aria-label="מועד רכישת הביטוח"
+                >
+                  {[
+                    { value: 'yes', label: 'כן, לפני יציאה לחו״ל' },
+                    {
+                      value: 'no',
+                      label: 'לא, נרכש בחו״ל / אחרי יציאה',
+                    },
+                    { value: 'unknown', label: 'לא בטוח' },
+                  ].map((option) => (
+                    <label
+                      key={option.value}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <input
+                        type="radio"
+                        name={field.name}
+                        value={option.value}
+                        checked={field.value === option.value}
+                        onChange={() => field.onChange(option.value)}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                        className="accent-primary"
+                      />
+                      <span>{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </FormControl>
+              {preTripInsurance === 'no' && claimType ? (
+                <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-900">
+                  ביטוח שנרכש לאחר תחילת הנסיעה כפוף לתקופת המתנה בפוליסה. ייתכן
+                  שהאירוע יידרש בחינה נוספת להתאמה.
+                </p>
+              ) : null}
+              {preTripInsurance === 'unknown' ? (
+                <p className="text-sm text-muted-foreground">
+                  אם אינך זוכר את התאריך המדויק, נשלח לך שאלת השלמה לאחר העיבוד
+                  הראשוני.
+                </p>
+              ) : null}
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={control}
           name="tripPurpose"

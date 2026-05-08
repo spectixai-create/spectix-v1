@@ -45,6 +45,7 @@ export function buildClaimPayload(values: IntakeFormValues): CreateClaimInput {
   const country = getCountryLabel(values);
   const incidentLocation = [city, country].filter(Boolean).join(', ');
   const amountClaimed = Number.parseFloat(String(values.amountClaimed));
+  const currencyCode = values.currencyCode as CreateClaimInput['currency'];
 
   return {
     claimantName: values.fullName.trim(),
@@ -54,10 +55,17 @@ export function buildClaimPayload(values: IntakeFormValues): CreateClaimInput {
     policyNumber: optionalString(values.policyNumber),
     claimType: values.claimType as CreateClaimInput['claimType'],
     incidentDate: values.incidentDate,
+    tripStartDate: values.tripStartDate,
+    tripEndDate: values.tripEndDate,
+    preTripInsurance:
+      values.preTripInsurance as CreateClaimInput['preTripInsurance'],
     incidentLocation,
     amountClaimed,
-    currency: 'ILS',
+    currency: currencyCode,
+    currencyCode,
     summary: values.incidentDescription.trim(),
+    tosAccepted: values.tosAccepted,
+    privacyAccepted: values.tosAccepted,
     metadata: {
       tripPurpose:
         values.tripPurpose === ''

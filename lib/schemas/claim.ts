@@ -1,5 +1,11 @@
 import { z } from 'zod';
 
+import { isCurrencyCode } from '@/lib/intake/currencies';
+import {
+  validateTripDateContext,
+  type PreTripInsurance,
+} from '@/lib/intake/trip-validation';
+
 /**
  * Validates intake-time metadata fields only.
  * Pipeline-time fields are written by backend pipeline spikes.
@@ -54,12 +60,56 @@ export const createClaimRequestSchema = z
 
         return dateStr <= todayInIsrael;
       }, 'incidentDate must be on or before today (Asia/Jerusalem)'),
+    tripStartDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'tripStartDate must be YYYY-MM-DD format'),
+    tripEndDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'tripEndDate must be YYYY-MM-DD format'),
+    preTripInsurance: z.enum(['yes', 'no', 'unknown']),
     incidentLocation: z.string().min(1).max(200),
     amountClaimed: z.number().positive().max(10_000_000),
-    currency: z.string().length(3).default('ILS'),
+    currency: z.string().refine(isCurrencyCode).default('ILS'),
+    currencyCode: z.string().refine(isCurrencyCode).optional(),
     summary: z.string().min(10).max(2000),
+    tosAccepted: z.boolean().optional(),
+    privacyAccepted: z.boolean().optional(),
+    tos_accepted: z.boolean().optional(),
+    privacy_accepted: z.boolean().optional(),
     metadata: createClaimMetadataSchema.optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((input, context) => {
+    if (input.tosAccepted !== true && input.tos_accepted !== true) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['tosAccepted'],
+        message: 'tos_accepted must be true',
+      });
+    }
+
+    if (input.privacyAccepted !== true && input.privacy_accepted !== true) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['privacyAccepted'],
+        message: 'privacy_accepted must be true',
+      });
+    }
+
+    const tripIssues = validateTripDateContext({
+      incidentDate: input.incidentDate,
+      tripStartDate: input.tripStartDate,
+      tripEndDate: input.tripEndDate,
+    });
+
+    for (const [path, message] of Object.entries(tripIssues)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [path],
+        message,
+      });
+    }
+  });
 
 export type CreateClaimInput = z.infer<typeof createClaimRequestSchema>;
+export type ClaimPreTripInsurance = PreTripInsurance;

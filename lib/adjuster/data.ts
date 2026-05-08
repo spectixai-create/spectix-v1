@@ -40,9 +40,13 @@ type DbClaimRow = {
   insured_name: string | null;
   claimant_name: string | null;
   incident_date: string | null;
+  trip_start_date?: string | null;
+  trip_end_date?: string | null;
+  pre_trip_insurance?: Claim['preTripInsurance'];
   incident_location: string | null;
   amount_claimed: number | string | null;
   currency: string;
+  currency_code?: string | null;
   summary: string | null;
   metadata: Claim['metadata'];
   claimant_email: string | null;
@@ -648,9 +652,13 @@ function mapClaim(row: DbClaimRow): Claim {
     insuredName: row.insured_name,
     claimantName: row.claimant_name,
     incidentDate: row.incident_date,
+    tripStartDate: row.trip_start_date ?? null,
+    tripEndDate: row.trip_end_date ?? null,
+    preTripInsurance: row.pre_trip_insurance ?? null,
     incidentLocation: row.incident_location,
     amountClaimed: toNullableNumber(row.amount_claimed),
     currency: row.currency,
+    currencyCode: row.currency_code ?? row.currency,
     summary: row.summary,
     metadata: row.metadata ?? null,
     claimantEmail: row.claimant_email,

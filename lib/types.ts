@@ -172,9 +172,13 @@ export interface Claim {
   insuredName: string | null;
   claimantName: string | null;
   incidentDate: string | null;
+  tripStartDate: string | null;
+  tripEndDate: string | null;
+  preTripInsurance: 'yes' | 'no' | 'unknown' | null;
   incidentLocation: string | null;
   amountClaimed: number | null;
   currency: string;
+  currencyCode: string;
   summary: string | null;
   metadata: ClaimMetadata | null;
   /** Added in migration #0002. */
@@ -654,10 +658,18 @@ export interface CreateClaimRequest {
   insuredName: string;
   claimType: ClaimType;
   incidentDate: string;
+  tripStartDate: string;
+  tripEndDate: string;
+  preTripInsurance: 'yes' | 'no' | 'unknown';
   incidentLocation: string;
   amountClaimed: number;
   currency: string;
+  currencyCode: string;
   summary: string;
+  tosAccepted?: boolean;
+  privacyAccepted?: boolean;
+  tos_accepted?: boolean;
+  privacy_accepted?: boolean;
   metadata?: ClaimMetadata;
 }
 

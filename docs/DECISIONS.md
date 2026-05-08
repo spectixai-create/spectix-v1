@@ -632,3 +632,102 @@ Guardrails:
   screenshots or recordings.
 - If the first signed LOI or written pilot intent arrives, switch to
   SPRINT-PROD-BLOCK planning by default.
+
+---
+
+## D-034 — Currency code stored on claims, ILS default
+
+Date: 07/05/2026
+Status: Active
+Decided by: CEO
+Source: UI-003 Part 2 Designer decisions and dispatch gate.
+
+Decision:
+The intake form stores the selected ISO currency code on `claims.currency_code`
+and keeps `ILS` as the default. The legacy `claims.currency` field remains
+populated for compatibility with existing validation and adjuster UI paths.
+
+Rationale:
+Pilot claims may involve foreign-currency expenses. Capturing the claim currency
+at intake avoids silent ILS assumptions while keeping existing validation layers
+stable.
+
+Guardrails:
+
+- `/new` does not show ILS conversion.
+- Server validation accepts only uppercase three-letter currency codes.
+- Currency conversion/rate sourcing remains outside UI-003 Part 2.
+
+---
+
+## D-035 — Minimal consent_log table for ToS/Privacy audit trail
+
+Date: 07/05/2026
+Status: Active
+Decided by: CEO
+Source: UI-003 Part 2 Designer decisions and CEO GPT correction.
+
+Decision:
+Create a minimal `consent_log` table that records only `claim_id`,
+`tos_version`, `privacy_version`, `accepted_at`, and creation metadata.
+
+Rationale:
+The pilot intake needs proof that the claimant accepted draft ToS/Privacy text,
+but the audit trail must avoid unnecessary tracking data before legal and
+privacy review.
+
+Guardrails:
+
+- Do not store IP address, user-agent, headers, cookies, auth headers, session
+  metadata, or fingerprinting data in `consent_log`.
+- Legal pages remain visibly marked as draft placeholders until post-LOI legal
+  review.
+
+---
+
+## D-036 — "לא בטוח" pre-trip insurance triggers pending question
+
+Date: 07/05/2026
+Status: Active
+Decided by: CEO
+Source: UI-003 Part 2 Designer decisions.
+
+Decision:
+If the intake answer for pre-trip insurance is `לא בטוח`, create a pending
+clarification question asking when the travel insurance was purchased.
+
+Rationale:
+The uncertain answer should not dead-end the claimant. It should enter the
+existing missing-information loop so the adjuster can resolve Rule 08 context
+without a new rules engine.
+
+Guardrails:
+
+- Use existing `clarification_questions` and `audit_log` patterns only.
+- Do not add a new rule engine or extra migration beyond the approved
+  trip/currency/consent migration.
+
+---
+
+## D-037 — Homepage primary audience: B2B insurer demo viewer
+
+Date: 07/05/2026
+Status: Active
+Decided by: CEO
+Source: UI-003 Part 2 Designer decisions.
+
+Decision:
+The homepage should speak first to insurer demo viewers, not consumers. The hero
+positions Spectix as claim-file triage and missing-information workflow support,
+with the claim decision staying with the representative.
+
+Rationale:
+The immediate go-to-market motion is insurer discovery and pilot qualification.
+A concise B2B hero lowers demo friction and avoids implying automatic claim
+decisions.
+
+Guardrails:
+
+- Keep the homepage to the approved static hero for UI-003 Part 2.
+- Do not add extra marketing sections before the insurer discovery package is
+  exercised.
