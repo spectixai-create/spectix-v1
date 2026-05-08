@@ -1,6 +1,7 @@
 # CEO Handoff - Next Chat
 
-Updated after PR #86 / UI-003 completion and post-PR86 staging verification.
+Updated after PR #88 / UI-003 Part 3 completion and post-PR88 staging
+verification.
 
 ## Bootstrap Reading Order
 
@@ -26,8 +27,10 @@ For new CEO chats, read in this order:
 - Date: 2026-05-08
 - Repo: `spectixai-create/spectix-v1`
 - Local path: `C:\Users\smart\spectix`
-- main HEAD: `b1c95fc53163fc59efa4c4d2b498ae71a9970f93`
-- Latest merged PR: #86,
+- main HEAD: `23936677014e32f01517f1ff0b6ffa5645acb282`
+- Latest merged PR: #88, `UI-003 Part 3 demo-readiness fixes`
+- Previous docs sync PR: #87, `SYNC: correct UI-003 next gate after UX audit`
+- Previous UI-003 merge: #86,
   `UI-003 Part 2: ToS/Privacy + currency + trip dates + homepage`
 - Previous UI-003 merge: #85,
   `UI-003 Part 1: hide design-system + public cleanup + HEIC + health gate`
@@ -57,16 +60,19 @@ For new CEO chats, read in this order:
   gate.
 - SPRINT-UI-003 Part 2 - ToS/Privacy, currency, trip dates/pre-trip insurance,
   and homepage.
+- SYNC - Correct UI-003 next gate after Architect UX audit.
+- SPRINT-UI-003 Part 3 - authenticated demo-readiness fixes.
 
 ## Current Active Task
 
-Docs-only UI-003 completion sync PR:
+Docs-only post-PR88 sync PR:
 
-- record PR #85 and PR #86 as merged;
-- record UI-003 complete;
-- record post-PR86 staging verification PASS;
-- correct gates and plan overview after the new Architect UX audit so the next
-  gate is UI-003 Part 3, not insurer discovery/demo execution;
+- record PR #88 as merged;
+- record UI-003 Part 3 complete;
+- record post-PR88 staging verification PASS;
+- record that the Architect UX audit commercial demo-readiness blockers are
+  closed;
+- keep insurer outreach/demo execution blocked until explicit approval;
 - record that this PR does not send outreach, contact insurers, run product
   operations, mutate Supabase, run smoke, deploy, or touch production.
 
@@ -74,7 +80,7 @@ Docs-only UI-003 completion sync PR:
 
 - PR URL: <https://github.com/spectixai-create/spectix-v1/pull/78>
 - Merge method: merge commit.
-- Merge commit / current main HEAD:
+- Merge commit:
   `b4b6158712a018dda3a99ad9fcf657a901f8a328`
 - Scope: claimant email notifications via Resend, email-only.
 - Manual magic-link fallback preserved: yes.
@@ -127,6 +133,11 @@ Post-merge validation:
   - pre-trip insurance state;
   - unknown pre-trip insurance creates a pending clarification question.
 - UI-003 homepage hero is live.
+- UI-003 Part 3 authenticated UI demo-readiness fixes are live: no
+  design-system nav link, clean authenticated footer, initials/avatar identity,
+  Hebrew claim types, Risk Band dashboard column, KPI cards, tab counters,
+  question-card `פתח תיק`, Hebrew plural fix, severity color, and RTL action
+  order.
 - CAPTCHA remains blocked/deferred until Cloudflare Turnstile keys are
   provided.
 
@@ -134,7 +145,7 @@ Post-merge validation:
 
 - PR URL: <https://github.com/spectixai-create/spectix-v1/pull/86>
 - Merge method: merge commit.
-- Merge commit / current main HEAD:
+- Merge commit:
   `b1c95fc53163fc59efa4c4d2b498ae71a9970f93`
 - UI-003 cluster complete: yes.
 - Production Supabase touched: no.
@@ -160,13 +171,50 @@ Post-merge staging verification:
 - Secrets, raw tokens, and full magic links printed: no.
 - Real claimant data used: no.
 
+## PR #88 Final State
+
+- PR URL: <https://github.com/spectixai-create/spectix-v1/pull/88>
+- Merge method: merge commit.
+- Merge commit / current main HEAD:
+  `23936677014e32f01517f1ff0b6ffa5645acb282`
+- Scope: UI-003 Part 3 authenticated demo-readiness fixes.
+- Production Supabase touched: no.
+- Manual deploy run by Codex: no.
+- Production smoke run: no.
+- OpenClaw used: no.
+- PR #47 touched: no.
+- Outreach/contact triggered: no.
+
+Post-merge staging verification:
+
+- Vercel status for `2393667`: success / Ready.
+- `/api/health` minimal public response: PASS.
+- Public `/`, `/new`, `/terms`, and `/privacy`: PASS.
+- Anonymous `/design-system` blocked: PASS.
+- Authenticated dashboard: PASS.
+- Authenticated questions queue: PASS.
+- Authenticated claim page: PASS.
+- Authenticated `/design-system` direct access: PASS.
+- No raw email in header by default: PASS.
+- Initials/avatar dropdown visible: PASS.
+- No design-system nav link: PASS.
+- Clean footer: `Spectix • 2026`.
+- KPI cards visible: PASS.
+- Risk Band column visible: PASS.
+- Claim types localized to Hebrew: PASS.
+- Tab counters visible: PASS.
+- Question cards include `פתח תיק`: PASS.
+- Bad Hebrew plural `1 ימים` absent: PASS.
+- RTL primary action order verified: PASS.
+- Secrets, raw tokens, and full magic links printed: no.
+
 ## Post-Architect UX Audit Correction
 
-The system is functionally validated, but commercial insurer-demo readiness is
-not yet approved. A new Architect UX audit found 6 P0 commercial-impact issues
-on authenticated/demo-exposed UI.
+The system is functionally validated. The commercial insurer-demo readiness
+blockers found by the Architect UX audit are closed by PR #88 and post-PR88
+staging verification.
 
-UI-003 Part 3 P0 issues:
+Closed UI-003 Part 3 P0 issues:
 
 - P0.1 `/design-system` link still visible for authenticated users.
 - P0.2 Authenticated footer still exposes internal Spike/build text.
@@ -175,7 +223,7 @@ UI-003 Part 3 P0 issues:
 - P0.5 Dashboard claim type values still shown in English.
 - P0.6 Dashboard missing Risk Band column.
 
-Selected UI-003 Part 3 P1 scope:
+Completed selected UI-003 Part 3 P1 scope:
 
 - Dashboard KPI cards.
 - Tags vs status badge separation.
@@ -184,7 +232,7 @@ Selected UI-003 Part 3 P1 scope:
 - Leading finding severity color coding.
 - RTL primary/secondary button order.
 
-Decisions to register in UI-003 Part 3 or a follow-up sync:
+Decisions registered in UI-003 Part 3:
 
 - D-038 - Authenticated UI treated as demo-exposed.
 - D-039 - Risk Bands canonical visualization.
@@ -193,13 +241,12 @@ Decisions to register in UI-003 Part 3 or a follow-up sync:
 
 ## Next Gate
 
-Exact next recommended action after this UI-003 completion sync PR merge:
+Exact next recommended action after this post-PR88 sync PR merge:
 
-**UI-003 Part 3 - pre-insurer-outreach demo-readiness fixes.**
+**Decide whether insurer outreach/demo execution is now approved.**
 
 Round 2 case sourcing and outreach material drafting may proceed in parallel,
-but no insurer contact or demo is approved until UI-003 Part 3 is merged and
-verified.
+but no insurer contact or demo is approved until explicitly authorized.
 
 If the user reports the first signed LOI from an Israeli travel insurer, the
 next gate becomes SPRINT-PROD-BLOCK by default.
@@ -234,6 +281,6 @@ Read:
 2. `docs/agents/workflow/ACTIVE_GATES.md`
 3. `docs/agents/workflow/CHAT_TRANSITION_LOG.md`
 
-Then review the UI-003 completion sync PR. After merge, the next gate is
-UI-003 Part 3 pre-insurer-outreach demo-readiness fixes. Do not automate
+Then review the post-PR88 sync PR. After merge, the next gate is deciding
+whether insurer outreach/demo execution is now approved. Do not automate
 outreach, contact insurers, or start production-readiness work automatically.

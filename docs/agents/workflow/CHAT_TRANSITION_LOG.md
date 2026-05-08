@@ -449,3 +449,60 @@ gate`) merged to `main`.
 4. Do not automate outreach or contact insurers from Codex.
 5. Keep production blocked until signed LOI / SPRINT-PROD-BLOCK.
 6. Keep OpenClaw/native orchestration blocked while PR #47 remains open.
+
+## Transition Update - 2026-05-08 (Post-PR88 UI-003 Part 3 PASS)
+
+### State
+
+- PR #88 (`UI-003 Part 3 demo-readiness fixes`) merged to `main`.
+- Merge commit / current main HEAD:
+  `23936677014e32f01517f1ff0b6ffa5645acb282`.
+- UI-002 is complete.
+- UI-003 Parts 1, 2, and 3 are complete.
+- Functional validation passed.
+- Architect UX audit commercial demo-readiness blockers are closed.
+- Remaining open PR: #47 (`Record OpenClaw Slack routing blocker`).
+
+### Post-PR88 Staging Verification
+
+- Vercel status for `2393667`: success / Ready.
+- `/api/health` minimal public response: PASS.
+- Public `/`, `/new`, `/terms`, and `/privacy`: PASS.
+- Anonymous `/design-system` blocked: PASS.
+- Authenticated dashboard: PASS.
+- Authenticated questions queue: PASS.
+- Authenticated claim page: PASS.
+- Authenticated `/design-system` direct access: PASS.
+- No raw email in header by default: PASS.
+- Initials/avatar dropdown visible: PASS.
+- No design-system nav link: PASS.
+- Clean footer: `Spectix • 2026`.
+- KPI cards visible: PASS.
+- Risk Band column visible: PASS.
+- Claim types localized to Hebrew: PASS.
+- Tab counters visible: PASS.
+- Question cards include `פתח תיק`: PASS.
+- No bad Hebrew plural `1 ימים`: PASS.
+- RTL primary action order verified: PASS.
+
+### Safety
+
+- Production touched: no.
+- Production Supabase touched: no.
+- Supabase mutation after merge: no.
+- Deploy run manually: no.
+- Vercel environment changed: no.
+- Secrets printed: no.
+- Raw tokens/full magic links printed: no.
+- OpenClaw used: no.
+- PR #47 touched: no.
+- Outreach/contact triggered: no.
+
+### Pending Action Item For New Chat
+
+1. Review the post-PR88 docs-only sync PR.
+2. Decide whether insurer outreach/demo execution is now unblocked.
+3. Do not automate outreach or contact insurers unless explicitly approved.
+4. Keep production Supabase, production deploy, production smoke, OpenClaw,
+   cron, 24/7 operation, auto-merge, and auto-deploy blocked unless explicitly
+   approved.
