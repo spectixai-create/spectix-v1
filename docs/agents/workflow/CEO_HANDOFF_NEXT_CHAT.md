@@ -1,6 +1,6 @@
 # CEO Handoff - Next Chat
 
-Updated after PR #82 / Insurer discovery execution pack merged.
+Updated after PR #86 / UI-003 completion and post-PR86 staging verification.
 
 ## Bootstrap Reading Order
 
@@ -11,25 +11,29 @@ For new CEO chats, read in this order:
 3. `docs/agents/workflow/CHAT_TRANSITION_LOG.md`
 4. `docs/management/plans/plan.2_overview_06_05.md`
 5. `docs/management/reports/real_case_tuning_round_1_report_07_05.md`
-6. `docs/demo/insurer_discovery_execution_pack_07_05.md`
-7. `docs/management/plans/real_case_tuning_round_1_07_05.md`
-8. `docs/management/sprints/sprint_ui002b.1_claimant_responses_core_06_05.md`
-9. `docs/management/sprints/sprint_ui002c.1_claimant_email_notifications_06_05.md`
-10. `docs/demo/ui002b_insurer_demo_package.md`
-11. `docs/demo/ui002b_customer_discovery_questions.md`
-12. `docs/demo/ui002b_demo_checklist.md`
+6. `docs/management/reports/qa001_full_nonprod_project_audit_07_05.md`
+7. `docs/management/reports/architect_p3_verification_07_05.md`
+8. `docs/demo/insurer_discovery_execution_pack_07_05.md`
+9. `docs/management/plans/real_case_tuning_round_1_07_05.md`
+10. `docs/management/sprints/sprint_ui002b.1_claimant_responses_core_06_05.md`
+11. `docs/management/sprints/sprint_ui002c.1_claimant_email_notifications_06_05.md`
+12. `docs/demo/ui002b_insurer_demo_package.md`
+13. `docs/demo/ui002b_customer_discovery_questions.md`
+14. `docs/demo/ui002b_demo_checklist.md`
 
 ## Current Date And Repo State
 
 - Date: 2026-05-08
 - Repo: `spectixai-create/spectix-v1`
 - Local path: `C:\Users\smart\spectix`
-- main HEAD: `094688ec62a5bb2b1331786125c3c15e65c6822b`
-- Latest merged PR: #82, `DEMO: Insurer discovery execution pack`
-- Previous validation PR: #81,
-  `VALIDATION: Real-case tuning round 1 report`
-- Previous planning PR: #80,
-  `PLAN: Real-case tuning round 1 pilot-readiness validation`
+- main HEAD: `b1c95fc53163fc59efa4c4d2b498ae71a9970f93`
+- Latest merged PR: #86,
+  `UI-003 Part 2: ToS/Privacy + currency + trip dates + homepage`
+- Previous UI-003 merge: #85,
+  `UI-003 Part 1: hide design-system + public cleanup + HEIC + health gate`
+- Previous report PR: #84, `REPORT: Architect Track A P3 verification`
+- Previous QA PR: #83,
+  `QA-001: Pilot-readiness audit + F-001/F-002 docs drift fixes`
 - Remaining open PR: #47, `Record OpenClaw Slack routing blocker`
 
 ## Completed Sprints / Gates
@@ -47,14 +51,22 @@ For new CEO chats, read in this order:
 - PLAN - Real-case tuning round 1 pilot-readiness validation.
 - VALIDATION - Real-case tuning round 1 report, verdict READY.
 - DEMO - Insurer discovery execution pack.
+- QA-001 - Pilot-readiness audit and docs drift fixes.
+- REPORT - Architect Track A P3 verification.
+- SPRINT-UI-003 Part 1 - design-system gate, public cleanup, HEIC, and health
+  gate.
+- SPRINT-UI-003 Part 2 - ToS/Privacy, currency, trip dates/pre-trip insurance,
+  and homepage.
 
 ## Current Active Task
 
-Docs-only execution package PR:
+Docs-only UI-003 completion sync PR:
 
-- create the insurer discovery/demo execution package;
-- update gates and CEO handoff to show insurer discovery/demo execution as the
-  next manual/operator-led gate;
+- record PR #85 and PR #86 as merged;
+- record UI-003 complete;
+- record post-PR86 staging verification PASS;
+- update gates and plan overview to point to manual insurer discovery/demo
+  execution as the next gate;
 - record that this PR does not send outreach, contact insurers, run product
   operations, mutate Supabase, run smoke, deploy, or touch production.
 
@@ -102,10 +114,55 @@ Post-merge validation:
   remains visible and auto-selectable for manual copy.
 - Email-only claimant notification path via Resend.
 - Resend webhook route for sent/delivered/bounced/complained events.
+- UI-003 public hardening:
+  - `/design-system` is gated from anonymous public access.
+  - Public footer is `Spectix • 2026`.
+  - Public `/api/health` is minimal.
+  - Detailed health is gated.
+  - HEIC/HEIF upload conversion is supported.
+- UI-003 intake additions:
+  - draft ToS/Privacy consent flow and public draft legal pages;
+  - 11-currency selector;
+  - trip dates;
+  - pre-trip insurance state;
+  - unknown pre-trip insurance creates a pending clarification question.
+- UI-003 homepage hero is live.
+- CAPTCHA remains blocked/deferred until Cloudflare Turnstile keys are
+  provided.
+
+## PR #86 Final State
+
+- PR URL: <https://github.com/spectixai-create/spectix-v1/pull/86>
+- Merge method: merge commit.
+- Merge commit / current main HEAD:
+  `b1c95fc53163fc59efa4c4d2b498ae71a9970f93`
+- UI-003 cluster complete: yes.
+- Production Supabase touched: no.
+- Manual deploy run by Codex: no.
+- Production smoke run: no.
+
+Post-merge staging verification:
+
+- Vercel status for `b1c95fc`: success.
+- `/api/health` minimal public response: PASS.
+- Homepage: PASS.
+- `/terms` and `/privacy`: PASS.
+- Intake UI: PASS.
+- Currency UX: PASS.
+- Trip validation: PASS.
+- Consent modal/state preservation: PASS.
+- Missing consent API rejection: PASS, HTTP 400.
+- Synthetic non-production intake smoke: PASS.
+- Synthetic claim ID: `45bd8f76-5a42-46e7-b9b6-1f8653bb255e`.
+- `consent_log` minimal row: PASS.
+- Pending clarification question: PASS.
+- Pending question ID: `1160f3b5-ff22-4f62-81bc-94b309eeeec8`.
+- Secrets, raw tokens, and full magic links printed: no.
+- Real claimant data used: no.
 
 ## Next Gate
 
-Exact next recommended action after this execution-package PR merge:
+Exact next recommended action after this UI-003 completion sync PR merge:
 
 **Operator may manually use the insurer discovery execution package outside
 repo automation.**
@@ -146,5 +203,7 @@ Read:
 2. `docs/agents/workflow/ACTIVE_GATES.md`
 3. `docs/agents/workflow/CHAT_TRANSITION_LOG.md`
 
-Then review the insurer discovery execution-package PR. Do not automate
+Then review the UI-003 completion sync PR. After merge, the next gate is manual
+insurer discovery/demo execution using
+`docs/demo/insurer_discovery_execution_pack_07_05.md`. Do not automate
 outreach, contact insurers, or start production-readiness work automatically.

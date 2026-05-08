@@ -364,3 +364,61 @@ Project Knowledge has been migrated to `docs/project/` as of this PR. New chats 
 4. Keep production Supabase, production deploy, production smoke, OpenClaw,
    cron, 24/7 operation, auto-merge, and auto-deploy blocked unless explicitly
    approved.
+
+## Transition Update - 2026-05-08 (UI-003 complete)
+
+### State
+
+- PR #85 (`UI-003 Part 1: hide design-system + public cleanup + HEIC + health
+gate`) merged to `main`.
+- PR #86 (`UI-003 Part 2: ToS/Privacy + currency + trip dates + homepage`)
+  merged to `main`.
+- Merge commit / current main HEAD:
+  `b1c95fc53163fc59efa4c4d2b498ae71a9970f93`.
+- UI-003 cluster is complete:
+  - Part 1: `/design-system` gate, public cleanup, HEIC upload support, and
+    `/api/health` info-disclosure gate.
+  - Part 2: draft ToS/Privacy consent, currency selector, trip dates,
+    pre-trip insurance, homepage hero, migration, and rollback.
+- CAPTCHA remains blocked/deferred until Cloudflare Turnstile keys are
+  provided.
+- Remaining open PR: #47 (`Record OpenClaw Slack routing blocker`).
+
+### Post-PR86 Staging Verification
+
+- Vercel status for `b1c95fc`: success.
+- Staging target: `https://staging.spectix.co.il`.
+- `/api/health` minimal public response: PASS.
+- Homepage: PASS.
+- `/terms` and `/privacy`: PASS.
+- Intake UI: PASS.
+- Currency UX: PASS.
+- Trip validation: PASS.
+- Consent modal/state preservation: PASS.
+- Missing consent API rejection: PASS, HTTP 400.
+- Synthetic non-production intake smoke: PASS.
+- Synthetic claim ID: `45bd8f76-5a42-46e7-b9b6-1f8653bb255e`.
+- `consent_log` minimal row: PASS.
+- Pending clarification question: PASS.
+- Pending question ID: `1160f3b5-ff22-4f62-81bc-94b309eeeec8`.
+
+### Safety
+
+- Production touched: no.
+- Production Supabase touched: no.
+- Deploy run: no.
+- OpenClaw used: no.
+- PR #47 touched/merged: no.
+- Real claimant data used: no.
+- Secrets printed: no.
+- Raw tokens printed: no.
+- Full magic links printed: no.
+
+### Pending Action Item For New Chat
+
+1. Review the UI-003 completion sync PR.
+2. After merge, the next gate is manual insurer discovery/demo execution using
+   `docs/demo/insurer_discovery_execution_pack_07_05.md`.
+3. Do not automate outreach or contact insurers from Codex.
+4. Keep production blocked until signed LOI / SPRINT-PROD-BLOCK.
+5. Keep OpenClaw/native orchestration blocked while PR #47 remains open.

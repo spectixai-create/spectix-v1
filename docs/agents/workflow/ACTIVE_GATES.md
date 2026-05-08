@@ -1,17 +1,27 @@
 # Active Gates
 
-Updated after PR #82 / Insurer discovery execution pack merged.
+Updated after PR #86 / UI-003 completion and post-PR86 staging verification.
 
 ## Current Main
 
 - Repo: `spectixai-create/spectix-v1`
 - Current main HEAD:
-  `094688ec62a5bb2b1331786125c3c15e65c6822b`
-- Latest merge: PR #82, `DEMO: Insurer discovery execution pack`
+  `b1c95fc53163fc59efa4c4d2b498ae71a9970f93`
+- Latest merge: PR #86,
+  `UI-003 Part 2: ToS/Privacy + currency + trip dates + homepage`
 - Remaining open PR: #47, `Record OpenClaw Slack routing blocker`
 
 ## Recently Merged
 
+- #86 - UI-003 Part 2: ToS/Privacy, currency, trip dates/pre-trip insurance,
+  and homepage, merge commit
+  `b1c95fc53163fc59efa4c4d2b498ae71a9970f93`
+- #85 - UI-003 Part 1: design-system gate, public cleanup, HEIC, and health
+  gate, merge commit `072e0d01a0eed7170699be68802a20b36a8b651b`
+- #84 - Architect Track A P3 verification report, merge commit
+  `9d6761515a191029c740472085f168c847e216bd`
+- #83 - QA-001 pilot-readiness audit and docs drift fixes, merge commit
+  `93ad93ac3467c5a1e0bd2b8aad1f40908c18dec1`
 - #82 - Insurer discovery execution pack, merge commit
   `094688ec62a5bb2b1331786125c3c15e65c6822b`
 - #81 - Real-case tuning round 1 validation report, merge commit
@@ -68,11 +78,45 @@ Real-case tuning round 1:
 - Production touched: no.
 - OpenClaw used: no.
 
+## Completed UI-003 State
+
+SPRINT-UI-003 is complete on `main`.
+
+- UI-003 Part 1: complete in PR #85.
+- UI-003 Part 1 scope: `/design-system` gate, public cleanup, HEIC upload
+  support, and public `/api/health` info-disclosure reduction.
+- UI-003 Part 2: complete in PR #86.
+- UI-003 Part 2 scope: ToS/Privacy draft consent, currency selector, trip
+  dates, pre-trip insurance, homepage hero, migration, and rollback.
+- CAPTCHA remains blocked/deferred until Cloudflare Turnstile keys are
+  provided.
+
+Post-PR86 staging verification passed:
+
+- `/api/health` minimal public response: PASS.
+- Homepage: PASS.
+- `/terms` and `/privacy`: PASS.
+- Intake UI: PASS.
+- Currency UX: PASS.
+- Trip validation: PASS.
+- Consent modal/state preservation: PASS.
+- Missing consent API rejection: PASS, HTTP 400.
+- Synthetic non-production intake smoke: PASS.
+- Synthetic claim ID: `45bd8f76-5a42-46e7-b9b6-1f8653bb255e`.
+- `consent_log` minimal row: PASS.
+- Pending clarification question: PASS.
+- Pending question ID: `1160f3b5-ff22-4f62-81bc-94b309eeeec8`.
+- Production touched: no.
+- Production Supabase touched: no.
+- Deploy run: no.
+- OpenClaw used: no.
+- PR #47 touched: no.
+- Real claimant data used: no.
+
 ## Current Approved / Not Approved
 
 Approved:
 
-- Docs-only execution package for insurer discovery/demo operator workflow.
 - Manual customer discovery and insurer demo preparation using synthetic,
   non-production/demo data.
 
