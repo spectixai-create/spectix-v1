@@ -1,17 +1,19 @@
 # Active Gates
 
-Updated after PR #81 / Real-case tuning READY.
+Updated after PR #82 / Insurer discovery execution pack merged.
 
 ## Current Main
 
 - Repo: `spectixai-create/spectix-v1`
 - Current main HEAD:
-  `640f44736eb50bed02f57dec38a99fdbeeb0d4db`
-- Latest merge: PR #81, `VALIDATION: Real-case tuning round 1 report`
+  `094688ec62a5bb2b1331786125c3c15e65c6822b`
+- Latest merge: PR #82, `DEMO: Insurer discovery execution pack`
 - Remaining open PR: #47, `Record OpenClaw Slack routing blocker`
 
 ## Recently Merged
 
+- #82 - Insurer discovery execution pack, merge commit
+  `094688ec62a5bb2b1331786125c3c15e65c6822b`
 - #81 - Real-case tuning round 1 validation report, merge commit
   `640f44736eb50bed02f57dec38a99fdbeeb0d4db`
 - #80 - Real-case tuning round 1 pilot-readiness planning, merge commit

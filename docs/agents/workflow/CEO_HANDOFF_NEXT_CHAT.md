@@ -1,6 +1,6 @@
 # CEO Handoff - Next Chat
 
-Updated after PR #81 / Real-case tuning READY.
+Updated after PR #82 / Insurer discovery execution pack merged.
 
 ## Bootstrap Reading Order
 
@@ -21,11 +21,13 @@ For new CEO chats, read in this order:
 
 ## Current Date And Repo State
 
-- Date: 2026-05-07
+- Date: 2026-05-08
 - Repo: `spectixai-create/spectix-v1`
 - Local path: `C:\Users\smart\spectix`
-- main HEAD: `640f44736eb50bed02f57dec38a99fdbeeb0d4db`
-- Latest merged PR: #81, `VALIDATION: Real-case tuning round 1 report`
+- main HEAD: `094688ec62a5bb2b1331786125c3c15e65c6822b`
+- Latest merged PR: #82, `DEMO: Insurer discovery execution pack`
+- Previous validation PR: #81,
+  `VALIDATION: Real-case tuning round 1 report`
 - Previous planning PR: #80,
   `PLAN: Real-case tuning round 1 pilot-readiness validation`
 - Remaining open PR: #47, `Record OpenClaw Slack routing blocker`
@@ -44,6 +46,7 @@ For new CEO chats, read in this order:
 - SPRINT-UI-002C - Claimant email notifications via Resend, email-only.
 - PLAN - Real-case tuning round 1 pilot-readiness validation.
 - VALIDATION - Real-case tuning round 1 report, verdict READY.
+- DEMO - Insurer discovery execution pack.
 
 ## Current Active Task
 

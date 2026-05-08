@@ -1,11 +1,11 @@
 # Current State
 
-Updated by Codex for Real-case tuning round 1 planning after PR #79.
+Updated for QA-001 followup after PR #82 / Insurer discovery execution pack.
 
 ## Version
 
-Spectix post PR #79 / UI-002C complete / Real-case tuning planning -
-2026-05-07
+Spectix post PR #82 / UI-002C complete / Real-case tuning round 1 READY /
+Insurer discovery execution pack merged - 2026-05-08
 
 ## Current Phase
 
@@ -15,8 +15,8 @@ adjuster-facing brief view, the claimant response flow, and email-only claimant
 notifications via Resend.
 
 Current `main` HEAD is
-`5f428fe8a9b76b9e6c12e7885263da03bd032a03`, the merge commit for PR #79
-(`SYNC-011: Record UI-002C completion and post-PR78 state`).
+`094688ec62a5bb2b1331786125c3c15e65c6822b`, the merge commit for PR #82
+(`DEMO: Insurer discovery execution pack`).
 
 The accepted claimant contact flow is:
 
@@ -71,6 +71,10 @@ part of the approved MVP scope.
   #78.
 - SYNC-011 - Post-PR78 UI-002C completion and state synchronization in PR
   #79.
+- PLAN - Real-case tuning round 1 pilot-readiness validation planning in PR
+  #80.
+- VALIDATION - Real-case tuning round 1 report, verdict READY, in PR #81.
+- DEMO - Insurer discovery execution pack in PR #82.
 
 ## Current Sprint Status
 
@@ -155,6 +159,9 @@ next gate becomes SPRINT-PROD-BLOCK by default.
 
 | PR  | Title                                                      | Merge SHA  | Date       | Notes               |
 | --- | ---------------------------------------------------------- | ---------- | ---------- | ------------------- |
+| #82 | DEMO: Insurer discovery execution pack                     | `094688e…` | 2026-05-07 | Demo package        |
+| #81 | VALIDATION: Real-case tuning round 1 report                | `640f447…` | 2026-05-07 | Validation report   |
+| #80 | PLAN: Real-case tuning round 1 pilot-readiness validation  | `4f9993a…` | 2026-05-07 | Planning            |
 | #79 | SYNC-011: Record UI-002C completion and post-PR78 state    | `5f428fe…` | 2026-05-07 | State sync          |
 | #78 | UI-002C: claimant email notifications (Resend, email-only) | `b4b6158…` | 2026-05-07 | Email notifications |
 | #77 | SYNC-010: Add UI-002C email-only spec and demo package     | `4315cf7…` | 2026-05-07 | Docs/demo package   |
