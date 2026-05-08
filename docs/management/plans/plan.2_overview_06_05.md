@@ -2,7 +2,7 @@
 
 **Date:** 06/05/2026
 
-**Updated:** 07/05/2026 after PR #81 and insurer discovery execution package
+**Updated:** 08/05/2026 after PR #82 (insurer discovery execution pack merged)
 
 **Version:** plan.2.1
 
@@ -38,9 +38,10 @@
 | 22        | SPRINT-UI-002C - email-only claimant notifications          | PR #78            |
 | 23        | SYNC-011 - post-PR78 UI-002C state synchronization          | PR #79            |
 | 24        | Real-case tuning round 1 / pilot-readiness validation       | PR #81            |
+| 25        | DEMO - Insurer discovery execution pack                     | PR #82            |
 
 Current main HEAD:
-`640f44736eb50bed02f57dec38a99fdbeeb0d4db`
+`094688ec62a5bb2b1331786125c3c15e65c6822b`
 
 ---
 
