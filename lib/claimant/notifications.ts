@@ -74,6 +74,9 @@ export function buildClaimantEmailTemplate({
   const escapedClaimNumber = escapeHtml(claimNumber);
   const escapedQuestionCopy = escapeHtml(questionCopy);
   const escapedUrl = escapeHtml(magic_link_url);
+  const replyInstruction =
+    'כדי שהתגובה תיקלט במערכת, יש להשיב דרך הקישור המאובטח בלבד. מענה ישיר למייל זה לא ייקלט בתיק.';
+  const escapedReplyInstruction = escapeHtml(replyInstruction);
 
   return {
     subject,
@@ -92,6 +95,9 @@ export function buildClaimantEmailTemplate({
             ענה עכשיו
           </a>
         </p>
+        <p style="margin:0 0 16px;color:#475569;line-height:1.7;">
+          ${escapedReplyInstruction}
+        </p>
         <p style="margin:0;color:#475569;line-height:1.7;">
           הקישור תקף ל-24 שעות. אם הכפתור לא נפתח, אפשר להעתיק את הקישור הבא לדפדפן:
         </p>
@@ -108,6 +114,8 @@ export function buildClaimantEmailTemplate({
 
 ענה עכשיו:
 ${magic_link_url}
+
+${replyInstruction}
 
 הקישור תקף ל-24 שעות.`,
   };

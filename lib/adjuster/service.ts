@@ -7,6 +7,8 @@ import type {
   ClaimListItem,
   ClaimListQuery,
   ClaimListResponse,
+  DocumentWithSignedUrl,
+  FindingEvidenceView,
   QuestionDispatchState,
   ReadinessScoreView,
 } from '@/lib/adjuster/types';
@@ -107,6 +109,9 @@ export function composeClaimDetailSnapshot({
   const dispatchesByQuestion = new Map(
     questionDispatches.map((dispatch) => [dispatch.questionId, dispatch]),
   );
+  const documentsById = new Map(
+    documents.map((document) => [document.id, document]),
+  );
 
   return {
     claim,
@@ -115,7 +120,9 @@ export function composeClaimDetailSnapshot({
     validations: [...validations].sort((a, b) =>
       a.layerId.localeCompare(b.layerId),
     ),
-    findings: synthesisResults.flatMap(mapFindingResult),
+    findings: synthesisResults.flatMap((result) =>
+      mapFindingResult(result, documentsById),
+    ),
     questions: synthesisResults.flatMap((result) =>
       mapQuestionResult(result, dispatchesByQuestion),
     ),
@@ -270,7 +277,7 @@ function composeClaimListItem(
       .find((result) => result.kind === 'readiness_score') ?? null,
   );
   const topFinding = synthesisResults
-    .flatMap(mapFindingResult)
+    .flatMap((result) => mapFindingResult(result))
     .sort(
       (a, b) =>
         (SEVERITY_WEIGHT[b.severity] ?? 0) - (SEVERITY_WEIGHT[a.severity] ?? 0),
@@ -348,7 +355,10 @@ function groupSynthesisByClaim(
   return grouped;
 }
 
-function mapFindingResult(result: SynthesisResult): BriefFinding[] {
+function mapFindingResult(
+  result: SynthesisResult,
+  documentsById?: Map<string, DocumentWithSignedUrl>,
+): BriefFinding[] {
   if (result.kind !== 'finding' || !isRecord(result.payload)) return [];
 
   return [
@@ -359,11 +369,84 @@ function mapFindingResult(result: SynthesisResult): BriefFinding[] {
       title: stringValue(result.payload.title, 'ממצא ללא כותרת'),
       description: stringValue(result.payload.description, ''),
       evidence: Array.isArray(result.payload.evidence)
-        ? result.payload.evidence
+        ? result.payload.evidence.flatMap((item) => {
+            const evidence = mapFindingEvidence(item, documentsById);
+
+            return evidence ? [evidence] : [];
+          })
         : [],
       sourceLayerId: nullableString(result.payload.source_layer_id),
     },
   ];
+}
+
+function mapFindingEvidence(
+  value: unknown,
+  documentsById?: Map<string, DocumentWithSignedUrl>,
+): FindingEvidenceView | null {
+  if (!isRecord(value)) return null;
+
+  const documentId = nullableString(value.document_id);
+  const document = documentId ? documentsById?.get(documentId) : undefined;
+  const fieldPath = nullableString(value.field_path);
+  const fieldName =
+    nullableString(value.field_name) ?? deriveFieldName(fieldPath);
+  const rawValue = conciseEvidenceValue(value.raw_value);
+  const normalizedValue = conciseEvidenceValue(value.normalized_value);
+
+  if (!documentId && !fieldPath && !rawValue && !normalizedValue) {
+    return null;
+  }
+
+  return {
+    documentId,
+    documentFileName: document?.fileName ?? null,
+    documentType:
+      document?.documentType ?? nullableString(value.document_type) ?? null,
+    documentSubtype:
+      document?.documentSubtype ??
+      nullableString(value.document_subtype) ??
+      null,
+    fieldPath,
+    fieldName,
+    rawValue,
+    normalizedValue,
+  };
+}
+
+function deriveFieldName(fieldPath: string | null): string | null {
+  if (!fieldPath) return null;
+
+  const parts = fieldPath.split('.').filter(Boolean);
+  const fieldsIndex = parts.lastIndexOf('fields');
+
+  if (fieldsIndex >= 0 && parts[fieldsIndex + 1]) {
+    return parts[fieldsIndex + 1];
+  }
+
+  const last = parts.at(-1);
+  const previous = parts.at(-2);
+
+  if (last === 'value' && previous) {
+    return previous;
+  }
+
+  return last ?? fieldPath;
+}
+
+function conciseEvidenceValue(value: unknown): string | null {
+  const text =
+    typeof value === 'string'
+      ? value
+      : typeof value === 'number' || typeof value === 'boolean'
+        ? String(value)
+        : null;
+
+  if (!text) return null;
+
+  const normalized = text.replace(/\s+/g, ' ').trim();
+
+  return normalized.length > 0 && normalized.length <= 120 ? normalized : null;
 }
 
 function mapQuestionResult(
