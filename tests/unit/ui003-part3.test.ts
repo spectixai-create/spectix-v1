@@ -67,7 +67,7 @@ describe('UI-003 Part 3 source-level regressions', () => {
   it('adds dashboard risk band, KPI, question action, and tab counters', () => {
     expect(
       readFileSync('components/adjuster/claims-list-table.tsx', 'utf8'),
-    ).toContain('רמת סיכון');
+    ).toContain('רמת בדיקה');
     expect(readFileSync('app/(adjuster)/dashboard/page.tsx', 'utf8')).toContain(
       'DashboardKpiRow',
     );

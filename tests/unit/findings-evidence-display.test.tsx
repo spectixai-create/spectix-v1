@@ -22,8 +22,10 @@ describe('findings evidence display', () => {
             document_id: 'doc-1',
             field_path:
               'extracted_data.normalized_data.fields.patient_name.value',
+            expected_value: 'שם המבוטחת',
             raw_value: 'דנה כהן',
             normalized_value: 'dana cohen',
+            recommended_action: 'לאמת שם מול המסמכים.',
           },
         ]),
       ],
@@ -36,8 +38,9 @@ describe('findings evidence display', () => {
     expect(screen.getByText('receipt.pdf')).toBeTruthy();
     expect(screen.getByText('קבלה / קבלה כללית')).toBeTruthy();
     expect(screen.getByText(/patient_name/)).toBeTruthy();
+    expect(screen.getByText('שם המבוטחת')).toBeTruthy();
     expect(screen.getByText('דנה כהן')).toBeTruthy();
-    expect(screen.getByText('dana cohen')).toBeTruthy();
+    expect(screen.getByText('לאמת שם מול המסמכים.')).toBeTruthy();
     expect(container.textContent).not.toContain('"document_id"');
     expect(container.textContent).not.toContain('"field_path"');
   });
@@ -62,9 +65,27 @@ describe('findings evidence display', () => {
 
     render(<FindingsTab findings={snapshot.findings} />);
 
-    expect(screen.getByText('ראיה ברמת התיק')).toBeTruthy();
+    expect(screen.getByText('נתוני תביעה')).toBeTruthy();
     expect(screen.getByText(/claims\.incident_date/)).toBeTruthy();
     expect(screen.getByText('2026-05-01')).toBeTruthy();
+  });
+
+  it('always renders a source block and missing values for findings without evidence rows', () => {
+    const snapshot = composeClaimDetailSnapshot({
+      claim: claim(),
+      documents: [],
+      passes: [],
+      validations: [],
+      synthesisResults: [finding([])],
+      questionDispatches: [],
+      auditLog: [],
+    });
+
+    render(<FindingsTab findings={snapshot.findings} />);
+
+    expect(screen.getByText('נתוני תביעה')).toBeTruthy();
+    expect(screen.getAllByText('לא נמצא').length).toBeGreaterThanOrEqual(3);
+    expect(screen.getByText('פעולה מומלצת')).toBeTruthy();
   });
 });
 

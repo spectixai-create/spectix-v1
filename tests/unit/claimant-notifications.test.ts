@@ -4,8 +4,10 @@ import type { WebhookEventPayload } from 'resend';
 import {
   buildClaimantEmailTemplate,
   buildNotificationDispatchId,
+  buildRejectionEmailTemplate,
   extractClaimIdFromNotificationDispatchId,
   sendClaimantEmail,
+  sendClaimRejectionEmail,
   verifyResendWebhookPayload,
 } from '@/lib/claimant/notifications';
 import { runClaimantNotify } from '@/inngest/functions/claimant-notify';
@@ -25,12 +27,26 @@ describe('UI-002C claimant email notifications', () => {
       first_name: null,
       magic_link_url: 'https://staging.spectix.co.il/c/claim?token=test',
       question_count: 1,
+      questions: [
+        {
+          text: 'נא להעלות אישור משטרה מקומית על הגניבה.',
+          customer_label: 'אישור משטרה',
+          required_action: 'upload_document',
+        },
+      ],
     });
     const named = buildClaimantEmailTemplate({
       claim_number: 'CLM-2',
       first_name: 'דנה',
       magic_link_url: 'https://staging.spectix.co.il/c/claim?token=test',
       question_count: 3,
+      questions: [
+        {
+          text: 'נא להבהיר היכן היה התיק בזמן הגניבה.',
+          customer_label: 'נסיבות שמירה על התיק',
+          required_action: 'answer',
+        },
+      ],
     });
 
     expect(emptyName.text).toContain('שלום,');
@@ -38,10 +54,50 @@ describe('UI-002C claimant email notifications', () => {
     expect(emptyName.text).toContain(
       'כדי שהתגובה תיקלט במערכת, יש להשיב דרך הקישור המאובטח בלבד',
     );
+    expect(emptyName.subject).toBe(
+      'נדרשת השלמת פרטים לתביעת ביטוח נסיעות מספר CLM-1',
+    );
+    expect(emptyName.text).toContain('אישור משטרה');
     expect(emptyName.text).toContain('מענה ישיר למייל זה לא ייקלט בתיק');
     expect(named.text).toContain('שלום דנה,');
     expect(named.html).toContain('מענה ישיר למייל זה לא ייקלט בתיק');
     expect(named.html).toContain('dir="rtl"');
+  });
+
+  it('builds and sends a rejection email without implying automated decisioning', async () => {
+    const template = buildRejectionEmailTemplate({
+      claim_number: 'CLM-9',
+      first_name: 'דנה',
+      customer_message: 'שלום דנה,\n\nלא ניתן לאשר את התביעה בשלב זה.',
+    });
+
+    expect(template.subject).toContain('CLM-9');
+    expect(template.text).toContain('לא ניתן לאשר את התביעה בשלב זה');
+    expect(template.text).not.toMatch(/הונאה|רמאי|automatic rejection/i);
+
+    const resend = {
+      emails: {
+        send: vi.fn(async () => ({
+          data: { id: 'email_reject' },
+          error: null,
+        })),
+      },
+    };
+
+    await expect(
+      sendClaimRejectionEmail(
+        {
+          to: 'claimant@example.com',
+          claim_id: claimId,
+          claim_number: 'CLM-9',
+          first_name: 'דנה',
+          reason: 'חריג בפוליסה',
+          policy_clause: 'סעיף כבודה',
+          customer_message: template.text,
+        },
+        resend as never,
+      ),
+    ).resolves.toBe('email_reject');
   });
 
   it('sends email through Resend with dispatch correlation tags', async () => {
@@ -63,6 +119,7 @@ describe('UI-002C claimant email notifications', () => {
           first_name: 'דנה',
           magic_link_url: 'https://staging.spectix.co.il/c/claim?token=test',
           question_count: 2,
+          questions: [{ text: 'שאלה ספציפית', customer_label: 'השלמה' }],
           dispatch_id: dispatchId,
         },
         resend as never,
@@ -279,6 +336,7 @@ function dispatchEvent(
       claim_number: 'CLM-1',
       magic_link_url: 'https://staging.spectix.co.il/c/claim?token=test',
       question_count: 2,
+      questions: [{ text: 'שאלה ספציפית', customer_label: 'השלמה' }],
       ...overrides,
     },
   };

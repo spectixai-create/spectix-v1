@@ -18,6 +18,11 @@ export type EvidenceRef = {
   field_path: string;
   raw_value?: string;
   normalized_value?: string;
+  expected_value?: string;
+  found_value?: string;
+  source_quote?: string;
+  explanation?: string;
+  recommended_action?: string;
 };
 
 export type ValidationLayerResult<P> = {

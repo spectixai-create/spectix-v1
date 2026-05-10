@@ -8,6 +8,7 @@ import {
   deriveFindingsFromValidations,
   generateFindingId,
   generateQuestionId,
+  generateCustomerQuestionFromFinding,
   generateQuestionsForFindings,
 } from '@/lib/synthesis';
 import { describe, expect, it, vi } from 'vitest';
@@ -166,27 +167,50 @@ describe('SPRINT-003A finding derivation', () => {
 });
 
 describe('SPRINT-003A question generation', () => {
-  it('generates document, correction, confirmation, date, and anomaly questions', () => {
+  it('generates specific customer questions with required action metadata', () => {
     const findings: Finding[] = [
-      finding('gap', 'medium', 'חסר מסמך רפואי', '11.2'),
+      finding('gap', 'medium', 'חסר אישור משטרה', '11.2'),
       finding('gap', 'medium', 'חסרים תאריכים לבדיקת תקופת כיסוי', '11.2'),
       finding('inconsistency', 'high', 'אי-התאמה בשם בין מסמכים', '11.1'),
-      finding('inconsistency', 'medium', 'תאריך הגשה לפני אירוע', '11.2'),
-      finding('anomaly', 'medium', 'סכום חריג בקבלה', '11.3'),
+      finding('gap', 'medium', 'חסרה רשימת פריטים', '11.2'),
+      finding('gap', 'medium', 'חסרים פרטי השגחה על התיק', '11.2'),
     ];
 
     const questions = generateQuestionsForFindings(findings);
 
-    expect(questions.map((question) => question.expected_answer_type)).toEqual([
-      'document',
-      'correction',
-      'confirmation',
-      'text',
-      'text',
+    expect(questions.map((question) => question.text)).toEqual([
+      'נא להעלות אישור משטרה מקומית על הגניבה, הכולל שם מלא, תאריך אירוע ומיקום.',
+      'נא להעלות מסמך הכולל את תאריך האירוע, או להבהיר בכתב את מועד הגניבה.',
+      'נא להעלות מסמך שבו מופיע שמך המלא, או אישור משטרה מעודכן הכולל שם מלא.',
+      'נא להעלות רשימת פריטים שנגנבו, כולל תיאור כל פריט וסכום נתבע.',
+      'נא להבהיר היכן היה התיק בזמן הגניבה והאם היה תחת השגחה.',
     ]);
-    expect(
-      questions.every((question) => /[\u0590-\u05ff]/.test(question.text)),
-    ).toBe(true);
+    expect(questions.map((question) => question.required_action)).toEqual([
+      'upload_document',
+      'upload_document_or_answer',
+      'upload_document',
+      'upload_document_or_answer',
+      'answer',
+    ]);
+    expect(questions.map((question) => question.customer_label)).toEqual([
+      'אישור משטרה',
+      'תאריך אירוע',
+      'מסמך עם שם מלא',
+      'רשימת פריטים',
+      'נסיבות שמירה על התיק',
+    ]);
+  });
+
+  it('falls back to a finding-specific completion question', () => {
+    const generated = generateCustomerQuestionFromFinding(
+      finding('gap', 'medium', 'חסר פרט בדיקה ייחודי', '11.2'),
+    );
+
+    expect(generated).toMatchObject({
+      customer_label: 'השלמת מידע',
+      required_action: 'upload_document_or_answer',
+    });
+    expect(generated?.question).toContain('חסר פרט בדיקה ייחודי');
   });
 
   it('does not generate questions for layer-not-run, layer-failed, or fuzzy name findings', () => {

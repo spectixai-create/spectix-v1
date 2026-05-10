@@ -82,6 +82,11 @@ export type FindingEvidenceView = {
   fieldName: string | null;
   rawValue: string | null;
   normalizedValue: string | null;
+  expectedValue: string | null;
+  foundValue: string | null;
+  sourceQuote: string | null;
+  explanation: string | null;
+  recommendedAction: string | null;
 };
 
 export type BriefFinding = {
@@ -99,6 +104,8 @@ export type BriefQuestion = {
   text: string;
   relatedFindingId: string | null;
   expectedAnswerType: string;
+  requiredAction: string | null;
+  customerLabel: string | null;
   context: string | null;
   dispatch: QuestionDispatchState | null;
 };
@@ -139,7 +146,10 @@ export type AdjusterAuditAction =
   | 'adjuster_decision_reject'
   | 'adjuster_request_info'
   | 'adjuster_escalate'
-  | 'adjuster_unescalate';
+  | 'adjuster_unescalate'
+  | 'claim_rejected'
+  | 'claim_status_changed'
+  | 'claim_rejection_email_failed';
 
 export type AuditInsert = {
   claim_id: string;

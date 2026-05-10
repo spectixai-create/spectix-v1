@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildAdjusterAudit,
+  buildDefaultRejectionCustomerMessage,
   canApprove,
   canEscalate,
   canReject,
@@ -12,6 +13,7 @@ import {
   normalizeEditedTexts,
   normalizeQuestionIds,
   planQuestionDispatches,
+  validateRejectionPayload,
   validateRejectReason,
 } from '@/lib/adjuster/service';
 import {
@@ -160,12 +162,38 @@ describe('SPRINT-UI-001 action rules', () => {
     expect(canRequestInfo('reviewed')).toBe(false);
   });
 
-  it('requires a bounded reject reason and uses rejected_no_coverage flow', () => {
+  it('requires bounded rejection fields and uses rejected_no_coverage flow', () => {
     expect(validateRejectReason('  אין כיסוי בפוליסה  ')).toBe(
       'אין כיסוי בפוליסה',
     );
     expect(validateRejectReason('')).toBeNull();
     expect(validateRejectReason('x'.repeat(501))).toBeNull();
+    expect(
+      validateRejectionPayload({
+        reason: 'אין כיסוי',
+        policy_clause: 'חריג כבודה',
+        customer_message: 'הודעה ללקוח',
+      }),
+    ).toEqual({
+      reason: 'אין כיסוי',
+      policyClause: 'חריג כבודה',
+      customerMessage: 'הודעה ללקוח',
+    });
+    expect(
+      validateRejectionPayload({
+        reason: 'אין כיסוי',
+        policy_clause: '',
+        customer_message: 'הודעה ללקוח',
+      }),
+    ).toBeNull();
+    expect(
+      buildDefaultRejectionCustomerMessage({
+        customerName: 'דנה',
+        claimNumber: '2026-001',
+        rejectionReason: 'אין כיסוי',
+        policyClause: 'חריג כבודה',
+      }),
+    ).toContain('סיבת ההחלטה:\nאין כיסוי');
   });
 
   it('builds adjuster audit entries without top-level cost_usd', () => {
@@ -239,7 +267,7 @@ describe('SPRINT-UI-001 question selection UI behavior', () => {
     const dispatched = briefQuestion('q1', dispatch('q1'));
 
     expect(getQuestionDispatchStatusText(dispatched)).toContain(
-      'נשלחה לאחרונה',
+      'נוצר קישור בתאריך',
     );
     expect(isQuestionSelectable(dispatched)).toBe(true);
   });
@@ -256,7 +284,7 @@ describe('SPRINT-UI-001 question selection UI behavior', () => {
       notificationLastError: 'email.bounced: mailbox_full',
     });
 
-    expect(getQuestionDispatchStatusText(sent)).toContain('אימייל נשלח');
+    expect(getQuestionDispatchStatusText(sent)).toContain('נשלח ללקוח בתאריך');
     expect(getQuestionDispatchStatusText(bounced)).toContain('שגיאת אימייל');
     expect(hasNotificationError(sent)).toBe(false);
     expect(hasNotificationError(bounced)).toBe(true);
@@ -399,6 +427,8 @@ function question(claimId: string, id: string): SynthesisResult {
       text: 'נא להבהיר את תאריך האירוע',
       related_finding_id: `${claimId}-gap`,
       expected_answer_type: 'text',
+      required_action: 'upload_document_or_answer',
+      customer_label: 'תאריך אירוע',
       context: null,
     },
     createdAt: '2026-05-06T00:00:00Z',
@@ -474,6 +504,8 @@ function briefQuestion(
     text: 'נא להבהיר את תאריך האירוע',
     relatedFindingId: 'f1',
     expectedAnswerType: 'text',
+    requiredAction: 'upload_document_or_answer',
+    customerLabel: 'השלמת מידע',
     context: null,
     dispatch: state,
   };

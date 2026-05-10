@@ -1,4 +1,10 @@
-import { CalendarDays, FileText, Gauge } from 'lucide-react';
+import {
+  CalendarDays,
+  ClipboardCheck,
+  FileText,
+  Gauge,
+  ShieldCheck,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import type { ClaimDetailSnapshot } from '@/lib/adjuster/types';
@@ -35,12 +41,22 @@ export function ClaimHeader({
             </p>
           </div>
         </div>
-        <div className="grid gap-2 text-sm sm:grid-cols-3 lg:min-w-[520px]">
+        <div className="grid gap-2 text-sm sm:grid-cols-2 lg:min-w-[680px] xl:grid-cols-5">
           <HeaderMetric
             icon={<Gauge className="h-4 w-4" aria-hidden="true" />}
             label="ציון מוכנות"
             value={readinessScore?.score ?? 'אין'}
             className={getScoreBandClass(readinessScore?.score ?? null)}
+          />
+          <HeaderMetric
+            icon={<ShieldCheck className="h-4 w-4" aria-hidden="true" />}
+            label="רמת בדיקה נדרשת"
+            value={getReviewLevelLabel(snapshot)}
+          />
+          <HeaderMetric
+            icon={<ClipboardCheck className="h-4 w-4" aria-hidden="true" />}
+            label="סטטוס כיסוי ראשוני"
+            value={getPreliminaryCoverageStatusLabel(claim.metadata)}
           />
           <HeaderMetric
             icon={<CalendarDays className="h-4 w-4" aria-hidden="true" />}
@@ -90,4 +106,50 @@ function HeaderMetric({
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat('he-IL').format(new Date(value));
+}
+
+function getReviewLevelLabel(snapshot: ClaimDetailSnapshot): string {
+  const metadata = snapshot.claim.metadata;
+  const explicitLevel =
+    metadata && typeof metadata === 'object'
+      ? readString(metadata, 'review_level')
+      : null;
+
+  if (explicitLevel === 'standard') return 'רגילה';
+  if (explicitLevel === 'enhanced') return 'מוגברת';
+  if (explicitLevel === 'investigator') return 'חוקר';
+  if (snapshot.claim.escalatedToInvestigator) return 'חוקר';
+  if (
+    snapshot.claim.riskBand === 'red' ||
+    snapshot.claim.riskBand === 'orange'
+  ) {
+    return 'מוגברת';
+  }
+  if (
+    snapshot.claim.riskBand === 'yellow' ||
+    snapshot.claim.riskBand === 'green'
+  ) {
+    return 'רגילה';
+  }
+
+  return 'לא נקבע';
+}
+
+function getPreliminaryCoverageStatusLabel(metadata: unknown): string {
+  const value =
+    metadata && typeof metadata === 'object'
+      ? readString(metadata, 'preliminary_coverage_status')
+      : null;
+
+  if (value === 'likely_covered') return 'נראה מכוסה';
+  if (value === 'needs_exclusion_review') return 'דורש בדיקת חריגים';
+  if (value === 'missing_information') return 'חסר מידע לכיסוי';
+  if (value === 'likely_not_covered') return 'לא נראה מכוסה';
+
+  return 'לא נבדק';
+}
+
+function readString(value: object, key: string): string | null {
+  const candidate = (value as Record<string, unknown>)[key];
+  return typeof candidate === 'string' ? candidate : null;
 }

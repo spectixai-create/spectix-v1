@@ -37,6 +37,7 @@ export async function runClaimantNotify({
     claim_number,
     magic_link_url,
     question_count,
+    questions,
   } = event.data;
 
   if (!claimant_email) {
@@ -51,6 +52,7 @@ export async function runClaimantNotify({
         first_name: claimant_first_name,
         magic_link_url,
         question_count,
+        questions,
         dispatch_id,
       });
 

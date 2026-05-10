@@ -9,10 +9,12 @@ import {
   buildRequestInfoBody,
   getDefaultSelectedQuestionIds,
   getQuestionDispatchStatusText,
+  getRequiredActionLabel,
   hasNotificationError,
   isQuestionSelectable,
 } from '@/lib/adjuster/question-selection';
 import { EMPTY_STATES } from '@/lib/ui/strings-he';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ManualMagicLinkShare } from '@/components/adjuster/manual-magic-link-share';
@@ -103,7 +105,7 @@ export function QuestionsList({
       setNotificationAttempted(payload.data?.notification_attempted ?? false);
       setMessage(
         payload.data?.notification_attempted
-          ? 'אימייל נשלח למבוטח והקישור זמין גם לשיתוף ידני'
+          ? 'נוצר קישור ונרשמה בקשת שליחת אימייל למבוטח'
           : 'נוצר קישור לשיתוף ידני עם המבוטח',
       );
       router.refresh();
@@ -148,8 +150,8 @@ export function QuestionsList({
         ) : (
           <div className="space-y-3">
             <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-              התראות אוטומטיות עדיין אינן פעילות. לאחר שליחה יש להעתיק את הקישור
-              ולשתף אותו ידנית עם המבוטח.
+              לאחר השליחה יישלח אימייל אם קיים בתיק, והקישור יישאר זמין לשיתוף
+              ידני עם המבוטח.
             </div>
             {questions.map((question) => (
               <label
@@ -168,7 +170,15 @@ export function QuestionsList({
                     onChange={() => toggle(question.id)}
                     disabled={!isQuestionSelectable(question)}
                   />
-                  <span>
+                  <span className="block space-y-2">
+                    <span className="flex flex-wrap gap-2">
+                      <Badge variant="outline">
+                        {question.customerLabel ?? 'השלמת מידע'}
+                      </Badge>
+                      <Badge variant="secondary">
+                        {getRequiredActionLabel(question.requiredAction)}
+                      </Badge>
+                    </span>
                     <span className="block font-medium">{question.text}</span>
                     <span
                       className={
@@ -193,7 +203,7 @@ export function QuestionsList({
             onClick={sendSelected}
           >
             <Send className="h-4 w-4" aria-hidden="true" />
-            יצירת קישור לשאלות מסומנות
+            שליחת שאלות מסומנות
           </Button>
           <Button
             type="button"
@@ -217,7 +227,7 @@ export function QuestionsList({
             {displayedContactStatus.missing_both
               ? 'אין פרטי קשר בתיק. יש לשתף את הקישור ידנית בטלפון.'
               : notificationAttempted === true
-                ? `אימייל נשלח ל-${displayedContactStatus.claimant_email}. הקישור זמין גם לשיתוף ידני.`
+                ? `נרשמה בקשת שליחת אימייל ל-${displayedContactStatus.claimant_email}. הקישור זמין גם לשיתוף ידני.`
                 : displayedContactStatus.claimant_email
                   ? 'לאחר יצירת הקישור יישלח אימייל, והקישור יישאר זמין לשיתוף ידני.'
                   : 'אין אימייל בתביעה. שתף את הקישור ידנית עם התובע.'}
