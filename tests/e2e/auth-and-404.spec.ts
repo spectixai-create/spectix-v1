@@ -94,7 +94,7 @@ test('404 page renders Hebrew actions and protected actions redirect to login', 
   await page.getByRole('link', { name: 'חזרה לדשבורד' }).click();
   await expect(page).toHaveURL((url) => {
     return (
-      url.pathname === '/login' && url.searchParams.get('next') === '/dashboard'
+      url.pathname === '/login' && url.searchParams.get('next') === '/overview'
     );
   });
 

@@ -22,7 +22,7 @@ export default function NotFound() {
           </div>
           <div className="grid w-full gap-3 sm:grid-cols-2">
             <Button asChild className="min-h-11">
-              <a href="/dashboard">חזרה לדשבורד</a>
+              <a href="/overview">חזרה לדשבורד</a>
             </Button>
             <Button asChild variant="secondary" className="min-h-11">
               <a href="/new">פתיחת תיק חדש</a>
