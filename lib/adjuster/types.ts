@@ -73,13 +73,24 @@ export type QuestionDispatchState = {
   notificationChannel?: 'email' | 'sms' | 'both' | null;
 };
 
+export type FindingEvidenceView = {
+  documentId: string | null;
+  documentFileName: string | null;
+  documentType: string | null;
+  documentSubtype: string | null;
+  fieldPath: string | null;
+  fieldName: string | null;
+  rawValue: string | null;
+  normalizedValue: string | null;
+};
+
 export type BriefFinding = {
   id: string;
   category: string;
   severity: FindingSeverity;
   title: string;
   description: string;
-  evidence: unknown[];
+  evidence: FindingEvidenceView[];
   sourceLayerId: string | null;
 };
 

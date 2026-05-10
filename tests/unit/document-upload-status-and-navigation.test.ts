@@ -226,6 +226,7 @@ describe('authenticated dashboard navigation', () => {
     render(page);
 
     expect(screen.getByRole('heading', { name: 'דשבורד' })).toBeTruthy();
+    expect(screen.getByText('dashboard kpis')).toBeTruthy();
     expect(
       screen
         .getByRole('link', { name: 'פתיחת תור עבודה' })

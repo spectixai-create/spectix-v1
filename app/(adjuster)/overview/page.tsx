@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { ClipboardList, HelpCircle, PlusCircle } from 'lucide-react';
 
+import { fetchClaimsList } from '@/lib/adjuster/data';
+import { requireUser } from '@/lib/auth/server';
+import { DashboardKpiRow } from '@/components/adjuster/dashboard-kpi-row';
 import { AdjusterShell } from '@/components/layout/adjuster-shell';
 import { PageHeader } from '@/components/layout/page-header';
 import { VersionFooter } from '@/components/layout/version-footer';
@@ -40,6 +43,15 @@ const overviewActions = [
 export const dynamic = 'force-dynamic';
 
 export default async function OverviewPage() {
+  await requireUser();
+
+  const claims = await fetchClaimsList({
+    status: 'all',
+    sort: 'newest',
+    page: 1,
+    pageSize: 5,
+  });
+
   return (
     <AdjusterShell>
       <div className="space-y-6">
@@ -47,6 +59,7 @@ export default async function OverviewPage() {
           title="דשבורד"
           description="תמונת מצב כללית של פעילות התיקים"
         />
+        <DashboardKpiRow summary={claims.summary} />
         <section
           className="grid gap-4 md:grid-cols-3"
           aria-label="פעולות דשבורד מרכזיות"

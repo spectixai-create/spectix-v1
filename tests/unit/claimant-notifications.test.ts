@@ -35,7 +35,12 @@ describe('UI-002C claimant email notifications', () => {
 
     expect(emptyName.text).toContain('שלום,');
     expect(emptyName.text).not.toContain('שלום שלום');
+    expect(emptyName.text).toContain(
+      'כדי שהתגובה תיקלט במערכת, יש להשיב דרך הקישור המאובטח בלבד',
+    );
+    expect(emptyName.text).toContain('מענה ישיר למייל זה לא ייקלט בתיק');
     expect(named.text).toContain('שלום דנה,');
+    expect(named.html).toContain('מענה ישיר למייל זה לא ייקלט בתיק');
     expect(named.html).toContain('dir="rtl"');
   });
 
