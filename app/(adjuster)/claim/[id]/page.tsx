@@ -8,6 +8,7 @@ import { ClaimHeader } from '@/components/adjuster/claim-header';
 import { PassTimeline } from '@/components/adjuster/pass-timeline';
 import { RefreshButton } from '@/components/adjuster/refresh-button';
 import { AdjusterShell } from '@/components/layout/adjuster-shell';
+import { DashboardBackLink } from '@/components/layout/dashboard-back-link';
 import { PageHeader } from '@/components/layout/page-header';
 import { VersionFooter } from '@/components/layout/version-footer';
 
@@ -32,7 +33,12 @@ export default async function ClaimPage({
         <PageHeader
           title={`תיק ${snapshot.claim.claimNumber}`}
           description="בריף מתאם מבוסס ממצאים, ולידציה וסינתזה"
-          actions={<RefreshButton />}
+          actions={
+            <>
+              <DashboardBackLink />
+              <RefreshButton />
+            </>
+          }
         />
         <ClaimHeader snapshot={snapshot} />
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">

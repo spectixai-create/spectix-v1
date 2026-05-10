@@ -28,7 +28,7 @@ export const DOCUMENT_STATUS_LABELS: Record<DocumentProcessingStatus, string> =
   {
     pending: 'ממתין',
     processing: 'בעיבוד',
-    processed: 'עובד',
+    processed: 'מוכן',
     failed: 'נכשל',
   };
 

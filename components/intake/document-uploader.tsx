@@ -20,6 +20,7 @@ type UploadStatus =
   | 'converting'
   | 'uploading'
   | 'processing'
+  | 'background'
   | 'success'
   | 'error';
 
@@ -41,7 +42,8 @@ const STATUS_LABELS: Record<UploadStatus, string> = {
   queued: 'ממתין להעלאה',
   converting: 'ממיר תמונה...',
   uploading: 'מעלה...',
-  processing: 'מעבד...',
+  processing: 'המסמך נקלט ונמצא בעיבוד',
+  background: 'המסמך נקלט, העיבוד ימשיך ברקע',
   success: 'מוכן',
   error: 'נכשל',
 };
@@ -348,5 +350,5 @@ async function pollDocumentStatus(
     await new Promise((resolve) => setTimeout(resolve, 2_000));
   }
 
-  update({ status: 'processing' });
+  update({ status: 'background' });
 }
