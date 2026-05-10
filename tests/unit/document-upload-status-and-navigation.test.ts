@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { createElement, type ReactNode } from 'react';
+import { createElement, type ComponentType, type ReactNode } from 'react';
 import {
   act,
   cleanup,
@@ -36,8 +36,16 @@ vi.mock('@/components/layout/adjuster-shell', () => ({
     createElement('div', null, children),
 }));
 
+vi.mock('@/lib/auth/actions', () => ({
+  signOut: vi.fn(),
+}));
+
 vi.mock('@/components/adjuster/action-panel', () => ({
   ActionPanel: () => createElement('div', null, 'actions'),
+}));
+
+vi.mock('@/components/adjuster/claims-list-table', () => ({
+  ClaimsListTable: () => createElement('div', null, 'claims table'),
 }));
 
 vi.mock('@/components/adjuster/claim-brief-tabs', () => ({
@@ -46,6 +54,10 @@ vi.mock('@/components/adjuster/claim-brief-tabs', () => ({
 
 vi.mock('@/components/adjuster/claim-header', () => ({
   ClaimHeader: () => createElement('div', null, 'claim header'),
+}));
+
+vi.mock('@/components/adjuster/dashboard-kpi-row', () => ({
+  DashboardKpiRow: () => createElement('div', null, 'dashboard kpis'),
 }));
 
 vi.mock('@/components/adjuster/pass-timeline', () => ({
@@ -73,6 +85,14 @@ vi.mock('@/lib/auth/server', () => ({
 }));
 
 vi.mock('@/lib/adjuster/data', () => ({
+  fetchClaimsList: vi.fn(async () => ({
+    items: [],
+    page: 1,
+    pageSize: 25,
+    summary: {},
+    total: 0,
+    totalPages: 0,
+  })),
   fetchClaimDetail: vi.fn(async () => ({
     auditLog: [],
     claim: {
@@ -198,6 +218,74 @@ describe('claim document upload access', () => {
 describe('authenticated dashboard navigation', () => {
   afterEach(() => cleanup());
 
+  it('renders the general dashboard route with internal navigation actions', async () => {
+    const { default: OverviewPage } =
+      await import('@/app/(adjuster)/overview/page');
+    const page = await OverviewPage();
+
+    render(page);
+
+    expect(screen.getByRole('heading', { name: 'דשבורד' })).toBeTruthy();
+    expect(
+      screen
+        .getByRole('link', { name: 'פתיחת תור עבודה' })
+        .getAttribute('href'),
+    ).toBe('/dashboard');
+    expect(
+      screen
+        .getByRole('link', { name: 'פתיחת תור שאלות' })
+        .getAttribute('href'),
+    ).toBe('/questions');
+    expect(
+      screen
+        .getByRole('link', { name: 'פתיחת טופס קליטה' })
+        .getAttribute('href'),
+    ).toBe('/new');
+  });
+
+  it('keeps the existing dashboard route as the work queue', async () => {
+    const { default: DashboardPage } =
+      await import('@/app/(adjuster)/dashboard/page');
+    const page = await DashboardPage({ searchParams: {} });
+
+    render(page);
+
+    expect(screen.getByRole('heading', { name: 'תור עבודה' })).toBeTruthy();
+  });
+
+  it('adds the general dashboard to authenticated shell navigation', async () => {
+    const { AdjusterShellClient } =
+      await import('@/components/layout/adjuster-shell-client');
+    const Shell = AdjusterShellClient as ComponentType<{
+      children?: ReactNode;
+      userEmail: string | null;
+    }>;
+
+    render(
+      createElement(
+        Shell,
+        { userEmail: 'adjuster.demo@spectix.test' },
+        createElement('div', null, 'content'),
+      ),
+    );
+
+    expect(
+      screen
+        .getAllByRole('link', { name: 'דשבורד' })
+        .some((link) => link.getAttribute('href') === '/overview'),
+    ).toBe(true);
+    expect(
+      screen
+        .getAllByRole('link', { name: 'תור עבודה' })
+        .some((link) => link.getAttribute('href') === '/dashboard'),
+    ).toBe(true);
+    expect(
+      screen
+        .getAllByRole('link', { name: 'תור שאלות' })
+        .some((link) => link.getAttribute('href') === '/questions'),
+    ).toBe(true);
+  });
+
   it('renders a dashboard return link on the claim detail page', async () => {
     const { default: ClaimPage } =
       await import('@/app/(adjuster)/claim/[id]/page');
@@ -207,7 +295,7 @@ describe('authenticated dashboard navigation', () => {
 
     expect(
       screen.getByRole('link', { name: 'חזרה לדשבורד' }).getAttribute('href'),
-    ).toBe('/dashboard');
+    ).toBe('/overview');
   });
 
   it('renders a dashboard return link on the questions page', async () => {
@@ -218,7 +306,7 @@ describe('authenticated dashboard navigation', () => {
 
     expect(
       screen.getByRole('link', { name: 'חזרה לדשבורד' }).getAttribute('href'),
-    ).toBe('/dashboard');
+    ).toBe('/overview');
   });
 });
 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { HelpCircle, LayoutDashboard, LogOut, Menu } from 'lucide-react';
+import { HelpCircle, Home, LayoutDashboard, LogOut, Menu } from 'lucide-react';
 
 import { signOut } from '@/lib/auth/actions';
 import { getUserInitials } from '@/lib/ui/user-identity';
@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/sheet';
 
 const navItems = [
+  { href: '/overview', label: 'דשבורד', icon: Home },
   { href: '/dashboard', label: 'תור עבודה', icon: LayoutDashboard },
   { href: '/questions', label: 'תור שאלות', icon: HelpCircle },
 ];

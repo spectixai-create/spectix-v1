@@ -5,7 +5,8 @@
 | `/`              | root         | Public               | Landing page                                 |
 | `/login`         | `(auth)`     | Public               | Redirects logged-in users to `/dashboard`    |
 | `/new`           | `(intake)`   | Public               | Claimant intake                              |
-| `/dashboard`     | `(adjuster)` | Required             | Protected by middleware                      |
+| `/overview`      | `(adjuster)` | Required             | General internal dashboard                   |
+| `/dashboard`     | `(adjuster)` | Required             | Work queue / תור עבודה                       |
 | `/claim/[id]`    | `(adjuster)` | Required             | Protected by middleware                      |
 | `/questions`     | `(adjuster)` | Required             | Protected by middleware                      |
 | `/design-system` | root         | Required             | Internal QA page, hidden from main nav       |
