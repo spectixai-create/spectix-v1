@@ -195,6 +195,57 @@ export function validateRejectReason(reason: unknown): string | null {
   return trimmed;
 }
 
+export type RejectionPayload = {
+  reason: string;
+  policyClause: string;
+  customerMessage: string;
+};
+
+export function validateRejectionPayload(
+  value: unknown,
+): RejectionPayload | null {
+  if (!isRecord(value)) return null;
+
+  const reason = validateBoundedText(value.reason, 500);
+  const policyClause = validateBoundedText(value.policy_clause, 500);
+  const customerMessage = validateBoundedText(value.customer_message, 2500);
+
+  if (!reason || !policyClause || !customerMessage) return null;
+
+  return { reason, policyClause, customerMessage };
+}
+
+export function buildDefaultRejectionCustomerMessage({
+  customerName,
+  claimNumber,
+  rejectionReason,
+  policyClause,
+  additionalExplanation,
+}: {
+  customerName: string | null;
+  claimNumber: string | null;
+  rejectionReason: string;
+  policyClause: string;
+  additionalExplanation?: string | null;
+}): string {
+  const name = customerName?.trim() || 'לקוח/ה';
+  const number = claimNumber?.trim() || 'התביעה';
+  const explanation = additionalExplanation?.trim();
+
+  return `שלום ${name},
+
+לאחר בדיקת התביעה מספר ${number}, לא ניתן לאשר את התביעה בשלב זה.
+
+סיבת ההחלטה:
+${rejectionReason}
+
+הבסיס להחלטה:
+${policyClause}${explanation ? `\n\n${explanation}` : ''}
+
+בברכה,
+מחלקת תביעות`;
+}
+
 export function normalizeQuestionIds(value: unknown): string[] | null {
   if (!Array.isArray(value)) return null;
 
@@ -393,8 +444,44 @@ function mapFindingEvidence(
     nullableString(value.field_name) ?? deriveFieldName(fieldPath);
   const rawValue = conciseEvidenceValue(value.raw_value);
   const normalizedValue = conciseEvidenceValue(value.normalized_value);
+  const expectedValue = firstConciseEvidenceValue(
+    value.expected_value,
+    value.expected,
+    value.expectedValue,
+  );
+  const foundValue = firstConciseEvidenceValue(
+    value.found_value,
+    value.found,
+    value.foundValue,
+    value.raw_value,
+    value.normalized_value,
+  );
+  const sourceQuote = firstConciseEvidenceValue(
+    value.source_quote,
+    value.sourceQuote,
+    value.quote,
+    value.source_text,
+  );
+  const explanation = firstConciseEvidenceValue(
+    value.explanation,
+    value.reason,
+  );
+  const recommendedAction = firstConciseEvidenceValue(
+    value.recommended_action,
+    value.recommendedAction,
+  );
 
-  if (!documentId && !fieldPath && !rawValue && !normalizedValue) {
+  if (
+    !documentId &&
+    !fieldPath &&
+    !rawValue &&
+    !normalizedValue &&
+    !expectedValue &&
+    !foundValue &&
+    !sourceQuote &&
+    !explanation &&
+    !recommendedAction
+  ) {
     return null;
   }
 
@@ -411,6 +498,11 @@ function mapFindingEvidence(
     fieldName,
     rawValue,
     normalizedValue,
+    expectedValue,
+    foundValue,
+    sourceQuote,
+    explanation,
+    recommendedAction,
   };
 }
 
@@ -449,6 +541,22 @@ function conciseEvidenceValue(value: unknown): string | null {
   return normalized.length > 0 && normalized.length <= 120 ? normalized : null;
 }
 
+function firstConciseEvidenceValue(...values: unknown[]): string | null {
+  for (const value of values) {
+    const concise = conciseEvidenceValue(value);
+    if (concise) return concise;
+  }
+
+  return null;
+}
+
+function validateBoundedText(value: unknown, maxLength: number): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > maxLength) return null;
+  return trimmed;
+}
+
 function mapQuestionResult(
   result: SynthesisResult,
   dispatchesByQuestion: Map<string, QuestionDispatchState>,
@@ -466,6 +574,8 @@ function mapQuestionResult(
         result.payload.expected_answer_type,
         'text',
       ),
+      requiredAction: nullableString(result.payload.required_action),
+      customerLabel: nullableString(result.payload.customer_label),
       context: nullableString(result.payload.context),
       dispatch: dispatchesByQuestion.get(id) ?? null,
     },

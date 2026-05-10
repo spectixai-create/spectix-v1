@@ -78,6 +78,16 @@ type DbQuestionDispatchRow = {
   notification_channel?: 'email' | 'sms' | 'both' | null;
 };
 
+type DbSynthesisQuestionRow = {
+  payload: Record<string, unknown>;
+};
+
+type NotificationQuestion = {
+  text: string;
+  customer_label?: string | null;
+  required_action?: string | null;
+};
+
 export { normalizeEditedTexts, normalizeQuestionIds };
 
 export async function dispatchClaimQuestions({
@@ -148,6 +158,12 @@ export async function dispatchClaimQuestions({
   });
 
   await updateClaimToPendingInfo(claimId);
+  const notificationQuestions = await fetchNotificationQuestions({
+    claimId,
+    questionIds,
+    editedTexts,
+    supabase,
+  });
   const { error: auditError } = await supabase.from('audit_log').insert(
     buildAdjusterAudit({
       claimId,
@@ -157,6 +173,9 @@ export async function dispatchClaimQuestions({
       details: {
         question_ids: questionIds,
         questions_count: questionIds.length,
+        question_labels: notificationQuestions.map(
+          (question) => question.customer_label ?? null,
+        ),
         edited_count: Object.keys(editedTexts ?? {}).length,
         manual_link_generated: true,
         expires_at: expiresAt,
@@ -184,6 +203,7 @@ export async function dispatchClaimQuestions({
           claim_number: contactStatus.claim_number,
           magic_link_url: magicLinkUrl,
           question_count: questionIds.length,
+          questions: notificationQuestions,
         },
       });
       notificationAttempted = true;
@@ -318,6 +338,50 @@ async function fetchExistingDispatches(
   }));
 }
 
+async function fetchNotificationQuestions({
+  claimId,
+  questionIds,
+  editedTexts,
+  supabase,
+}: {
+  claimId: string;
+  questionIds: string[];
+  editedTexts?: Record<string, string>;
+  supabase: ReturnType<typeof createAdminClient>;
+}): Promise<NotificationQuestion[]> {
+  const { data, error } = await supabase
+    .from('synthesis_results')
+    .select('payload')
+    .eq('claim_id', claimId)
+    .eq('pass_number', 3)
+    .eq('kind', 'question');
+
+  if (error) throw error;
+
+  const questionsById = new Map<string, NotificationQuestion>();
+  for (const row of (data ?? []) as DbSynthesisQuestionRow[]) {
+    const payload = row.payload;
+    const id = stringValue(payload.id);
+    if (!id) continue;
+    questionsById.set(id, {
+      text: stringValue(payload.text) ?? 'נדרשת השלמת פרטים בתביעה.',
+      customer_label: stringValue(payload.customer_label),
+      required_action: stringValue(payload.required_action),
+    });
+  }
+
+  return questionIds.map((questionId) => {
+    const question = questionsById.get(questionId);
+    const editedText = editedTexts?.[questionId]?.trim();
+
+    return {
+      text: editedText || question?.text || 'נדרשת השלמת פרטים בתביעה.',
+      customer_label: question?.customer_label ?? null,
+      required_action: question?.required_action ?? null,
+    };
+  });
+}
+
 async function createMagicLink({
   claimId,
   actorId,
@@ -410,6 +474,12 @@ function sanitizeNotificationError(error: unknown): string {
   return (message || 'notification_queue_failed')
     .replace(/https?:\/\/\S+/g, '[url]')
     .slice(0, 500);
+}
+
+function stringValue(value: unknown): string | null {
+  return typeof value === 'string' && value.trim().length > 0
+    ? value.trim()
+    : null;
 }
 
 function dispatchErrorResult(

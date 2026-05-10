@@ -1,6 +1,10 @@
 'use client';
 
-import type { BriefFinding, FindingEvidenceView } from '@/lib/adjuster/types';
+import {
+  formatFindingEvidence,
+  type FormattedFindingEvidence,
+} from '@/lib/adjuster/finding-evidence';
+import type { BriefFinding } from '@/lib/adjuster/types';
 import {
   DOCUMENT_LABELS,
   EMPTY_STATES,
@@ -67,21 +71,15 @@ export function FindingsTab({
             </p>
           </summary>
           <div className="mt-4 rounded-md bg-muted p-3 text-sm">
-            <p className="font-medium">ראיות בטוחות</p>
-            {finding.evidence.length > 0 ? (
-              <div className="mt-2 space-y-2">
-                {finding.evidence.map((evidence, evidenceIndex) => (
-                  <EvidenceRow
-                    key={`${finding.id}-evidence-${evidenceIndex}`}
-                    evidence={evidence}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="mt-2 text-sm text-muted-foreground">
-                לא צורפו ראיות מפורטות לממצא זה.
-              </p>
-            )}
+            <p className="font-medium">מקורות וראיות</p>
+            <div className="mt-2 space-y-2">
+              {formatFindingEvidence(finding).map((evidence, evidenceIndex) => (
+                <EvidenceRow
+                  key={`${finding.id}-evidence-${evidenceIndex}`}
+                  evidence={evidence}
+                />
+              ))}
+            </div>
           </div>
         </details>
       ))}
@@ -92,47 +90,39 @@ export function FindingsTab({
 function EvidenceRow({
   evidence,
 }: Readonly<{
-  evidence: FindingEvidenceView;
+  evidence: FormattedFindingEvidence;
 }>) {
-  const documentTypeLabel = getDocumentTypeLabel(evidence);
-  const fieldLabel = getFieldLabel(evidence);
-  const sourceLabel = evidence.documentFileName
-    ? evidence.documentFileName
-    : evidence.documentId
-      ? 'מקור לא משויך למסמך'
-      : 'ראיה ברמת התיק';
+  const documentTypeLabel = getDocumentTypeLabel(evidence.documentTypeLabel);
 
   return (
     <div className="rounded-md border bg-background/70 p-3">
       <dl className="grid gap-2 text-sm md:grid-cols-[140px_1fr]">
-        <dt className="font-medium text-muted-foreground">מסמך</dt>
-        <dd>{sourceLabel}</dd>
+        <dt className="font-medium text-muted-foreground">מקור</dt>
+        <dd>{evidence.sourceLabel}</dd>
         {documentTypeLabel ? (
           <>
             <dt className="font-medium text-muted-foreground">סוג מסמך</dt>
             <dd>{documentTypeLabel}</dd>
           </>
         ) : null}
-        {fieldLabel ? (
+        <dt className="font-medium text-muted-foreground">שדה שנבדק</dt>
+        <dd className="break-words font-latin text-xs md:text-sm">
+          {evidence.checkedField}
+        </dd>
+        <dt className="font-medium text-muted-foreground">ערך מצופה</dt>
+        <dd className="break-words">{evidence.expectedValue}</dd>
+        <dt className="font-medium text-muted-foreground">ערך שנמצא</dt>
+        <dd className="break-words">{evidence.foundValue}</dd>
+        {evidence.sourceQuote ? (
           <>
-            <dt className="font-medium text-muted-foreground">שדה</dt>
-            <dd className="break-words font-latin text-xs md:text-sm">
-              {fieldLabel}
-            </dd>
+            <dt className="font-medium text-muted-foreground">ציטוט מקור</dt>
+            <dd className="break-words">{evidence.sourceQuote}</dd>
           </>
         ) : null}
-        {evidence.rawValue ? (
-          <>
-            <dt className="font-medium text-muted-foreground">ערך מקורי</dt>
-            <dd className="break-words">{evidence.rawValue}</dd>
-          </>
-        ) : null}
-        {evidence.normalizedValue ? (
-          <>
-            <dt className="font-medium text-muted-foreground">ערך מנורמל</dt>
-            <dd className="break-words">{evidence.normalizedValue}</dd>
-          </>
-        ) : null}
+        <dt className="font-medium text-muted-foreground">הסבר</dt>
+        <dd className="break-words">{evidence.explanation}</dd>
+        <dt className="font-medium text-muted-foreground">פעולה מומלצת</dt>
+        <dd className="break-words">{evidence.recommendedAction}</dd>
       </dl>
     </div>
   );
@@ -148,20 +138,14 @@ function EmptyState({ text }: Readonly<{ text: string }>) {
   );
 }
 
-function getDocumentTypeLabel(evidence: FindingEvidenceView): string | null {
-  const labels = [evidence.documentType, evidence.documentSubtype]
-    .filter((value): value is string => Boolean(value))
-    .map((value) => DOCUMENT_LABELS[value] ?? value);
+function getDocumentTypeLabel(value: string | null): string | null {
+  if (!value) return null;
+
+  const labels = value
+    .split(' / ')
+    .filter(Boolean)
+    .map((label) => DOCUMENT_LABELS[label] ?? label);
   const uniqueLabels = Array.from(new Set(labels));
 
   return uniqueLabels.length > 0 ? uniqueLabels.join(' / ') : null;
-}
-
-function getFieldLabel(evidence: FindingEvidenceView): string | null {
-  if (!evidence.fieldPath) return evidence.fieldName;
-  if (!evidence.fieldName || evidence.fieldName === evidence.fieldPath) {
-    return evidence.fieldPath;
-  }
-
-  return `${evidence.fieldName} (${evidence.fieldPath})`;
 }

@@ -16,8 +16,23 @@ export function collectEvidence(value: unknown): EvidenceRef[] {
     if (typeof candidate.normalized_value === 'string') {
       ref.normalized_value = candidate.normalized_value;
     }
+    if (typeof candidate.expected_value === 'string') {
+      ref.expected_value = candidate.expected_value;
+    }
+    if (typeof candidate.found_value === 'string') {
+      ref.found_value = candidate.found_value;
+    }
+    if (typeof candidate.source_quote === 'string') {
+      ref.source_quote = candidate.source_quote;
+    }
+    if (typeof candidate.explanation === 'string') {
+      ref.explanation = candidate.explanation;
+    }
+    if (typeof candidate.recommended_action === 'string') {
+      ref.recommended_action = candidate.recommended_action;
+    }
 
-    const key = `${ref.document_id}:${ref.field_path}:${ref.raw_value ?? ''}:${ref.normalized_value ?? ''}`;
+    const key = `${ref.document_id}:${ref.field_path}:${ref.raw_value ?? ''}:${ref.normalized_value ?? ''}:${ref.expected_value ?? ''}:${ref.found_value ?? ''}`;
     if (seen.has(key)) return;
     seen.add(key);
     refs.push(ref);

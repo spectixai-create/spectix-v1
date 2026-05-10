@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { jsonError, jsonOk, requireApiUser } from '@/lib/adjuster/api';
 import { rejectClaim } from '@/lib/adjuster/data';
-import { validateRejectReason } from '@/lib/adjuster/service';
+import { validateRejectionPayload } from '@/lib/adjuster/service';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,17 +20,17 @@ export async function POST(
     return jsonError('invalid_json', 'גוף הבקשה אינו JSON תקין', 400);
   }
 
-  const reason = validateRejectReason(
-    typeof body === 'object' && body !== null && 'reason' in body
-      ? (body as { reason?: unknown }).reason
-      : undefined,
-  );
+  const rejection = validateRejectionPayload(body);
 
-  if (!reason) {
-    return jsonError('invalid_reason', 'נדרש נימוק דחייה עד 500 תווים', 400);
+  if (!rejection) {
+    return jsonError(
+      'invalid_rejection',
+      'נדרשים נימוק דחייה, בסיס פוליסה ונוסח הודעה ללקוח',
+      400,
+    );
   }
 
-  const result = await rejectClaim(params.id, user.id, reason);
+  const result = await rejectClaim(params.id, user.id, rejection);
   if (!result.ok) {
     return NextResponse.json(
       { ok: false, error: { code: result.code, message: result.message } },

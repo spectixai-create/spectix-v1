@@ -7,6 +7,10 @@ export type QuestionAnswerType =
   | 'document'
   | 'confirmation'
   | 'correction';
+export type QuestionRequiredAction =
+  | 'upload_document'
+  | 'answer'
+  | 'upload_document_or_answer';
 
 export type Finding = {
   id: string;
@@ -23,6 +27,8 @@ export type ClarificationQuestion = {
   text: string;
   related_finding_id: string;
   expected_answer_type: QuestionAnswerType;
+  required_action: QuestionRequiredAction;
+  customer_label: string;
   context?: Record<string, unknown>;
 };
 

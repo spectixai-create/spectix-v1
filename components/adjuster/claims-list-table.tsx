@@ -37,8 +37,8 @@ const headers = [
   'מבוטח',
   'סוג',
   'סכום',
-  'ציון',
-  'רמת סיכון',
+  'ציון מוכנות',
+  'רמת בדיקה',
   'ממצא מוביל',
   'ימים פתוח',
   'סטטוס',
@@ -124,7 +124,7 @@ export function ClaimsListTable({
           <SelectContent>
             <SelectItem value="newest">חדש לישן</SelectItem>
             <SelectItem value="oldest">ישן לחדש</SelectItem>
-            <SelectItem value="score_desc">ציון גבוה לנמוך</SelectItem>
+            <SelectItem value="score_desc">ציון מוכנות גבוה לנמוך</SelectItem>
             <SelectItem value="days_open_desc">ימים פתוח</SelectItem>
           </SelectContent>
         </Select>
@@ -195,6 +195,12 @@ export function ClaimsListTable({
                     >
                       {claim.readinessScore ?? 'אין'}
                     </Badge>
+                    {claim.status === 'pending_info' &&
+                    (claim.readinessScore ?? 0) >= 80 ? (
+                      <span className="mt-1 block text-xs text-muted-foreground">
+                        מוכנות גבוהה אך ממתין להשלמת מידע
+                      </span>
+                    ) : null}
                   </TableCell>
                   <TableCell>
                     {isRiskBand(claim.riskBand) ? (

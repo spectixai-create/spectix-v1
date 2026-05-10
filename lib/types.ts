@@ -847,6 +847,11 @@ export interface ClaimDispatchQuestionsEvent {
     claim_number: string | null;
     magic_link_url: string;
     question_count: number;
+    questions?: Array<{
+      text: string;
+      customer_label?: string | null;
+      required_action?: string | null;
+    }>;
   };
 }
 

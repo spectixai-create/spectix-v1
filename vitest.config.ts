@@ -14,6 +14,10 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['lib/**/*.test.ts', 'tests/unit/**/*.test.ts'],
+    include: [
+      'lib/**/*.test.ts',
+      'tests/unit/**/*.test.ts',
+      'tests/unit/**/*.test.tsx',
+    ],
   },
 });

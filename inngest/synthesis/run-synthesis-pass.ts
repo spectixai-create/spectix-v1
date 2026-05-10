@@ -262,6 +262,7 @@ export async function runSynthesisPass({
         pass_number: SYNTHESIS_PASS_NUMBER,
         findings_count: findings.length,
         questions_count: questions.length,
+        question_labels: questions.map((question) => question.customer_label),
         claimant_response_count: claimantResponses.length,
         score: readinessScore.score,
         final_status: finalStatus,

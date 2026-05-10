@@ -10,6 +10,8 @@ import {
   composeClaimListResponse,
   planQuestionDispatches,
 } from '@/lib/adjuster/service';
+import type { RejectionPayload } from '@/lib/adjuster/service';
+import { sendClaimRejectionEmail } from '@/lib/claimant/notifications';
 import type {
   AuditLogView,
   ClaimDetailSnapshot,
@@ -61,6 +63,15 @@ type DbClaimRow = {
   escalated_to_investigator: boolean | null;
   created_at: string;
   updated_at: string;
+};
+
+type DbRejectClaimRow = {
+  id: string;
+  status: ClaimStatus;
+  claim_number: string | null;
+  claimant_email: string | null;
+  claimant_name: string | null;
+  insured_name: string | null;
 };
 
 type DbPassRow = {
@@ -238,14 +249,69 @@ export async function approveClaim(
 export async function rejectClaim(
   claimId: string,
   actorId: string,
-  reason: string,
+  rejection: RejectionPayload,
 ): Promise<AdjusterActionResult> {
   const supabase = createAdminClient();
+  const claim = await fetchClaimForRejection(supabase, claimId);
+
+  if (!claim) return actionError(404, 'not_found', 'התיק לא נמצא');
+
+  const allowedStatuses: ClaimStatus[] = [
+    'ready',
+    'reviewed',
+    'pending_info',
+    'errored',
+    'cost_capped',
+  ];
+  if (!allowedStatuses.includes(claim.status)) {
+    return actionError(409, 'invalid_state', 'לא ניתן לדחות תיק במצב הנוכחי');
+  }
+
+  let customerMessageSent = false;
+  let rejectionMessageId: string | null = null;
+
+  if (claim.claimant_email) {
+    try {
+      rejectionMessageId = await sendClaimRejectionEmail({
+        to: claim.claimant_email,
+        claim_id: claim.id,
+        claim_number: claim.claim_number,
+        first_name: claim.claimant_name ?? claim.insured_name,
+        reason: rejection.reason,
+        policy_clause: rejection.policyClause,
+        customer_message: rejection.customerMessage,
+      });
+      customerMessageSent = true;
+    } catch (error) {
+      await insertAudit(
+        supabase,
+        buildAdjusterAudit({
+          claimId,
+          actorId,
+          action: 'claim_rejection_email_failed',
+          details: {
+            reason: rejection.reason,
+            policy_clause: rejection.policyClause,
+            previous_status: claim.status,
+            customer_message_sent: false,
+            email_error: truncateActionError(error),
+          },
+        }),
+      );
+
+      return actionError(
+        502,
+        'rejection_email_failed',
+        'שליחת הודעת הדחייה ללקוח נכשלה. הסטטוס לא עודכן.',
+      );
+    }
+  }
+
   const updated = await updateClaimStatus(
     supabase,
     claimId,
     'rejected_no_coverage',
-    ['ready', 'reviewed', 'pending_info', 'errored', 'cost_capped'],
+    allowedStatuses,
   );
 
   if (!updated) {
@@ -258,7 +324,44 @@ export async function rejectClaim(
       claimId,
       actorId,
       action: 'adjuster_decision_reject',
-      details: { reason, to_status: 'rejected_no_coverage' },
+      details: {
+        reason: rejection.reason,
+        policy_clause: rejection.policyClause,
+        customer_message: rejection.customerMessage,
+        customer_message_sent: customerMessageSent,
+        rejection_message_id: rejectionMessageId,
+        from_status: claim.status,
+        to_status: 'rejected_no_coverage',
+      },
+    }),
+  );
+
+  await insertAudit(
+    supabase,
+    buildAdjusterAudit({
+      claimId,
+      actorId,
+      action: 'claim_rejected',
+      details: {
+        reason: rejection.reason,
+        policy_clause: rejection.policyClause,
+        customer_message_sent: customerMessageSent,
+        timestamp: new Date().toISOString(),
+      },
+    }),
+  );
+
+  await insertAudit(
+    supabase,
+    buildAdjusterAudit({
+      claimId,
+      actorId,
+      action: 'claim_status_changed',
+      details: {
+        previous_status: claim.status,
+        new_status: 'rejected_no_coverage',
+        change_reason: 'claim_rejected',
+      },
     }),
   );
 
@@ -581,6 +684,22 @@ async function fetchClaimActionState(
   };
 }
 
+async function fetchClaimForRejection(
+  supabase: SupabaseClient,
+  claimId: string,
+): Promise<DbRejectClaimRow | null> {
+  const { data, error } = await supabase
+    .from('claims')
+    .select(
+      'id, status, claim_number, claimant_email, claimant_name, insured_name',
+    )
+    .eq('id', claimId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? (data as DbRejectClaimRow) : null;
+}
+
 async function updateClaimStatus(
   supabase: SupabaseClient,
   claimId: string,
@@ -763,6 +882,13 @@ function mapAuditLog(row: DbAuditLogRow): AuditLogView {
     details: row.details,
     createdAt: row.created_at,
   };
+}
+
+function truncateActionError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  return (message || 'unknown_error')
+    .replace(/https?:\/\/\S+/g, '[url]')
+    .slice(0, 500);
 }
 
 function toNullableNumber(value: number | string | null): number | null {
