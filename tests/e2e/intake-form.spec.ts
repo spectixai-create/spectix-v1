@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('public intake form renders, keeps values, handles states and mock upload', async ({
+test('public intake form renders, keeps values, handles states and post-submit upload entry', async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -27,6 +27,7 @@ test('public intake form renders, keeps values, handles states and mock upload',
         ok: true,
         data: {
           claim: {
+            id: '00000000-0000-4000-8000-000000000001',
             claimNumber: '2026-999',
           },
         },
@@ -37,14 +38,10 @@ test('public intake form renders, keeps values, handles states and mock upload',
   await page.setViewportSize({ width: 1280, height: 1100 });
   await page.goto('/new');
 
-  for (const label of [
-    'פרטי המבוטח',
-    'פרטי האירוע',
-    'הקשר הנסיעה',
-    'העלאת מסמכים',
-  ]) {
+  for (const label of ['פרטי המבוטח', 'פרטי האירוע', 'הקשר הנסיעה']) {
     await expect(page.getByText(label).first()).toBeVisible();
   }
+  await expect(page.getByLabel('אזור העלאת מסמכים')).toHaveCount(0);
 
   await expect(page.getByText('*')).toHaveCount(12);
   await expect(page).toHaveScreenshot('intake-1280-idle.png', {
@@ -92,26 +89,6 @@ test('public intake form renders, keeps values, handles states and mock upload',
   await expect(page.getByLabel('מספר פוליסה *')).toHaveValue('POL-2024-7788');
   await expect(page.getByText(/\/ 2000/)).toBeVisible();
 
-  const dropzone = page.getByLabel('אזור העלאת מסמכים');
-  const dataTransfer = await page.evaluateHandle(() => {
-    const transfer = new DataTransfer();
-    const file = new File(['receipt'], 'receipt-trendy-electronics.pdf', {
-      type: 'application/pdf',
-    });
-    transfer.items.add(file);
-    return transfer;
-  });
-  await dropzone.dispatchEvent('dragenter', { dataTransfer });
-  await expect(dropzone).toHaveAttribute('data-state', 'drag-over');
-  await expect(page).toHaveScreenshot('intake-drag-over.png', {
-    fullPage: true,
-    animations: 'disabled',
-  });
-  await dropzone.dispatchEvent('drop', { dataTransfer });
-  await expect(page.getByText('receipt-trendy-electronics.pdf')).toBeVisible();
-  await page.getByLabel('הסרת קובץ receipt-trendy-electronics.pdf').click();
-  await expect(page.getByText('receipt-trendy-electronics.pdf')).toHaveCount(0);
-
   await page.getByRole('button', { name: 'שמור כטיוטה' }).click();
   await expect(page.getByText('הטיוטה נשמרה')).toBeVisible();
   await page.getByRole('button', { name: 'Close toast' }).click();
@@ -129,6 +106,8 @@ test('public intake form renders, keeps values, handles states and mock upload',
       timeout: 10000,
     },
   );
+  await expect(page.getByText('מסמכים תומכים')).toBeVisible();
+  await expect(page.getByLabel('אזור העלאת מסמכים תומכים')).toBeVisible();
   await expect(page).toHaveScreenshot('intake-success.png', {
     fullPage: true,
     animations: 'disabled',

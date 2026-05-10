@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import { FormActions } from '@/components/intake/form-actions';
 import { SectionClaimant } from '@/components/intake/section-claimant';
 import { SectionConsent } from '@/components/intake/section-consent';
-import { SectionDocuments } from '@/components/intake/section-documents';
 import { SectionIncident } from '@/components/intake/section-incident';
 import { SectionTripContext } from '@/components/intake/section-trip-context';
 import { ErrorPanel } from '@/components/intake/states/error-panel';
@@ -17,7 +16,6 @@ import {
   type IntakeDemoState,
   type IntakeFormStatus,
   type IntakeFormValues,
-  type MockUploadedFile,
 } from '@/components/intake/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
@@ -36,7 +34,6 @@ export function IntakeForm({
     reValidateMode: 'onChange',
   });
   const [status, setStatus] = React.useState<IntakeFormStatus>('idle');
-  const [files, setFiles] = React.useState<MockUploadedFile[]>([]);
   const [successClaim, setSuccessClaim] = React.useState<Claim | null>(null);
   const [errorMessage, setErrorMessage] = React.useState<string | undefined>();
   const [showSlowSubmitHelper, setShowSlowSubmitHelper] = React.useState(false);
@@ -96,22 +93,6 @@ export function IntakeForm({
     }
   }
 
-  function handleAddFiles(nextFiles: File[]) {
-    setFiles((currentFiles) => [
-      ...currentFiles,
-      ...nextFiles.slice(0, 20 - currentFiles.length).map((file) => ({
-        id: `${file.name}-${file.size}-${crypto.randomUUID()}`,
-        name: file.name,
-        sizeBytes: file.size,
-        type: file.type,
-      })),
-    ]);
-  }
-
-  function handleRemoveFile(id: string) {
-    setFiles((currentFiles) => currentFiles.filter((file) => file.id !== id));
-  }
-
   if (status === 'success') {
     return <SuccessPanel claim={successClaim ?? undefined} />;
   }
@@ -137,11 +118,6 @@ export function IntakeForm({
                 control={form.control}
                 watch={form.watch}
                 setValue={form.setValue}
-              />
-              <SectionDocuments
-                files={files}
-                onAdd={handleAddFiles}
-                onRemove={handleRemoveFile}
               />
               <SectionConsent control={form.control} />
               <FormActions

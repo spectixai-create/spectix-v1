@@ -34,7 +34,8 @@ export default function NewClaimPage({
             פתיחת תיק חדש
           </h1>
           <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-            מלא את הפרטים והעלה מסמכים ראשוניים כדי שנוכל להתחיל בבדיקת התיק.
+            מלא את הפרטים כדי לפתוח תיק. לאחר קבלת מספר התיק תוכל להעלות מסמכים
+            תומכים.
           </p>
         </div>
         <IntakeForm initialDemoState={initialDemoState} />
