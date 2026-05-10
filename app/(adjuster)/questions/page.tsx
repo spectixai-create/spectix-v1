@@ -1,4 +1,5 @@
 import { AdjusterShell } from '@/components/layout/adjuster-shell';
+import { DashboardBackLink } from '@/components/layout/dashboard-back-link';
 import { PageHeader } from '@/components/layout/page-header';
 import { VersionFooter } from '@/components/layout/version-footer';
 import { QuestionsSummaryStats } from '@/components/questions/question-summary-stats';
@@ -23,6 +24,7 @@ export default function QuestionsPage({
         <PageHeader
           title="תור שאלות הבהרה"
           description="ניהול תקשורת עם מבוטחים — שאלות פתוחות, תשובות לסקירה, היסטוריה"
+          actions={<DashboardBackLink />}
         />
         <QuestionsSummaryStats />
         <QuestionsView view={view} />

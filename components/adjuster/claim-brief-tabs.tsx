@@ -52,7 +52,10 @@ export function ClaimBriefTabs({
         />
       </TabsContent>
       <TabsContent value="documents">
-        <DocumentsTab documents={snapshot.documents} />
+        <DocumentsTab
+          claimId={snapshot.claim.id}
+          documents={snapshot.documents}
+        />
       </TabsContent>
       <TabsContent value="validation">
         <ValidationTab validations={snapshot.validations} />
