@@ -35,6 +35,7 @@ export type ClaimListItem = {
   riskScore: number | null;
   topFindingCategory: string | null;
   topFindingSeverity: FindingSeverity | null;
+  reviewReason: string | null;
   daysOpen: number;
   escalatedToInvestigator: boolean;
   createdAt: string;

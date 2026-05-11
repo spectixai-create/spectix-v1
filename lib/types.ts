@@ -410,6 +410,8 @@ export type ClaimMetadata = {
   profession?: string;
   country?: string;
   city?: string;
+  theft_details?: Record<string, unknown> | null;
+  stolen_items?: Array<Record<string, unknown>> | null;
   // Layer 5 context multiplier
   contextMultiplier?: number;
   contextMultiplierReasons?: string[];

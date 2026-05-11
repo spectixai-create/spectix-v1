@@ -39,7 +39,7 @@ const headers = [
   'סכום',
   'ציון מוכנות',
   'רמת בדיקה',
-  'ממצא מוביל',
+  'סיבת בדיקה',
   'ימים פתוח',
   'סטטוס',
 ] as const;
@@ -215,7 +215,31 @@ export function ClaimsListTable({
                     )}
                   </TableCell>
                   <TableCell>
-                    {claim.topFindingCategory ? (
+                    {claim.reviewReason ? (
+                      <div className="max-w-56 space-y-1">
+                        <span className="block text-sm font-medium leading-6">
+                          {claim.reviewReason}
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {claim.topFindingCategory ? (
+                            <Tag>
+                              {FINDING_CATEGORY_LABELS[
+                                claim.topFindingCategory
+                              ] ?? claim.topFindingCategory}
+                            </Tag>
+                          ) : null}
+                          {claim.topFindingSeverity ? (
+                            <Badge
+                              variant={
+                                severityVariant[claim.topFindingSeverity]
+                              }
+                            >
+                              {severityLabel[claim.topFindingSeverity]}
+                            </Badge>
+                          ) : null}
+                        </div>
+                      </div>
+                    ) : claim.topFindingCategory ? (
                       <div className="flex flex-wrap gap-2">
                         <Tag>
                           {FINDING_CATEGORY_LABELS[claim.topFindingCategory] ??

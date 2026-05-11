@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import type { IntakeFormValues } from '../../components/intake/types';
+import {
+  defaultIntakeValues,
+  type IntakeFormValues,
+} from '../../components/intake/types';
 
 import { buildClaimPayload } from './build-payload';
 
@@ -25,6 +28,8 @@ const baseValues: IntakeFormValues = {
   localConnections: 'אין',
   previousTripsCount: '2',
   previousClaimsCount: '1',
+  theftDetails: defaultIntakeValues.theftDetails,
+  stolenItems: [],
   tosAccepted: true,
 };
 
@@ -56,6 +61,19 @@ describe('buildClaimPayload', () => {
         profession: 'מנהלת שיווק',
         country: 'תאילנד',
         city: 'בנגקוק',
+        theft_details: {
+          bag_location_at_theft: 'unknown',
+          was_bag_supervised: 'unknown',
+          was_forced_entry: 'unknown',
+          police_report_filed: 'unknown',
+          police_report_available: 'unknown',
+          stolen_valuables: 'unknown',
+          stolen_electronics: 'unknown',
+          stolen_cash: 'unknown',
+          compensation_from_other_source: 'unknown',
+          theft_description: null,
+        },
+        stolen_items: [],
       },
     });
   });

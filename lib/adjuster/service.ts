@@ -22,6 +22,18 @@ const SEVERITY_WEIGHT: Record<string, number> = {
   low: 1,
 };
 
+const FINDING_CATEGORY_PRIORITY: Record<string, number> = {
+  coverage_validation: 9,
+  identity_validation: 8,
+  policy_exclusion: 7,
+  risk_flag: 6,
+  document_requirement: 5,
+  claim_details: 4,
+  gap: 3,
+  inconsistency: 2,
+  anomaly: 1,
+};
+
 export function normalizeClaimListQuery(
   query: ClaimListQuery,
 ): Required<Pick<ClaimListQuery, 'sort' | 'page' | 'pageSize'>> &
@@ -329,10 +341,7 @@ function composeClaimListItem(
   );
   const topFinding = synthesisResults
     .flatMap((result) => mapFindingResult(result))
-    .sort(
-      (a, b) =>
-        (SEVERITY_WEIGHT[b.severity] ?? 0) - (SEVERITY_WEIGHT[a.severity] ?? 0),
-    )[0];
+    .sort(compareFindingsByReviewPriority)[0];
 
   return {
     id: claim.id,
@@ -349,11 +358,53 @@ function composeClaimListItem(
     riskScore: claim.riskScore,
     topFindingCategory: topFinding?.category ?? null,
     topFindingSeverity: topFinding?.severity ?? null,
+    reviewReason: topFinding ? getReviewReason(topFinding) : null,
     daysOpen: calculateDaysOpen(claim.createdAt, now),
     escalatedToInvestigator: claim.escalatedToInvestigator,
     createdAt: claim.createdAt,
     updatedAt: claim.updatedAt,
   };
+}
+
+function compareFindingsByReviewPriority(
+  a: BriefFinding,
+  b: BriefFinding,
+): number {
+  const severity =
+    (SEVERITY_WEIGHT[b.severity] ?? 0) - (SEVERITY_WEIGHT[a.severity] ?? 0);
+  if (severity !== 0) return severity;
+
+  return (
+    (FINDING_CATEGORY_PRIORITY[b.category] ?? 0) -
+    (FINDING_CATEGORY_PRIORITY[a.category] ?? 0)
+  );
+}
+
+export function getReviewReason(finding: BriefFinding): string {
+  const text = `${finding.category} ${finding.title} ${finding.description}`
+    .toLocaleLowerCase('he-IL')
+    .trim();
+
+  if (text.includes('אישור משטרה')) return 'חסר אישור משטרה';
+  if (text.includes('תאריך')) return 'חסר תאריך אירוע';
+  if (text.includes('שם') && text.includes('אי-התאמה')) {
+    return 'שם במסמך לא תואם';
+  }
+  if (text.includes('סכום חריג')) return 'סכום חריג';
+  if (text.includes('חפץ ערך')) return 'חפץ ערך ללא קבלה';
+  if (text.includes('סכום גבוה')) return 'פריט בסכום גבוה ללא קבלה';
+  if (text.includes('לא תחת השגחה')) {
+    return 'דורש בדיקת חריג — תיק ללא השגחה';
+  }
+  if (text.includes('גניבה מרכב') || text.includes('רכב')) {
+    return 'דורש בדיקת חריג — גניבה מרכב';
+  }
+  if (text.includes('מזומן')) return 'מזומן דורש בדיקת כיסוי';
+  if (text.includes('ביטוח') && text.includes('יציאה')) {
+    return 'ביטוח נרכש אחרי יציאה';
+  }
+
+  return finding.title || 'נדרש עיון בממצא';
 }
 
 function composeClaimListSummary(items: ClaimListItem[]) {

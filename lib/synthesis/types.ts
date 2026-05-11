@@ -1,6 +1,15 @@
 import type { EvidenceRef, ValidationLayerId } from '@/lib/validation';
 
-export type FindingCategory = 'gap' | 'anomaly' | 'inconsistency';
+export type FindingCategory =
+  | 'coverage_validation'
+  | 'identity_validation'
+  | 'policy_exclusion'
+  | 'risk_flag'
+  | 'document_requirement'
+  | 'claim_details'
+  | 'gap'
+  | 'inconsistency'
+  | 'anomaly';
 export type FindingSeverity = 'low' | 'medium' | 'high';
 export type QuestionAnswerType =
   | 'text'
@@ -12,13 +21,19 @@ export type QuestionRequiredAction =
   | 'answer'
   | 'upload_document_or_answer';
 
+export type FindingEvidence = Partial<EvidenceRef> & {
+  field_name?: string;
+  document_type?: string | null;
+  document_subtype?: string | null;
+};
+
 export type Finding = {
   id: string;
   category: FindingCategory;
   severity: FindingSeverity;
   title: string;
   description: string;
-  evidence: EvidenceRef[];
+  evidence: FindingEvidence[];
   source_layer_id?: ValidationLayerId;
 };
 
@@ -58,6 +73,14 @@ export type ClaimantResponseContext = {
   question_text: string | null;
   expected_answer_type: QuestionAnswerType | null;
   response_value: Record<string, unknown>;
+};
+
+export type ClaimSynthesisContext = {
+  id: string;
+  claim_type: string | null;
+  metadata: Record<string, unknown> | null;
+  amount_claimed: number | null;
+  currency: string | null;
 };
 
 export type SynthesisResultKind = 'finding' | 'question' | 'readiness_score';

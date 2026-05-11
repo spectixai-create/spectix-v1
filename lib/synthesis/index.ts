@@ -6,8 +6,10 @@ export {
 } from './question-generation';
 export { computeReadinessScore } from './readiness-score';
 export { runSynthesisForValidationRows } from './handler-orchestration';
+export { deriveTheftMetadataFindings } from './theft-metadata-findings';
 export type {
   ClarificationQuestion,
+  ClaimSynthesisContext,
   ClaimantResponseContext,
   ClaimValidationRow,
   Finding,

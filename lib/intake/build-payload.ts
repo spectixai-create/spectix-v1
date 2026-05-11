@@ -1,6 +1,7 @@
 import type { IntakeFormValues } from '../../components/intake/types';
 import { countryOptions } from '../sample-data/intake-options';
 import type { CreateClaimInput } from '../schemas/claim';
+import type { StolenItem, TheftDetails } from '@/lib/theft/metadata';
 
 function optionalString(value: string | null | undefined): string | null {
   const trimmed = value?.trim() ?? '';
@@ -47,6 +48,9 @@ export function buildClaimPayload(values: IntakeFormValues): CreateClaimInput {
   const amountClaimed = Number.parseFloat(String(values.amountClaimed));
   const currencyCode = values.currencyCode as CreateClaimInput['currency'];
 
+  const theftMetadata =
+    values.claimType === 'theft' ? buildTheftMetadata(values) : {};
+
   return {
     claimantName: values.fullName.trim(),
     insuredName: values.fullName.trim(),
@@ -79,6 +83,61 @@ export function buildClaimPayload(values: IntakeFormValues): CreateClaimInput {
       profession: optionalString(values.occupation),
       country: optionalString(country),
       city: optionalString(city),
+      ...theftMetadata,
     },
   };
+}
+
+function buildTheftMetadata(values: IntakeFormValues): {
+  theft_details: TheftDetails;
+  stolen_items: StolenItem[];
+} {
+  return {
+    theft_details: {
+      bag_location_at_theft: values.theftDetails.bagLocationAtTheft,
+      was_bag_supervised: values.theftDetails.wasBagSupervised,
+      was_forced_entry: values.theftDetails.wasForcedEntry,
+      police_report_filed: values.theftDetails.policeReportFiled,
+      police_report_available: values.theftDetails.policeReportAvailable,
+      stolen_valuables: values.theftDetails.stolenValuables,
+      stolen_electronics: values.theftDetails.stolenElectronics,
+      stolen_cash: values.theftDetails.stolenCash,
+      compensation_from_other_source:
+        values.theftDetails.compensationFromOtherSource,
+      theft_description: optionalString(values.theftDetails.theftDescription),
+    },
+    stolen_items: values.stolenItems
+      .map((item) => ({
+        name: optionalString(item.name),
+        category: item.category,
+        claimed_amount: optionalNumber(item.claimedAmount),
+        currency: item.currency,
+        purchase_year: optionalInteger(item.purchaseYear),
+        has_receipt: item.hasReceipt,
+        has_proof_of_ownership: item.hasProofOfOwnership,
+        is_valuable: item.isValuable,
+        notes: optionalString(item.notes),
+      }))
+      .filter(hasMeaningfulStolenItem),
+  };
+}
+
+function optionalInteger(value: number | string): number | null {
+  const parsed = optionalNumber(value);
+
+  return parsed !== null && Number.isInteger(parsed) ? parsed : null;
+}
+
+function hasMeaningfulStolenItem(item: StolenItem): boolean {
+  return Boolean(
+    item.name ||
+    item.claimed_amount !== null ||
+    item.purchase_year !== null ||
+    item.notes ||
+    item.category !== 'other' ||
+    item.currency !== 'ILS' ||
+    item.has_receipt !== 'unknown' ||
+    item.has_proof_of_ownership !== 'unknown' ||
+    item.is_valuable !== 'unknown',
+  );
 }
