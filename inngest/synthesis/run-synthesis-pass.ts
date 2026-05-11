@@ -56,6 +56,9 @@ type QuestionResponseRow = {
 type ClaimContextRow = {
   id: string;
   claim_type: string | null;
+  policy_number: string | null;
+  incident_date: string | null;
+  incident_location: string | null;
   metadata: Record<string, unknown> | null;
   amount_claimed: number | string | null;
   currency: string | null;
@@ -183,7 +186,9 @@ export async function runSynthesisPass({
   const claimContext = await step.run('read-claim-context', async () => {
     const { data, error } = await supabaseAdmin
       .from('claims')
-      .select('id, claim_type, metadata, amount_claimed, currency')
+      .select(
+        'id, claim_type, policy_number, incident_date, incident_location, metadata, amount_claimed, currency',
+      )
       .eq('id', claimId)
       .maybeSingle();
 
@@ -345,6 +350,9 @@ function mapClaimContext(row: ClaimContextRow): ClaimSynthesisContext {
   return {
     id: row.id,
     claim_type: row.claim_type ?? null,
+    policy_number: row.policy_number ?? null,
+    incident_date: row.incident_date ?? null,
+    incident_location: row.incident_location ?? null,
     metadata: row.metadata ?? null,
     amount_claimed: Number.isFinite(amount) ? amount : null,
     currency: row.currency ?? null,

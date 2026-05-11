@@ -2,6 +2,7 @@ import { computeReadinessScore } from './readiness-score';
 import { deriveFindingsFromValidations } from './finding-derivation';
 import { generateQuestionsForFindings } from './question-generation';
 import { deriveTheftMetadataFindings } from './theft-metadata-findings';
+import { derivePolicyFindings } from '@/lib/policy';
 import type {
   ClaimSynthesisContext,
   ClaimValidationRow,
@@ -17,6 +18,7 @@ export function runSynthesisForValidationRows(
   const findings = [
     ...deriveFindingsFromValidations(validationRows),
     ...deriveTheftMetadataFindings(claimContext),
+    ...derivePolicyFindings(claimContext),
   ];
   const questions = generateQuestionsForFindings(findings);
   const readinessScore = computeReadinessScore(findings);

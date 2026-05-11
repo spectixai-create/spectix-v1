@@ -412,6 +412,12 @@ export type ClaimMetadata = {
   city?: string;
   theft_details?: Record<string, unknown> | null;
   stolen_items?: Array<Record<string, unknown>> | null;
+  preliminary_coverage_status?:
+    | 'likely_covered'
+    | 'needs_exclusion_review'
+    | 'missing_information'
+    | 'likely_not_covered'
+    | 'not_checked';
   // Layer 5 context multiplier
   contextMultiplier?: number;
   contextMultiplierReasons?: string[];
