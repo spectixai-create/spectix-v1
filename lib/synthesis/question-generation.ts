@@ -9,9 +9,13 @@ import type {
 export function generateQuestionsForFindings(
   findings: Finding[],
 ): ClarificationQuestion[] {
+  const seenQuestions = new Set<string>();
+
   return findings.flatMap((finding) => {
     const template = generateCustomerQuestionFromFinding(finding);
     if (!template) return [];
+    if (seenQuestions.has(template.question)) return [];
+    seenQuestions.add(template.question);
 
     const seed = {
       related_finding_id: finding.id,
@@ -59,6 +63,8 @@ export function generateCustomerQuestionFromFinding(finding: Finding): {
   }
 
   const key = searchableFindingText(finding);
+  if (isReviewOnlyTheftFinding(key)) return null;
+
   const mapped = templateByKeywords(key);
   if (mapped) return mapped;
 
@@ -81,27 +87,19 @@ function templateByKeywords(key: string) {
 
   if (
     matches(key, [
-      'event_date',
-      'incident_date',
-      'date',
-      'תאריך',
-      'מועד',
-      'תאריכים',
+      'valuable',
+      'jewelry',
+      'electronics',
+      'חפץ ערך',
+      'יקר',
+      'תכשיט',
+      'אלקטרוניקה',
     ])
   ) {
     return template({
-      question:
-        'נא להעלות מסמך הכולל את תאריך האירוע, או להבהיר בכתב את מועד הגניבה.',
-      customer_label: 'תאריך אירוע',
-      required_action: 'upload_document_or_answer',
-    });
-  }
-
-  if (matches(key, ['item_list', 'items', 'פריטים', 'רשימת פריטים'])) {
-    return template({
-      question: 'נא להעלות רשימת פריטים שנגנבו, כולל תיאור כל פריט וסכום נתבע.',
-      customer_label: 'רשימת פריטים',
-      required_action: 'upload_document_or_answer',
+      question: 'נא להעלות קבלה או הוכחת בעלות עבור הפריט היקר שנתבע.',
+      customer_label: 'הוכחת בעלות לפריט יקר',
+      required_action: 'upload_document',
     });
   }
 
@@ -138,6 +136,41 @@ function templateByKeywords(key: string) {
     });
   }
 
+  if (
+    matches(key, [
+      'event_date',
+      'incident_date',
+      'date',
+      'תאריך',
+      'מועד',
+      'תאריכים',
+    ])
+  ) {
+    return template({
+      question:
+        'נא להעלות מסמך הכולל את תאריך האירוע, או להבהיר בכתב את מועד הגניבה.',
+      customer_label: 'תאריך אירוע',
+      required_action: 'upload_document_or_answer',
+    });
+  }
+
+  if (
+    matches(key, [
+      'item_list',
+      'missing item list',
+      'items list',
+      'stolen item list',
+      'רשימת פריטים',
+      'חסרה רשימת פריטים',
+    ])
+  ) {
+    return template({
+      question: 'נא להעלות רשימת פריטים שנגנבו, כולל תיאור כל פריט וסכום נתבע.',
+      customer_label: 'רשימת פריטים',
+      required_action: 'upload_document_or_answer',
+    });
+  }
+
   if (matches(key, ['location', 'country', 'city', 'מיקום', 'עיר', 'מדינה'])) {
     return template({
       question: 'נא להבהיר באיזו מדינה, עיר ומיקום מדויק אירעה הגניבה.',
@@ -163,24 +196,6 @@ function templateByKeywords(key: string) {
     });
   }
 
-  if (
-    matches(key, [
-      'valuable',
-      'jewelry',
-      'electronics',
-      'חפץ ערך',
-      'יקר',
-      'תכשיט',
-      'אלקטרוניקה',
-    ])
-  ) {
-    return template({
-      question: 'נא להעלות קבלה או הוכחת בעלות עבור הפריט היקר שנתבע.',
-      customer_label: 'הוכחת בעלות לפריט יקר',
-      required_action: 'upload_document',
-    });
-  }
-
   if (matches(key, ['name', 'insured', 'שם', 'מבוטח'])) {
     return template({
       question:
@@ -191,6 +206,15 @@ function templateByKeywords(key: string) {
   }
 
   return null;
+}
+
+function isReviewOnlyTheftFinding(key: string): boolean {
+  return matches(key, [
+    'גניבה מרכב',
+    'מזומן דווח',
+    'cash item',
+    'theft from vehicle',
+  ]);
 }
 
 function template(input: {

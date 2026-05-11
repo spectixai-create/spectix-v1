@@ -58,6 +58,12 @@ export const EMPTY_STATES = {
 } as const;
 
 export const FINDING_CATEGORY_LABELS: Record<string, string> = {
+  coverage_validation: 'בדיקת כיסוי',
+  identity_validation: 'בדיקת זהות',
+  policy_exclusion: 'בדיקת חריג',
+  risk_flag: 'דגל בדיקה',
+  document_requirement: 'חוסר מסמך',
+  claim_details: 'פרטי תביעה',
   gap: 'פער מידע',
   anomaly: 'חריגה',
   inconsistency: 'אי-התאמה',

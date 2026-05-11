@@ -8,6 +8,7 @@ import { FormActions } from '@/components/intake/form-actions';
 import { SectionClaimant } from '@/components/intake/section-claimant';
 import { SectionConsent } from '@/components/intake/section-consent';
 import { SectionIncident } from '@/components/intake/section-incident';
+import { SectionTheftDetails } from '@/components/intake/section-theft-details';
 import { SectionTripContext } from '@/components/intake/section-trip-context';
 import { ErrorPanel } from '@/components/intake/states/error-panel';
 import { SuccessPanel } from '@/components/intake/states/success-panel';
@@ -119,6 +120,7 @@ export function IntakeForm({
                 watch={form.watch}
                 setValue={form.setValue}
               />
+              <SectionTheftDetails control={form.control} watch={form.watch} />
               <SectionConsent control={form.control} />
               <FormActions
                 submitting={status === 'submitting'}

@@ -6,6 +6,7 @@ import { callClaudeWithCostGuard } from '@/lib/cost-cap';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
   runSynthesisForValidationRows,
+  type ClaimSynthesisContext,
   type ClaimantResponseContext,
   type ClaimValidationRow,
   type SynthesisResultRow,
@@ -50,6 +51,14 @@ type SupabaseLike = ReturnType<typeof createAdminClient>;
 type QuestionResponseRow = {
   question_id: string;
   response_value: Record<string, unknown>;
+};
+
+type ClaimContextRow = {
+  id: string;
+  claim_type: string | null;
+  metadata: Record<string, unknown> | null;
+  amount_claimed: number | string | null;
+  currency: string | null;
 };
 
 type PreviousQuestionRow = {
@@ -171,19 +180,41 @@ export async function runSynthesisPass({
     },
   );
 
+  const claimContext = await step.run('read-claim-context', async () => {
+    const { data, error } = await supabaseAdmin
+      .from('claims')
+      .select('id, claim_type, metadata, amount_claimed, currency')
+      .eq('id', claimId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return null;
+
+    return mapClaimContext(data as ClaimContextRow);
+  });
+
   const findings = await step.run('derive-findings', async () => {
-    return runSynthesisForValidationRows(validationRows, claimantResponses)
-      .findings;
+    return runSynthesisForValidationRows(
+      validationRows,
+      claimantResponses,
+      claimContext,
+    ).findings;
   });
 
   const questions = await step.run('generate-questions', async () => {
-    return runSynthesisForValidationRows(validationRows, claimantResponses)
-      .questions;
+    return runSynthesisForValidationRows(
+      validationRows,
+      claimantResponses,
+      claimContext,
+    ).questions;
   });
 
   const readinessScore = await step.run('compute-readiness-score', async () => {
-    return runSynthesisForValidationRows(validationRows, claimantResponses)
-      .readinessScore;
+    return runSynthesisForValidationRows(
+      validationRows,
+      claimantResponses,
+      claimContext,
+    ).readinessScore;
   });
 
   await step.run('persist-synthesis-results', async () => {
@@ -303,6 +334,21 @@ function normalizeQuestionAnswerType(
   }
 
   return null;
+}
+
+function mapClaimContext(row: ClaimContextRow): ClaimSynthesisContext {
+  const amount =
+    row.amount_claimed === null || row.amount_claimed === undefined
+      ? null
+      : Number(row.amount_claimed);
+
+  return {
+    id: row.id,
+    claim_type: row.claim_type ?? null,
+    metadata: row.metadata ?? null,
+    amount_claimed: Number.isFinite(amount) ? amount : null,
+    currency: row.currency ?? null,
+  };
 }
 
 async function writeAudit({
