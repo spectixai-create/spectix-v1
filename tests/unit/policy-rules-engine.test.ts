@@ -21,6 +21,10 @@ describe('POLICY-RULES-001 policy resolver', () => {
     expect(resolveDemoPolicy('POL-DEMO-001')?.policy_number).toBe(
       'DEMO-POLICY-TRAVEL-001',
     );
+    expect(resolveDemoPolicy('16165132165')).toMatchObject({
+      policy_number: 'DEMO-POLICY-TRAVEL-ITALY-001',
+      destinations: expect.arrayContaining(['Italy', 'IT', 'איטליה']),
+    });
   });
 
   it('returns null for unknown policy numbers', () => {

@@ -79,7 +79,15 @@ export const DEMO_TRAVEL_POLICY: TravelPolicy = {
   ],
 };
 
-const DEMO_POLICIES = [DEMO_TRAVEL_POLICY];
+export const DEMO_TRAVEL_ITALY_POLICY: TravelPolicy = {
+  ...DEMO_TRAVEL_POLICY,
+  policy_number: 'DEMO-POLICY-TRAVEL-ITALY-001',
+  aliases: ['16165132165'],
+  insured_name: 'Demo Italy Traveller',
+  destinations: ['Italy', 'IT', 'איטליה', 'Rome', 'רומא', 'Milan', 'מילאנו'],
+};
+
+const DEMO_POLICIES = [DEMO_TRAVEL_POLICY, DEMO_TRAVEL_ITALY_POLICY];
 
 export function resolveDemoPolicy(
   policyNumber: string | null | undefined,

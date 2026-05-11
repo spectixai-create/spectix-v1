@@ -33,10 +33,19 @@ export function PassTimeline({
                   {PASS_STATUS_LABELS[pass.status]}
                 </Badge>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                עלות: ${pass.costUsd.toFixed(4)} · קריאות LLM:{' '}
-                {pass.llmCallsMade}
-              </p>
+              <details className="mt-3 rounded-md border bg-muted/40 p-3 text-sm">
+                <summary className="cursor-pointer font-medium">
+                  פרטים טכניים
+                </summary>
+                <dl className="mt-3 grid gap-2 md:grid-cols-[140px_1fr]">
+                  <dt className="text-muted-foreground">עלות פנימית</dt>
+                  <dd className="font-latin text-xs">
+                    ${pass.costUsd.toFixed(4)}
+                  </dd>
+                  <dt className="text-muted-foreground">קריאות LLM</dt>
+                  <dd className="font-latin text-xs">{pass.llmCallsMade}</dd>
+                </dl>
+              </details>
             </li>
           ))}
         </ol>
