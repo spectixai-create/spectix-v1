@@ -1,4 +1,6 @@
 import type { Claim, ClaimStatus, SynthesisResult } from '@/lib/types';
+import { getPreliminaryCoverageStatusForClaim } from '@/lib/policy';
+import type { ClaimSynthesisContext } from '@/lib/synthesis';
 import type {
   AuditInsert,
   BriefFinding,
@@ -124,17 +126,18 @@ export function composeClaimDetailSnapshot({
   const documentsById = new Map(
     documents.map((document) => [document.id, document]),
   );
+  const findings = synthesisResults.flatMap((result) =>
+    mapFindingResult(result, documentsById),
+  );
 
   return {
-    claim,
+    claim: enrichClaimWithPolicyCoverageStatus(claim),
     passes: [...passes].sort((a, b) => a.passNumber - b.passNumber),
     documents,
     validations: [...validations].sort((a, b) =>
       a.layerId.localeCompare(b.layerId),
     ),
-    findings: synthesisResults.flatMap((result) =>
-      mapFindingResult(result, documentsById),
-    ),
+    findings,
     questions: synthesisResults.flatMap((result) =>
       mapQuestionResult(result, dispatchesByQuestion),
     ),
@@ -385,6 +388,16 @@ export function getReviewReason(finding: BriefFinding): string {
     .toLocaleLowerCase('he-IL')
     .trim();
 
+  if (text.includes('מחוץ לתקופת הביטוח')) {
+    return 'תאריך האירוע מחוץ לתקופת הביטוח';
+  }
+  if (text.includes('תקרת הכיסוי לפריט')) {
+    return 'סכום הפריט מעל תקרת הכיסוי לפריט';
+  }
+  if (text.includes('תקרת כיסוי הכבודה')) {
+    return 'סכום התביעה מעל תקרת כיסוי הכבודה';
+  }
+  if (text.includes('מזומן מוחרג')) return 'מזומן מוחרג בפוליסה';
   if (text.includes('אישור משטרה')) return 'חסר אישור משטרה';
   if (text.includes('תאריך')) return 'חסר תאריך אירוע';
   if (text.includes('שם') && text.includes('אי-התאמה')) {
@@ -405,6 +418,40 @@ export function getReviewReason(finding: BriefFinding): string {
   }
 
   return finding.title || 'נדרש עיון בממצא';
+}
+
+function enrichClaimWithPolicyCoverageStatus(claim: Claim): Claim {
+  const preliminaryCoverageStatus = getPreliminaryCoverageStatusForClaim(
+    toClaimSynthesisContext(claim),
+  );
+
+  if (
+    preliminaryCoverageStatus === 'not_checked' &&
+    claim.metadata?.preliminary_coverage_status
+  ) {
+    return claim;
+  }
+
+  return {
+    ...claim,
+    metadata: {
+      ...(claim.metadata ?? {}),
+      preliminary_coverage_status: preliminaryCoverageStatus,
+    },
+  };
+}
+
+function toClaimSynthesisContext(claim: Claim): ClaimSynthesisContext {
+  return {
+    id: claim.id,
+    claim_type: claim.claimType,
+    policy_number: claim.policyNumber,
+    incident_date: claim.incidentDate,
+    incident_location: claim.incidentLocation,
+    metadata: claim.metadata ?? null,
+    amount_claimed: claim.amountClaimed,
+    currency: claim.currency,
+  };
 }
 
 function composeClaimListSummary(items: ClaimListItem[]) {

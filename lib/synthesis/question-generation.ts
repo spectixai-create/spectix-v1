@@ -171,7 +171,18 @@ function templateByKeywords(key: string) {
     });
   }
 
-  if (matches(key, ['location', 'country', 'city', 'מיקום', 'עיר', 'מדינה'])) {
+  if (
+    matches(key, [
+      'location',
+      'country',
+      'city',
+      'destination',
+      'מיקום',
+      'עיר',
+      'מדינה',
+      'יעד',
+    ])
+  ) {
     return template({
       question: 'נא להבהיר באיזו מדינה, עיר ומיקום מדויק אירעה הגניבה.',
       customer_label: 'מיקום אירוע',
@@ -212,8 +223,18 @@ function isReviewOnlyTheftFinding(key: string): boolean {
   return matches(key, [
     'גניבה מרכב',
     'מזומן דווח',
+    'מזומן מוחרג',
+    'תאריך האירוע מחוץ לתקופת הביטוח',
+    'יעד האירוע אינו תואם',
+    'כיסוי כבודה אינו פעיל',
+    'סכום הפריט מעל תקרת הכיסוי',
+    'סכום התביעה מעל תקרת כיסוי',
     'cash item',
+    'cash excluded',
     'theft from vehicle',
+    'outside coverage period',
+    'per-item limit',
+    'total baggage limit',
   ]);
 }
 
@@ -249,6 +270,10 @@ function searchableFindingText(finding: Finding): string {
       evidence.field_path,
       evidence.raw_value,
       evidence.normalized_value,
+      evidence.expected_value,
+      evidence.found_value,
+      evidence.explanation,
+      evidence.recommended_action,
     ]),
   ];
 

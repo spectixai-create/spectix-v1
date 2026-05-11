@@ -78,6 +78,9 @@ export type ClaimantResponseContext = {
 export type ClaimSynthesisContext = {
   id: string;
   claim_type: string | null;
+  policy_number: string | null;
+  incident_date: string | null;
+  incident_location: string | null;
   metadata: Record<string, unknown> | null;
   amount_claimed: number | null;
   currency: string | null;

@@ -226,6 +226,9 @@ function theftFindings(): Finding[] {
   return deriveTheftMetadataFindings({
     id: 'claim-1',
     claim_type: 'theft',
+    policy_number: null,
+    incident_date: '2026-05-05',
+    incident_location: 'פריז',
     amount_claimed: 3500,
     currency: 'ILS',
     metadata: {
