@@ -60,6 +60,24 @@ vi.mock('@/components/adjuster/dashboard-kpi-row', () => ({
   DashboardKpiRow: () => createElement('div', null, 'dashboard kpis'),
 }));
 
+vi.mock('@/components/adjuster/manager-overview-dashboard', () => ({
+  ManagerOverviewDashboard: () =>
+    createElement('div', null, [
+      createElement('span', { key: 'label' }, 'manager overview'),
+      createElement(
+        'a',
+        { href: '/dashboard', key: 'dashboard' },
+        'פתיחת תור עבודה',
+      ),
+      createElement(
+        'a',
+        { href: '/questions', key: 'questions' },
+        'פתיחת תור שאלות',
+      ),
+      createElement('a', { href: '/new', key: 'new' }, 'פתיחת טופס קליטה'),
+    ]),
+}));
+
 vi.mock('@/components/adjuster/pass-timeline', () => ({
   PassTimeline: () => createElement('div', null, 'passes'),
 }));
@@ -226,7 +244,7 @@ describe('authenticated dashboard navigation', () => {
     render(page);
 
     expect(screen.getByRole('heading', { name: 'דשבורד' })).toBeTruthy();
-    expect(screen.getByText('dashboard kpis')).toBeTruthy();
+    expect(screen.getByText('manager overview')).toBeTruthy();
     expect(
       screen
         .getByRole('link', { name: 'פתיחת תור עבודה' })

@@ -40,6 +40,8 @@ const headers = [
   'ציון מוכנות',
   'רמת בדיקה',
   'סיבת בדיקה',
+  'SLA',
+  'מצב טיפול',
   'ימים פתוח',
   'סטטוס',
 ] as const;
@@ -131,7 +133,7 @@ export function ClaimsListTable({
       </form>
 
       <div className="overflow-x-auto rounded-md border bg-card">
-        <Table className="min-w-[980px]">
+        <Table className="min-w-[1120px]">
           <TableHeader>
             <TableRow>
               {headers.map((header) => (
@@ -257,6 +259,18 @@ export function ClaimsListTable({
                       'אין'
                     )}
                   </TableCell>
+                  <TableCell>
+                    <Badge variant={getSlaBadgeVariant(claim.slaStatus)}>
+                      {claim.slaLabel}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={getHandlingBadgeVariant(claim.handlingStatus)}
+                    >
+                      {claim.handlingStatusLabel}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="font-latin">{claim.daysOpen}</TableCell>
                   <TableCell>
                     <ClaimStatusBadge status={claim.status} />
@@ -291,4 +305,24 @@ function isRiskBand(value: string | null): value is RiskBand {
     value === 'orange' ||
     value === 'red'
   );
+}
+
+function getSlaBadgeVariant(
+  status: ClaimListResponse['items'][number]['slaStatus'],
+) {
+  if (status === 'breached') return 'destructive';
+  if (status === 'near_breach') return 'risk-orange';
+  return 'secondary';
+}
+
+function getHandlingBadgeVariant(
+  status: ClaimListResponse['items'][number]['handlingStatus'],
+) {
+  if (status === 'investigation' || status === 'system_attention') {
+    return 'destructive';
+  }
+  if (status === 'enhanced_review' || status === 'waiting_for_customer') {
+    return 'risk-orange';
+  }
+  return 'outline';
 }

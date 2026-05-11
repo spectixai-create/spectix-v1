@@ -32,14 +32,14 @@ export function DashboardKpiRow({
         trend={<Tag tone="success">מוכן</Tag>}
       />
       <StatCard
-        label="ממתינים למידע"
+        label="ממתינים ללקוח"
         value={<span className="num font-latin">{summary.pendingInfo}</span>}
         icon={HelpCircle}
         trend={<Tag tone="warning">השלמה</Tag>}
       />
       <StatCard
-        label="סיכון גבוה"
-        value={<span className="num font-latin">{summary.highRisk}</span>}
+        label="בבדיקה מוגברת"
+        value={<span className="num font-latin">{summary.enhancedReview}</span>}
         helper="כולל אדום וכתום"
         icon={AlertTriangle}
         trend={<Tag tone="warning">דורש תשומת לב</Tag>}

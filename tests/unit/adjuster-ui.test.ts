@@ -106,11 +106,12 @@ describe('SPRINT-UI-001 claim list composition', () => {
       now: new Date('2026-05-06T00:00:00Z'),
     });
 
-    expect(response.summary).toEqual({
+    expect(response.summary).toMatchObject({
       totalOpen: 2,
       ready: 1,
       pendingInfo: 1,
       highRisk: 2,
+      enhancedReview: 2,
     });
     expect(response.items[0]).toMatchObject({
       riskBand: 'red',

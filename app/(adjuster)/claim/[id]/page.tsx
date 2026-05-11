@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import { fetchClaimDetail } from '@/lib/adjuster/data';
+import { resolveAdjusterRole } from '@/lib/auth/roles';
 import { requireUser } from '@/lib/auth/server';
 import { ActionPanel } from '@/components/adjuster/action-panel';
 import { ClaimBriefTabs } from '@/components/adjuster/claim-brief-tabs';
@@ -19,7 +20,8 @@ export default async function ClaimPage({
 }: Readonly<{
   params: { id: string };
 }>) {
-  await requireUser();
+  const user = await requireUser();
+  const role = resolveAdjusterRole(user);
 
   const snapshot = await fetchClaimDetail(params.id);
 
@@ -44,7 +46,7 @@ export default async function ClaimPage({
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
           <ClaimBriefTabs snapshot={snapshot} />
           <div className="space-y-6">
-            <ActionPanel snapshot={snapshot} />
+            <ActionPanel snapshot={snapshot} role={role} />
             <PassTimeline passes={snapshot.passes} />
           </div>
         </div>

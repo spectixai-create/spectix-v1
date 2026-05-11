@@ -1,5 +1,13 @@
 import type { Claim, ClaimStatus, SynthesisResult } from '@/lib/types';
 import { getPreliminaryCoverageStatusForClaim } from '@/lib/policy';
+import {
+  getHandlingStatus,
+  getHandlingStatusLabel,
+  getSlaLabel,
+  getSlaStatus,
+  isResolvedClaimStatus,
+  isStuckClaim,
+} from '@/lib/manager/sla';
 import type { ClaimSynthesisContext } from '@/lib/synthesis';
 import type {
   AuditInsert,
@@ -345,6 +353,13 @@ function composeClaimListItem(
   const topFinding = synthesisResults
     .flatMap((result) => mapFindingResult(result))
     .sort(compareFindingsByReviewPriority)[0];
+  const daysOpen = calculateDaysOpen(claim.createdAt, now);
+  const slaStatus = getSlaStatus(daysOpen, claim.status);
+  const handlingStatus = getHandlingStatus({
+    status: claim.status,
+    riskBand: claim.riskBand,
+    escalatedToInvestigator: claim.escalatedToInvestigator,
+  });
 
   return {
     id: claim.id,
@@ -362,7 +377,19 @@ function composeClaimListItem(
     topFindingCategory: topFinding?.category ?? null,
     topFindingSeverity: topFinding?.severity ?? null,
     reviewReason: topFinding ? getReviewReason(topFinding) : null,
-    daysOpen: calculateDaysOpen(claim.createdAt, now),
+    daysOpen,
+    slaStatus,
+    slaLabel: getSlaLabel(slaStatus),
+    handlingStatus,
+    handlingStatusLabel: getHandlingStatusLabel(handlingStatus),
+    isStuck: isStuckClaim(
+      {
+        daysOpen,
+        status: claim.status,
+        updatedAt: claim.updatedAt,
+      },
+      now,
+    ),
     escalatedToInvestigator: claim.escalatedToInvestigator,
     createdAt: claim.createdAt,
     updatedAt: claim.updatedAt,
@@ -455,16 +482,57 @@ function toClaimSynthesisContext(claim: Claim): ClaimSynthesisContext {
 }
 
 function composeClaimListSummary(items: ClaimListItem[]) {
+  const openItems = items.filter((item) => !isResolvedClaimStatus(item.status));
+  const enhancedReviewItems = items.filter(
+    (item) =>
+      item.riskBand === 'red' ||
+      item.riskBand === 'orange' ||
+      item.handlingStatus === 'investigation',
+  );
+  const pendingInfoItems = items.filter(
+    (item) => item.status === 'pending_info',
+  );
+
   return {
-    totalOpen: items.filter(
-      (item) => !['reviewed', 'rejected_no_coverage'].includes(item.status),
-    ).length,
+    totalOpen: openItems.length,
     ready: items.filter((item) => item.status === 'ready').length,
-    pendingInfo: items.filter((item) => item.status === 'pending_info').length,
+    pendingInfo: pendingInfoItems.length,
     highRisk: items.filter(
       (item) => item.riskBand === 'red' || item.riskBand === 'orange',
     ).length,
+    enhancedReview: enhancedReviewItems.length,
+    investigation: items.filter(
+      (item) => item.handlingStatus === 'investigation',
+    ).length,
+    slaBreached: items.filter((item) => item.slaStatus === 'breached').length,
+    averageHandlingDays: average(openItems.map((item) => item.daysOpen)),
+    averageTimeToInfoRequestDays: average(
+      pendingInfoItems.map((item) => item.daysOpen),
+    ),
+    claimsWithGaps: items.filter((item) =>
+      ['document_requirement', 'gap', 'claim_details'].includes(
+        item.topFindingCategory ?? '',
+      ),
+    ).length,
+    claimsWithInconsistencies: items.filter((item) =>
+      ['inconsistency', 'identity_validation', 'policy_exclusion'].includes(
+        item.topFindingCategory ?? '',
+      ),
+    ).length,
+    openClaimAmount: sumAmounts(openItems),
+    enhancedReviewAmount: sumAmounts(enhancedReviewItems),
   };
+}
+
+function average(values: number[]): number {
+  if (values.length === 0) return 0;
+  return Math.round(
+    values.reduce((sum, value) => sum + value, 0) / values.length,
+  );
+}
+
+function sumAmounts(items: ClaimListItem[]): number {
+  return items.reduce((sum, item) => sum + (item.amountClaimed ?? 0), 0);
 }
 
 function compareClaimListItems(

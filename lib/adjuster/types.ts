@@ -9,6 +9,7 @@ import type {
   RiskBand,
   SynthesisResult,
 } from '@/lib/types';
+import type { HandlingStatus, SlaStatus } from '@/lib/manager/sla';
 
 export type ClaimSort = 'newest' | 'oldest' | 'score_desc' | 'days_open_desc';
 
@@ -37,6 +38,11 @@ export type ClaimListItem = {
   topFindingSeverity: FindingSeverity | null;
   reviewReason: string | null;
   daysOpen: number;
+  slaStatus: SlaStatus;
+  slaLabel: string;
+  handlingStatus: HandlingStatus;
+  handlingStatusLabel: string;
+  isStuck: boolean;
   escalatedToInvestigator: boolean;
   createdAt: string;
   updatedAt: string;
@@ -47,6 +53,15 @@ export type ClaimListSummary = {
   ready: number;
   pendingInfo: number;
   highRisk: number;
+  enhancedReview: number;
+  investigation: number;
+  slaBreached: number;
+  averageHandlingDays: number;
+  averageTimeToInfoRequestDays: number;
+  claimsWithGaps: number;
+  claimsWithInconsistencies: number;
+  openClaimAmount: number;
+  enhancedReviewAmount: number;
 };
 
 export type ClaimListResponse = {

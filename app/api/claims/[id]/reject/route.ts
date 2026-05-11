@@ -3,6 +3,11 @@ import { NextResponse } from 'next/server';
 import { jsonError, jsonOk, requireApiUser } from '@/lib/adjuster/api';
 import { rejectClaim } from '@/lib/adjuster/data';
 import { validateRejectionPayload } from '@/lib/adjuster/service';
+import {
+  ADJUSTER_PERMISSION_DENIED_MESSAGE,
+  canPerformAdjusterAction,
+  resolveAdjusterRole,
+} from '@/lib/auth/roles';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +17,9 @@ export async function POST(
 ): Promise<NextResponse> {
   const { user, response } = await requireApiUser();
   if (!user) return response;
+  if (!canPerformAdjusterAction(resolveAdjusterRole(user), 'reject')) {
+    return jsonError('forbidden', ADJUSTER_PERMISSION_DENIED_MESSAGE, 403);
+  }
 
   let body: unknown;
   try {

@@ -19,6 +19,12 @@ import {
   canRequestInfo,
 } from '@/lib/adjuster/service';
 import type { ClaimDetailSnapshot } from '@/lib/adjuster/types';
+import {
+  ADJUSTER_PERMISSION_DENIED_MESSAGE,
+  canPerformAdjusterAction,
+  getAdjusterRoleLabel,
+  type AdjusterRole,
+} from '@/lib/auth/roles';
 import { ADJUSTER_ACTIONS } from '@/lib/ui/strings-he';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,8 +42,10 @@ import { Textarea } from '@/components/ui/textarea';
 
 export function ActionPanel({
   snapshot,
+  role = 'claims_specialist',
 }: Readonly<{
   snapshot: ClaimDetailSnapshot;
+  role?: AdjusterRole;
 }>) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -135,9 +143,19 @@ export function ActionPanel({
   }
 
   const actionsDisabled = isPending || claim.status === 'rejected_no_coverage';
+  const canApproveByRole = canPerformAdjusterAction(role, 'approve');
+  const canRequestInfoByRole = canPerformAdjusterAction(role, 'request_info');
+  const canEscalateByRole = canPerformAdjusterAction(role, 'escalate');
+  const canRejectByRole = canPerformAdjusterAction(role, 'reject');
+  const hasRoleBlockedActions =
+    !canApproveByRole ||
+    !canRequestInfoByRole ||
+    !canEscalateByRole ||
+    !canRejectByRole;
   const rejectionDisabled =
     actionsDisabled ||
     !canReject(claim.status) ||
+    !canRejectByRole ||
     !rejectionReason.trim() ||
     !policyClause.trim() ||
     !customerMessage.trim();
@@ -148,11 +166,16 @@ export function ActionPanel({
         <CardTitle className="text-lg">פעולות מתאם</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground" dir="rtl">
+          תפקיד נוכחי: {getAdjusterRoleLabel(role)}
+        </p>
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3" dir="rtl">
           <Button
             type="button"
             className="gap-2"
-            disabled={actionsDisabled || !canApprove(claim.status)}
+            disabled={
+              actionsDisabled || !canApprove(claim.status) || !canApproveByRole
+            }
             onClick={() => runAction('approve')}
           >
             <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
@@ -165,6 +188,7 @@ export function ActionPanel({
             disabled={
               actionsDisabled ||
               !canRequestInfo(claim.status) ||
+              !canRequestInfoByRole ||
               selectedQuestionIds.length === 0
             }
             onClick={() =>
@@ -181,7 +205,7 @@ export function ActionPanel({
               type="button"
               variant="outline"
               className="gap-2"
-              disabled={isPending}
+              disabled={isPending || !canEscalateByRole}
               onClick={() => runAction('unescalate')}
             >
               <Undo2 className="h-4 w-4" aria-hidden="true" />
@@ -192,7 +216,11 @@ export function ActionPanel({
               type="button"
               variant="outline"
               className="gap-2"
-              disabled={actionsDisabled || !canEscalate(claim.status)}
+              disabled={
+                actionsDisabled ||
+                !canEscalate(claim.status) ||
+                !canEscalateByRole
+              }
               onClick={() => runAction('escalate')}
             >
               <ShieldAlert className="h-4 w-4" aria-hidden="true" />
@@ -206,13 +234,21 @@ export function ActionPanel({
             type="button"
             variant="destructive"
             className="gap-2"
-            disabled={actionsDisabled || !canReject(claim.status)}
+            disabled={
+              actionsDisabled || !canReject(claim.status) || !canRejectByRole
+            }
             onClick={openRejectionDialog}
           >
             <XCircle className="h-4 w-4" aria-hidden="true" />
             {ADJUSTER_ACTIONS.reject}
           </Button>
         </div>
+
+        {hasRoleBlockedActions ? (
+          <p className="text-sm text-muted-foreground" dir="rtl">
+            {ADJUSTER_PERMISSION_DENIED_MESSAGE}
+          </p>
+        ) : null}
 
         <Dialog
           open={rejectionDialogOpen}
