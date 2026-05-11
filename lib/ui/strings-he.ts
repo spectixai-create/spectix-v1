@@ -35,8 +35,8 @@ export const DOCUMENT_STATUS_LABELS: Record<DocumentProcessingStatus, string> =
 export const BRIEF_TABS = {
   findings: 'ממצאים',
   documents: 'מסמכים',
-  validation: 'ולידציה',
-  audit: 'ביקורת',
+  validation: 'בדיקות תיק',
+  audit: 'היסטוריית פעולות',
 } as const;
 
 export const ADJUSTER_ACTIONS = {
@@ -52,8 +52,8 @@ export const EMPTY_STATES = {
   claims: 'לא נמצאו תיקים תואמים',
   findings: 'אין ממצאים להצגה',
   documents: 'אין מסמכים להצגה',
-  validations: 'אין תוצאות ולידציה להצגה',
-  audit: 'אין אירועי ביקורת להצגה',
+  validations: 'אין בדיקות תיק להצגה',
+  audit: 'אין פעולות להצגה',
   questions: 'אין שאלות לשליחה',
 } as const;
 
@@ -72,15 +72,20 @@ export const VALIDATION_STATUS_LABELS: Record<string, string> = {
 export const AUDIT_ACTION_LABELS: Record<string, string> = {
   adjuster_decision_approve: 'החלטת מתאם: אישור',
   adjuster_decision_reject: 'החלטת מתאם: דחייה',
-  adjuster_request_info: 'בקשת מידע מהמבוטח',
+  adjuster_request_info: 'בקשת מידע נשלחה',
   adjuster_escalate: 'העברה לחוקר',
   adjuster_unescalate: 'ביטול העברה לחוקר',
-  claim_synthesis_started: 'סינתזה התחילה',
-  claim_synthesis_completed: 'סינתזה הושלמה',
-  claim_validation_layer_started: 'שכבת ולידציה התחילה',
-  claim_validation_layer_completed: 'שכבת ולידציה הושלמה',
-  claim_validation_layer_failed: 'שכבת ולידציה נכשלה',
-  claim_validation_layer_skipped: 'שכבת ולידציה דולגה',
+  claim_created: 'תיק נפתח',
+  document_uploaded: 'מסמך הועלה',
+  claim_synthesis_started: 'ניתוח תיק התחיל',
+  claim_synthesis_completed: 'ניתוח תיק הושלם',
+  claim_validation_layer_started: 'בדיקת תיק התחילה',
+  claim_validation_layer_completed: 'בדיקת תיק הושלמה',
+  claim_validation_layer_failed: 'בדיקת תיק נכשלה',
+  claim_validation_layer_skipped: 'בדיקת תיק דולגה',
+  claim_rejected: 'התיק נדחה',
+  claim_status_changed: 'סטטוס תיק השתנה',
+  claim_rejection_email_failed: 'שליחת הודעת דחייה נכשלה',
 };
 
 export const DOCUMENT_LABELS: Record<string, string> = {
