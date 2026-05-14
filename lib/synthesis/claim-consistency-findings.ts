@@ -106,15 +106,19 @@ function deriveDocumentTypeMismatchFindings(
 function deriveSummaryMismatchFindings(
   claim: ClaimSynthesisContext,
 ): Finding[] {
-  const summary = claim.summary?.trim();
-  if (!summary) return [];
+  const { theft_details: theftDetails } = readTheftMetadata(claim.metadata);
+  const summarySource = [
+    {
+      fieldPath: 'claims.summary',
+      value: claim.summary,
+    },
+    {
+      fieldPath: 'claims.metadata.theft_details.theft_description',
+      value: theftDetails?.theft_description,
+    },
+  ].find((source) => containsMedicalAccidentKeyword(source.value));
 
-  const normalizedSummary = summary.toLocaleLowerCase('he-IL');
-  const hasMedicalKeyword = MEDICAL_SUMMARY_KEYWORDS.some((keyword) =>
-    normalizedSummary.includes(keyword.toLocaleLowerCase('he-IL')),
-  );
-
-  if (!hasMedicalKeyword) return [];
+  if (!summarySource?.value) return [];
 
   return [
     finding({
@@ -122,14 +126,23 @@ function deriveSummaryMismatchFindings(
       severity: 'high',
       category: 'inconsistency',
       description: 'התיאור נראה מתאים לאירוע רפואי/תאונתי ולא לתביעת גניבה.',
-      fieldPath: 'claims.summary',
+      fieldPath: summarySource.fieldPath,
       expectedValue: 'תיאור אירוע גניבה',
-      foundValue: concise(summary),
+      foundValue: concise(summarySource.value),
       explanation: 'התיאור נראה מתאים לאירוע רפואי/תאונתי ולא לתביעת גניבה.',
       recommendedAction: 'לאמת עם המבוטח את סוג התביעה או לעדכן את סוג התביעה.',
       source: 'נתוני תביעה',
     }),
   ];
+}
+
+function containsMedicalAccidentKeyword(value: string | null | undefined) {
+  const normalizedValue = value?.trim().toLocaleLowerCase('he-IL');
+  if (!normalizedValue) return false;
+
+  return MEDICAL_SUMMARY_KEYWORDS.some((keyword) =>
+    normalizedValue.includes(keyword.toLocaleLowerCase('he-IL')),
+  );
 }
 
 function deriveAmountMismatchFindings(claim: ClaimSynthesisContext): Finding[] {
@@ -152,7 +165,7 @@ function deriveAmountMismatchFindings(claim: ClaimSynthesisContext): Finding[] {
   const relativeDifference =
     absoluteDifference / Math.max(claimAmount, itemTotal);
 
-  if (absoluteDifference <= 100 && relativeDifference <= 0.05) return [];
+  if (absoluteDifference <= 100 && relativeDifference <= 0.1) return [];
 
   const currency = claim.currency ?? comparableItems[0]?.currency ?? 'ILS';
 

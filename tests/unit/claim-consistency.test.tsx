@@ -47,6 +47,29 @@ describe('CLAIM-CONSISTENCY-001 deterministic findings', () => {
     );
   });
 
+  it('flags theft claims whose theft description describes a medical accident', () => {
+    const findings = deriveClaimConsistencyFindings(
+      claim({
+        summary: 'תיק נגנב בזמן טיול',
+        metadata: theftMetadata({
+          theft_details: {
+            ...baseTheftDetails(),
+            theft_description: 'נפילה במלון בזמן טיול',
+          },
+        }),
+      }),
+    );
+    const finding = findings.find(
+      (item) => item.title === 'תיאור האירוע אינו תואם לסוג התביעה',
+    );
+
+    expect(finding).toBeTruthy();
+    expect(finding?.evidence[0]).toMatchObject({
+      field_path: 'claims.metadata.theft_details.theft_description',
+      found_value: 'נפילה במלון בזמן טיול',
+    });
+  });
+
   it('flags material mismatch between claim amount and stolen item total', () => {
     const findings = deriveClaimConsistencyFindings(
       claim({
@@ -210,20 +233,24 @@ function theftMetadata(
 
   return {
     country: 'איטליה',
-    theft_details: {
-      bag_location_at_theft: 'unlocked_vehicle',
-      was_bag_supervised: 'no',
-      was_forced_entry: 'no',
-      police_report_filed: 'no',
-      police_report_available: 'no',
-      stolen_valuables: 'yes',
-      stolen_electronics: 'yes',
-      stolen_cash: 'no',
-      compensation_from_other_source: 'no',
-      theft_description: 'התיק נגנב מרכב לא נעול.',
-    },
+    theft_details: baseTheftDetails(),
     stolen_items: stolenItems,
     ...overrides,
+  };
+}
+
+function baseTheftDetails() {
+  return {
+    bag_location_at_theft: 'unlocked_vehicle',
+    was_bag_supervised: 'no',
+    was_forced_entry: 'no',
+    police_report_filed: 'no',
+    police_report_available: 'no',
+    stolen_valuables: 'yes',
+    stolen_electronics: 'yes',
+    stolen_cash: 'no',
+    compensation_from_other_source: 'no',
+    theft_description: 'התיק נגנב מרכב לא נעול.',
   };
 }
 
