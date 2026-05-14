@@ -75,15 +75,24 @@ export type ClaimantResponseContext = {
   response_value: Record<string, unknown>;
 };
 
+export type ClaimDocumentSummary = {
+  id: string;
+  file_name: string | null;
+  document_type: string | null;
+  document_subtype: string | null;
+};
+
 export type ClaimSynthesisContext = {
   id: string;
   claim_type: string | null;
   policy_number: string | null;
   incident_date: string | null;
   incident_location: string | null;
+  summary?: string | null;
   metadata: Record<string, unknown> | null;
   amount_claimed: number | null;
   currency: string | null;
+  documents?: ClaimDocumentSummary[];
 };
 
 export type SynthesisResultKind = 'finding' | 'question' | 'readiness_score';

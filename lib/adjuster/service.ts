@@ -448,6 +448,7 @@ function toClaimSynthesisContext(claim: Claim): ClaimSynthesisContext {
     policy_number: claim.policyNumber,
     incident_date: claim.incidentDate,
     incident_location: claim.incidentLocation,
+    summary: claim.summary,
     metadata: claim.metadata ?? null,
     amount_claimed: claim.amountClaimed,
     currency: claim.currency,

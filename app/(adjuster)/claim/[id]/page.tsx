@@ -5,6 +5,7 @@ import { requireUser } from '@/lib/auth/server';
 import { ActionPanel } from '@/components/adjuster/action-panel';
 import { ClaimBriefTabs } from '@/components/adjuster/claim-brief-tabs';
 import { ClaimHeader } from '@/components/adjuster/claim-header';
+import { IntakeSummaryPanel } from '@/components/adjuster/intake-summary-panel';
 import { PassTimeline } from '@/components/adjuster/pass-timeline';
 import { RefreshButton } from '@/components/adjuster/refresh-button';
 import { AdjusterShell } from '@/components/layout/adjuster-shell';
@@ -41,6 +42,7 @@ export default async function ClaimPage({
           }
         />
         <ClaimHeader snapshot={snapshot} />
+        <IntakeSummaryPanel snapshot={snapshot} />
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
           <ClaimBriefTabs snapshot={snapshot} />
           <div className="space-y-6">
