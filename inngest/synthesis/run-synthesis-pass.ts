@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import {
   runSynthesisForValidationRows,
   type ClaimSynthesisContext,
+  type ClaimDocumentSummary,
   type ClaimantResponseContext,
   type ClaimValidationRow,
   type SynthesisResultRow,
@@ -59,9 +60,17 @@ type ClaimContextRow = {
   policy_number: string | null;
   incident_date: string | null;
   incident_location: string | null;
+  summary: string | null;
   metadata: Record<string, unknown> | null;
   amount_claimed: number | string | null;
   currency: string | null;
+};
+
+type ClaimDocumentSummaryRow = {
+  id: string;
+  file_name: string | null;
+  document_type: string | null;
+  document_subtype: string | null;
 };
 
 type PreviousQuestionRow = {
@@ -187,7 +196,7 @@ export async function runSynthesisPass({
     const { data, error } = await supabaseAdmin
       .from('claims')
       .select(
-        'id, claim_type, policy_number, incident_date, incident_location, metadata, amount_claimed, currency',
+        'id, claim_type, policy_number, incident_date, incident_location, summary, metadata, amount_claimed, currency',
       )
       .eq('id', claimId)
       .maybeSingle();
@@ -195,7 +204,17 @@ export async function runSynthesisPass({
     if (error) throw error;
     if (!data) return null;
 
-    return mapClaimContext(data as ClaimContextRow);
+    const { data: documents, error: documentsError } = await supabaseAdmin
+      .from('documents')
+      .select('id, file_name, document_type, document_subtype')
+      .eq('claim_id', claimId);
+
+    if (documentsError) throw documentsError;
+
+    return mapClaimContext(
+      data as ClaimContextRow,
+      (documents ?? []) as ClaimDocumentSummaryRow[],
+    );
   });
 
   const findings = await step.run('derive-findings', async () => {
@@ -341,7 +360,10 @@ function normalizeQuestionAnswerType(
   return null;
 }
 
-function mapClaimContext(row: ClaimContextRow): ClaimSynthesisContext {
+function mapClaimContext(
+  row: ClaimContextRow,
+  documents: ClaimDocumentSummaryRow[] = [],
+): ClaimSynthesisContext {
   const amount =
     row.amount_claimed === null || row.amount_claimed === undefined
       ? null
@@ -353,9 +375,22 @@ function mapClaimContext(row: ClaimContextRow): ClaimSynthesisContext {
     policy_number: row.policy_number ?? null,
     incident_date: row.incident_date ?? null,
     incident_location: row.incident_location ?? null,
+    summary: row.summary ?? null,
     metadata: row.metadata ?? null,
     amount_claimed: Number.isFinite(amount) ? amount : null,
     currency: row.currency ?? null,
+    documents: documents.map(mapClaimDocumentSummary),
+  };
+}
+
+function mapClaimDocumentSummary(
+  row: ClaimDocumentSummaryRow,
+): ClaimDocumentSummary {
+  return {
+    id: row.id,
+    file_name: row.file_name ?? null,
+    document_type: row.document_type ?? null,
+    document_subtype: row.document_subtype ?? null,
   };
 }
 

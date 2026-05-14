@@ -6,9 +6,11 @@ export {
 } from './question-generation';
 export { computeReadinessScore } from './readiness-score';
 export { runSynthesisForValidationRows } from './handler-orchestration';
+export { deriveClaimConsistencyFindings } from './claim-consistency-findings';
 export { deriveTheftMetadataFindings } from './theft-metadata-findings';
 export type {
   ClarificationQuestion,
+  ClaimDocumentSummary,
   ClaimSynthesisContext,
   ClaimantResponseContext,
   ClaimValidationRow,

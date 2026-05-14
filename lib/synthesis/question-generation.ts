@@ -63,6 +63,9 @@ export function generateCustomerQuestionFromFinding(finding: Finding): {
   }
 
   const key = searchableFindingText(finding);
+  const consistencyTemplate = templateForConsistencyFinding(finding.title);
+  if (consistencyTemplate) return consistencyTemplate;
+
   if (isReviewOnlyTheftFinding(key)) return null;
 
   const mapped = templateByKeywords(key);
@@ -73,6 +76,37 @@ export function generateCustomerQuestionFromFinding(finding: Finding): {
     customer_label: 'השלמת מידע',
     required_action: 'upload_document_or_answer',
   });
+}
+
+function templateForConsistencyFinding(title: string) {
+  if (title === 'סוג המסמכים אינו תואם לסוג התביעה') {
+    return template({
+      question:
+        'המסמכים שצורפו נראים כמסמכים שאינם תואמים לסוג התביעה. נא להעלות מסמכים רלוונטיים לסוג התביעה שנבחר, או לאשר שיש לעדכן את סוג התביעה.',
+      customer_label: 'התאמת מסמכים לסוג תביעה',
+      required_action: 'upload_document_or_answer',
+    });
+  }
+
+  if (title === 'תיאור האירוע אינו תואם לסוג התביעה') {
+    return template({
+      question:
+        'נא לאשר האם התביעה היא בגין גניבה או בגין אירוע רפואי/תאונה, ולצרף מסמכים תומכים בהתאם.',
+      customer_label: 'אימות סוג תביעה',
+      required_action: 'answer',
+    });
+  }
+
+  if (title === 'סכום התביעה אינו תואם לסכום הפריטים') {
+    return template({
+      question:
+        'נא לאשר את סכום התביעה הכולל ואת סכומי הפריטים שנגנבו, או לתקן את רשימת הפריטים בהתאם.',
+      customer_label: 'אימות סכום תביעה',
+      required_action: 'answer',
+    });
+  }
+
+  return null;
 }
 
 function templateByKeywords(key: string) {
